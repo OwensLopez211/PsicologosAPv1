@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshUserSession = async (): Promise<boolean> => {
     try {
       const refreshed = await refreshToken();
+      // No actualices ningún estado aquí que pueda causar re-renderizados innecesarios
       return !!refreshed;
     } catch (error) {
       console.error('Error refreshing token:', error);
