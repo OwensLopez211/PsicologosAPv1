@@ -1,25 +1,35 @@
+// PublicRoute.tsx (actualizado)
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import LoadingSpinner from '../LoadingSpinner';
 
-interface PublicRouteProps {
-  children: React.ReactNode;
-}
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, user, loading } = useAuth();
+  const [isChecking, setIsChecking] = useState(true);
 
-const PublicRoute = ({ children }: PublicRouteProps) => {
-  const { user } = useAuth();
+  useEffect(() => {
+    // Pequeño retraso para asegurar que el estado de autenticación está correctamente cargado
+    const timer = setTimeout(() => {
+      setIsChecking(false);
+    }, 100);
 
-  if (user) {
-    // Redirect authenticated users based on their role
-    switch (user.user_type) {
-      case 'client':
-        return <Navigate to="/dashboard" replace />;
-      case 'psychologist':
-        return <Navigate to="/psicologo/dashboard" replace />;
-      case 'admin':
-        return <Navigate to="/admin/dashboard" replace />;
-      default:
-        return <Navigate to="/dashboard" replace />;
-    }
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading || isChecking) {
+    return <LoadingSpinner />;
+  }
+
+  if (isAuthenticated && user) {
+    // Redireccionar al dashboard según el tipo de usuario
+    const userType = user.user_type?.toLowerCase();
+    const dashboard = userType === 'psychologist'
+      ? '/psicologo/dashboard'
+      : userType === 'admin'
+        ? '/admin/dashboard'
+        : '/dashboard';
+    return <Navigate to={dashboard} replace />;
   }
 
   return <>{children}</>;

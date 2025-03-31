@@ -24,6 +24,8 @@ export interface RegisterData {
   first_name: string;
   last_name: string;
   phone_number?: string;
+  professional_title?: string;
+  // Puedes añadir más campos según necesites
 }
 
 export const login = async (email: string, password: string): Promise<AuthResponse> => {
@@ -33,41 +35,48 @@ export const login = async (email: string, password: string): Promise<AuthRespon
       password
     });
     
-    // Normalize user_type to lowercase to ensure consistency
+    // Normalizar user_type a minúsculas para garantizar consistencia
     if (response.data.user && response.data.user.user_type) {
       response.data.user.user_type = response.data.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
     }
     
-    // Store auth data in localStorage
+    // Almacenar datos de autenticación en localStorage
     localStorage.setItem('token', response.data.access);
     localStorage.setItem('refresh_token', response.data.refresh);
     localStorage.setItem('user', JSON.stringify(response.data.user));
     
     return response.data;
   } catch (error: any) {
+    console.error('Login error:', error.response || error);
+    
     if (error.response?.status === 401) {
       throw new Error('Credenciales inválidas');
     }
+    
     throw error;
   }
 };
 
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
   try {
-    const response = await api.post<AuthResponse>('/auth/register/', {
-      email: data.email,
-      username: data.email, // Using email as username
-      password: data.password,
-      password2: data.password2,
-      user_type: data.user_type,
-      first_name: data.first_name,
-      last_name: data.last_name,
-      phone_number: data.phone_number
-    });
+    // Aseguramos que user_type esté en minúsculas
+    const payload = {
+      ...data,
+      email: data.email.trim().toLowerCase(),
+      username: data.email.trim().toLowerCase(), // Usar email como username
+      user_type: data.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin'
+    };
+    
+    const response = await api.post<AuthResponse>('/auth/register/', payload);
+    
+    // Almacenar datos de autenticación en localStorage
+    localStorage.setItem('token', response.data.access);
+    localStorage.setItem('refresh_token', response.data.refresh);
+    localStorage.setItem('user', JSON.stringify(response.data.user));
     
     return response.data;
   } catch (error: any) {
-    // Handle network errors
+    // Manejo de errores de red
     if (!error.response) {
       toast.error('Error de conexión. Por favor, verifica tu conexión a internet.');
       throw new Error('NETWORK_ERROR');
@@ -75,14 +84,14 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
 
     const errorData = error.response?.data;
     
-    // Handle email/username already exists
+    // Manejo específico de errores comunes
     if (errorData?.errors?.email?.[0]?.includes('existe') || 
         errorData?.errors?.username?.[0]?.includes('existe')) {
       toast.error('Este correo electrónico ya está registrado en la plataforma');
       throw new Error('EMAIL_EXISTS');
     }
     
-    // Handle validation errors
+    // Manejo de errores de validación
     if (errorData?.errors) {
       const firstError = Object.values(errorData.errors)[0];
       if (Array.isArray(firstError) && firstError.length > 0) {
@@ -91,30 +100,32 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
       }
     }
     
-    // Handle unexpected errors
+    // Manejo de errores inesperados
     toast.error('Ha ocurrido un error durante el registro. Por favor, intente nuevamente.');
     throw error;
   }
 };
 
-export const refreshToken = async () => {
+export const refreshToken = async (): Promise<string | null> => {
   const refresh = localStorage.getItem('refresh_token');
-  if (!refresh) throw new Error('No refresh token available');
+  if (!refresh) {
+    throw new Error('No refresh token available');
+  }
   
-  // Add a flag to localStorage to prevent refresh loops
+  // Control de recursión - prevenir loops infinitos de refresh
   const lastRefreshAttempt = localStorage.getItem('lastRefreshAttempt');
   const now = Date.now();
   
   if (lastRefreshAttempt) {
     const timeSinceLastAttempt = now - parseInt(lastRefreshAttempt);
-    // If we tried to refresh less than 10 seconds ago, don't try again
+    // Si intentamos refrescar hace menos de 10 segundos, no intentar de nuevo
     if (timeSinceLastAttempt < 10000) {
       console.log('Skipping token refresh - attempted too recently');
       return null;
     }
   }
   
-  // Set the timestamp of this attempt
+  // Registrar el timestamp de este intento
   localStorage.setItem('lastRefreshAttempt', now.toString());
   
   try {
@@ -130,12 +141,10 @@ export const refreshToken = async () => {
   } catch (error: any) {
     console.error('Token refresh error:', error);
     
-    // Only clear tokens if it's an authentication error
+    // Solo limpiar tokens si es un error de autenticación
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('lastRefreshAttempt'); // Clear the timestamp too
       console.log('Tokens cleared due to authentication error');
     }
     
@@ -143,7 +152,6 @@ export const refreshToken = async () => {
   }
 };
 
-// Add this function to complete the authService
 const authService = {
   login,
   register,

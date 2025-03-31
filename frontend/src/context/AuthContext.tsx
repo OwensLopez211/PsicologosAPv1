@@ -1,3 +1,4 @@
+// AuthContext.tsx (actualizado)
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { refreshToken } from '../services/authService';
 import toast from 'react-hot-toast';
@@ -5,7 +6,7 @@ import toast from 'react-hot-toast';
 interface User {
   id: number;
   email: string;
-  user_type: 'client' | 'psychologist' | 'admin';  // Changed to lowercase to match backend
+  user_type: 'client' | 'psychologist' | 'admin';
   first_name: string;
   last_name: string;
 }
@@ -16,6 +17,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   logout: () => void;
+  refreshUserSession: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,7 +30,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('lastRefreshAttempt');
     setUser(null);
+  };
+
+  // Nueva función para refrescar la sesión del usuario
+  const refreshUserSession = async (): Promise<boolean> => {
+    try {
+      const refreshed = await refreshToken();
+      return !!refreshed;
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return false;
+    }
   };
 
   useEffect(() => {
@@ -40,19 +54,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (savedUser && (token || refreshTokenValue)) {
           const parsedUser = JSON.parse(savedUser);
-          setUser(parsedUser);
           
-          // Only try to refresh token if we have a refresh token
-          if (refreshTokenValue) {
-            try {
-              await refreshToken();
-            } catch (error) {
-              console.error('Token refresh failed:', error);
-              // Don't logout immediately on first page load if refresh fails
-              // This gives a better UX - we'll let the API interceptor handle 401s
-              if ((error as any)?.response?.status !== 404) {
-                logout();
-              }
+          // Normalizar el tipo de usuario a minúsculas
+          const normalizedUser = {
+            ...parsedUser,
+            user_type: parsedUser.user_type?.toLowerCase() as 'client' | 'psychologist' | 'admin'
+          };
+          
+          setUser(normalizedUser);
+          
+          // Solo intentar refrescar el token si existe un refresh token
+          if (refreshTokenValue && !token) {
+            const success = await refreshUserSession();
+            if (!success) {
+              logout();
             }
           }
         }
@@ -73,7 +88,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser, 
       isAuthenticated: !!user,
       loading,
-      logout
+      logout,
+      refreshUserSession
     }}>
       {children}
     </AuthContext.Provider>

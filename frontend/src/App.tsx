@@ -1,5 +1,7 @@
+// App.tsx (actualizado)
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import TokenRefreshManager from './components/TokenRefreshManager';
 import PrivateRoute from './components/routing/PrivateRoute';
 import PublicRoute from './components/routing/PublicRoute';
 import Layout from './components/Layout';
@@ -26,6 +28,7 @@ function App() {
       <Toaster />
       <Router>
         <AuthProvider>
+          <TokenRefreshManager />
           <Routes>
             {/* Public routes */}
             <Route element={<Layout />}>

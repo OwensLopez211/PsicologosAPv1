@@ -23,30 +23,32 @@ const Sidebar = ({ userType, onClose }: SidebarProps) => {
   const normalizedUserType = userType?.toUpperCase() as 'CLIENT' | 'PSYCHOLOGIST' | 'ADMIN';
   
   const getMenuItems = () => {
-    const commonItems = [
-      { path: '/dashboard', label: 'Inicio', icon: HomeIcon },
-      { path: '/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
-    ];
 
     const roleSpecificItems = {
       CLIENT: [
+        { path: '/dashboard', label: 'Inicio', icon: HomeIcon },
+        { path: '/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
         { path: '/dashboard/appointments', label: 'Mis Citas', icon: CalendarIcon },
         { path: '/dashboard/psychologists', label: 'Buscar Psicólogos', icon: MagnifyingGlassIcon },
       ],
       PSYCHOLOGIST: [
-        { path: '/dashboard/schedule', label: 'Mi Agenda', icon: CalendarIcon },
-        { path: '/dashboard/patients', label: 'Mis Pacientes', icon: UsersIcon },
-        { path: '/dashboard/documents', label: 'Mis Documentos', icon: DocumentTextIcon },
+        { path: '/psicologo/dashboard', label: 'Inicio', icon: HomeIcon },
+        { path: '/psicologo/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
+        { path: '/psicologo/dashboard/schedule', label: 'Mi Agenda', icon: CalendarIcon },
+        { path: '/psicologo/dashboard/patients', label: 'Mis Pacientes', icon: UsersIcon },
+        { path: '/psicologo/dashboard/documents', label: 'Mis Documentos', icon: DocumentTextIcon },
       ],
       ADMIN: [
-        { path: '/dashboard/users', label: 'Usuarios', icon: UsersIcon },
-        { path: '/dashboard/psychologists', label: 'Psicólogos', icon: UserIcon },
-        { path: '/dashboard/verifications', label: 'Verificaciones', icon: ClipboardDocumentCheckIcon },
-        { path: '/dashboard/reports', label: 'Reportes', icon: ChartBarIcon },
+        { path: '/admin/dashboard', label: 'Inicio', icon: HomeIcon },
+        { path: '/admin/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
+        { path: '/admin/dashboard/users', label: 'Usuarios', icon: UsersIcon },
+        { path: '/admin/dashboard/psychologists', label: 'Psicólogos', icon: UserIcon },
+        { path: '/admin/dashboard/verifications', label: 'Verificaciones', icon: ClipboardDocumentCheckIcon },
+        { path: '/admin/dashboard/reports', label: 'Reportes', icon: ChartBarIcon },
       ],
     };
 
-    return [...commonItems, ...(roleSpecificItems[normalizedUserType] || roleSpecificItems.CLIENT)];
+    return [...(roleSpecificItems[normalizedUserType] || roleSpecificItems.CLIENT)];
   };
 
   return (

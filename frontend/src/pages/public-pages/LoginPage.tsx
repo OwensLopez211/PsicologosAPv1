@@ -1,5 +1,6 @@
+// LoginPage.tsx (actualizado)
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { login } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import PageTransition from '../../components/public-components/PageTransition';
@@ -8,6 +9,7 @@ import toast from 'react-hot-toast';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setUser } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -16,7 +18,16 @@ const LoginPage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fix: Change useState to useEffect for loading remembered email
+  // Verificar si hay mensaje de expiración en la URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const expired = params.get('expired');
+    if (expired === 'true') {
+      toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+    }
+  }, [location]);
+
+  // Cargar email recordado
   useEffect(() => {
     const rememberedEmail = localStorage.getItem('rememberedEmail');
     if (rememberedEmail) {
@@ -31,21 +42,23 @@ const LoginPage = () => {
     try {
       const response = await login(formData.email, formData.password);
       
-      // Store auth data
-      localStorage.setItem('token', response.access);
-      localStorage.setItem('refresh_token', response.refresh);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      // Gestionar "recordarme"
+      if (formData.remember) {
+        localStorage.setItem('rememberedEmail', formData.email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
+      
+      // Normalizar el tipo de usuario
+      const normalizedUserType = response.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
       
       setUser({
         ...response.user,
-        user_type: response.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin'
+        user_type: normalizedUserType
       });
       
-      // In the handleSubmit function, update the switch statement:
-      
-      // Navigate based on user type (using lowercase)
-      const userType = response.user.user_type.toLowerCase();
-      switch (userType) {
+      // Navegar según el tipo de usuario
+      switch (normalizedUserType) {
         case 'client':
           navigate('/dashboard');
           break;
@@ -64,9 +77,9 @@ const LoginPage = () => {
       
       if (!err.response) {
         toast.error('Error de conexión. Por favor, verifica tu conexión a internet.');
-      } else if (err.response.status === 401) {
+      } else if (err.response?.status === 401) {
         toast.error('Correo electrónico o contraseña incorrectos');
-      } else if (err.response.data?.detail) {
+      } else if (err.response?.data?.detail) {
         toast.error(err.response.data.detail);
       } else {
         toast.error('Error al iniciar sesión. Por favor, intente nuevamente.');
@@ -76,7 +89,6 @@ const LoginPage = () => {
     }
   };
 
-  // Remove the error-related JSX since we're using toast notifications
   return (
     <PageTransition>
       <div className="min-h-screen bg-gradient-to-br from-[#B4E4D3] via-white to-[#B4E4D3]/30 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -120,7 +132,6 @@ const LoginPage = () => {
           className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
         >
           <div className="bg-white/80 backdrop-blur-sm py-8 px-6 shadow-2xl rounded-2xl sm:px-10 border border-white/20">
-            {/* Remove this error block since we're using toast */}
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700">

@@ -1,5 +1,5 @@
+// api.ts (actualizado)
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import authService from './authService';
 
 const api = axios.create({
   baseURL: 'http://localhost:8000/api',
@@ -7,10 +7,10 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  withCredentials: true
+  withCredentials: false
 });
 
-// Request interceptor
+// Interceptor de solicitud
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
@@ -22,7 +22,7 @@ api.interceptors.request.use(
   (error: AxiosError) => Promise.reject(error)
 );
 
-// Response interceptor
+// Interceptor de respuesta
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -32,7 +32,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Skip token refresh for specific endpoints or if already retrying
+    // Omitir renovación de token para endpoints específicos o si ya estamos reintentando
     if (
       (originalRequest as any)._retry || 
       originalRequest.url?.includes('/auth/refresh/')
@@ -40,18 +40,17 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Only attempt token refresh for 401 errors
+    // Solo intentar renovar el token para errores 401
     if (error.response?.status === 401) {
       try {
         (originalRequest as any)._retry = true;
         
-        // Simple debounce for token refresh
         const lastRefreshAttempt = localStorage.getItem('lastRefreshAttempt');
         const now = Date.now();
         
         if (lastRefreshAttempt) {
           const timeSinceLastAttempt = now - parseInt(lastRefreshAttempt);
-          if (timeSinceLastAttempt < 10000) { // 10 seconds
+          if (timeSinceLastAttempt < 10000) { // 10 segundos
             console.log('Token refresh attempted too recently, skipping');
             return Promise.reject(error);
           }
@@ -59,17 +58,17 @@ api.interceptors.response.use(
         
         localStorage.setItem('lastRefreshAttempt', now.toString());
         
-        // Instead of using the refresh token mechanism which is failing,
-        // let's redirect to login if the token is expired
-        const user = localStorage.getItem('user');
-        if (user) {
-          // Keep the user data but clear tokens
-          localStorage.removeItem('token');
-          localStorage.removeItem('refresh_token');
+        // Redireccionar al login si el token está expirado
+        const hasUser = localStorage.getItem('user');
+        if (hasUser) {
+          const refreshToken = localStorage.getItem('refresh_token');
           
-          // Redirect to login page
-          window.location.href = '/login?expired=true';
-          return Promise.reject(error);
+          // Solo redireccionar si no hay refresh token o hay otros problemas
+          if (!refreshToken) {
+            localStorage.removeItem('token');
+            window.location.href = '/login?expired=true';
+            return Promise.reject(error);
+          }
         }
       } catch (e) {
         console.error('Error in refresh token logic:', e);

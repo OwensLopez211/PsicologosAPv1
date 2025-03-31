@@ -11,7 +11,6 @@ class User(AbstractUser):
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15, blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     is_email_verified = models.BooleanField(default=False)
     verification_token = models.CharField(max_length=100, null=True, blank=True)
     reset_password_token = models.CharField(max_length=100, null=True, blank=True)

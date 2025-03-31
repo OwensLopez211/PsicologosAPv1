@@ -11,25 +11,74 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 
 User = get_user_model()
 
+from rest_framework import status, generics
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import get_user_model
+from .serializers import UserSerializer, RegisterSerializer
+
+User = get_user_model()
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = []
     serializer_class = RegisterSerializer
 
     def post(self, request, *args, **kwargs):
+        # Imprime los datos recibidos para debugging
+        print(f"Register request data: {request.data}")
+        
+        # Asegurarse de que first_name y last_name estén presentes y no sean None
+        first_name = request.data.get('first_name', '')
+        last_name = request.data.get('last_name', '')
+        
+        # Verificar que no sean None antes de continuar
+        if first_name is None:
+            first_name = ''
+        if last_name is None:
+            last_name = ''
+            
         data = {
             'email': request.data.get('email'),
             'username': request.data.get('email'),
             'password': request.data.get('password'),
             'password2': request.data.get('password2'),
-            'user_type': request.data.get('user_type', 'client').lower(),  # Ensure lowercase
-            'first_name': request.data.get('first_name', ''),
-            'last_name': request.data.get('last_name', '')
+            'user_type': request.data.get('user_type', 'client').lower(),
+            'first_name': first_name,
+            'last_name': last_name
         }
-
+        
+        # Imprimir los datos procesados para debugging
+        print(f"Processed data for serializer: {data}")
+        
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
             user = serializer.save()
+            
+            # Asegurarse de que first_name y last_name se guarden correctamente
+            user.first_name = first_name
+            user.last_name = last_name
+            user.save()
+            
+            # Ahora procesamos los datos adicionales para el perfil
+            phone_number = request.data.get('phone_number', '')
+            
+            # Obtener el perfil recién creado
+            if user.user_type.lower() == 'client':
+                if hasattr(user, 'clientprofile_profile'):
+                    profile = user.clientprofile_profile
+                    profile.phone_number = phone_number
+                    profile.save()
+                    print(f"Updated client profile for {user.email}")
+            elif user.user_type.lower() == 'psychologist':
+                if hasattr(user, 'psychologistprofile_profile'):
+                    profile = user.psychologistprofile_profile
+                    profile.phone = phone_number
+                    if 'professional_title' in request.data:
+                        profile.professional_title = request.data.get('professional_title')
+                    profile.save()
+                    print(f"Updated psychologist profile for {user.email}")
+            
             refresh = RefreshToken.for_user(user)
             user_serializer = UserSerializer(user)
             
@@ -38,6 +87,9 @@ class RegisterView(generics.CreateAPIView):
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
             }, status=status.HTTP_201_CREATED)
+        
+        # En caso de error, imprimir para debugging
+        print(f"Validation errors: {serializer.errors}")
         
         return Response({
             'detail': 'Error de validación',
