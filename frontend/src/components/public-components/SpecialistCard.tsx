@@ -9,14 +9,14 @@ interface SpecialistCardProps {
   imageUrl: string;
 }
 
-const SpecialistCard = ({ id, name, title, specialties, experience, imageUrl }: SpecialistCardProps) => {
+const SpecialistCard: FC<SpecialistCardProps> = ({ id, name, title, specialties, experience, imageUrl }) => {
   return (
-    <div className="bg-white p-6 flex items-start justify-between gap-6 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+    <div className="bg-white p-8 flex items-start justify-between gap-6 border-b border-gray-100 hover:bg-gray-50 transition-colors">
       <Link 
         to={`/especialistas/${id}`} 
-        className="flex gap-6 flex-1"
+        className="flex gap-8 flex-1"
       >
-        <div className="w-16 h-16 rounded-full overflow-hidden bg-[#2A6877] flex-shrink-0">
+        <div className="w-20 h-20 rounded-full overflow-hidden bg-[#2A6877] flex-shrink-0">
           <img 
             src={imageUrl} 
             alt={name}

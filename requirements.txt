@@ -10,7 +10,7 @@ psycopg2-binary==2.9.9
 dj-database-url==2.1.0
 
 # Image processing
-Pillow==10.1.0
+Pillow==9.5.0  # Changed to a more compatible version
 
 # Environment variables
 python-dotenv==1.0.0
@@ -18,7 +18,7 @@ python-dotenv==1.0.0
 # Development tools
 black==23.10.1
 flake8==6.1.0
-setuptools==68.2.2  # Add this line
+setuptools==68.2.2
 
 # Production
 gunicorn==21.2.0
