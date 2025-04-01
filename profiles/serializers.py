@@ -11,15 +11,6 @@ class UserBasicSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'first_name', 'last_name')
         read_only_fields = ('id', 'email')
 
-class ClientProfileSerializer(serializers.ModelSerializer):
-    """Serializer para perfil de cliente"""
-    user = UserBasicSerializer(read_only=True)
-    
-    class Meta:
-        model = ClientProfile
-        fields = ('id', 'user', 'profile_image', 'phone_number', 'birth_date', 'emergency_contact')
-        read_only_fields = ('id', 'created_at', 'updated_at')
-
 class ProfessionalDocumentSerializer(serializers.ModelSerializer):
     """Serializer para documentos profesionales"""
     class Meta:
@@ -28,27 +19,52 @@ class ProfessionalDocumentSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'is_verified', 'uploaded_at')
 
 class ScheduleSerializer(serializers.ModelSerializer):
-    """Serializer para horario del psicólogo"""
+    """Serializer para horarios de psicólogos"""
     class Meta:
         model = Schedule
-        fields = ('id', 'schedule_config')
+        fields = '__all__'
+        read_only_fields = ('id', 'psychologist')
 
-class PsychologistProfileSerializer(serializers.ModelSerializer):
-    """Serializer completo para perfil de psicólogo"""
-    user = UserBasicSerializer(read_only=True)
-    documents = ProfessionalDocumentSerializer(many=True, read_only=True)
+class BaseProfileSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+
+    class Meta:
+        fields = (
+            'first_name',
+            'last_name',
+            'email',
+            'profile_image',
+        )
+
+class ClientProfileSerializer(BaseProfileSerializer):
+    phone = serializers.CharField(source='phone_number', required=False)
+    
+    class Meta(BaseProfileSerializer.Meta):
+        model = ClientProfile
+        fields = BaseProfileSerializer.Meta.fields + ('phone',)
+
+class PsychologistProfileSerializer(BaseProfileSerializer):
+    phone = serializers.CharField(required=False)
+    documents = ProfessionalDocumentSerializer(many=True, read_only=True, source='professionaldocument_set')
     schedule = ScheduleSerializer(read_only=True)
     
-    class Meta:
+    # Ensure these fields can handle empty values properly
+    specialties = serializers.ListField(child=serializers.CharField(), required=False)
+    target_populations = serializers.ListField(child=serializers.CharField(), required=False)
+    intervention_areas = serializers.ListField(child=serializers.CharField(), required=False)
+    graduation_year = serializers.IntegerField(required=False, allow_null=True)
+    
+    class Meta(BaseProfileSerializer.Meta):
         model = PsychologistProfile
-        fields = (
-            'id', 'user', 'profile_image', 'rut', 'phone', 'gender', 'region', 'city',
+        fields = BaseProfileSerializer.Meta.fields + (
+            'id', 'rut', 'phone', 'gender', 'region', 'city',
             'professional_title', 'specialties', 'health_register_number', 'university',
             'graduation_year', 'experience_description', 'target_populations', 
-            'intervention_areas', 'is_verified', 'verification_status', 'documents', 
-            'schedule'
+            'intervention_areas', 'verification_status', 'documents', 'schedule'
         )
-        read_only_fields = ('id', 'is_verified', 'verification_status', 'created_at', 'updated_at')
+        read_only_fields = ('id', 'verification_status', 'created_at', 'updated_at')
 
 class PsychologistProfileBasicSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listado de psicólogos"""
@@ -58,6 +74,6 @@ class PsychologistProfileBasicSerializer(serializers.ModelSerializer):
         model = PsychologistProfile
         fields = (
             'id', 'user', 'profile_image', 'professional_title', 
-            'specialties', 'is_verified'
+            'specialties', 'verification_status'  # Changed is_verified to verification_status
         )
         read_only_fields = fields

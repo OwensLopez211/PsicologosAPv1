@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 interface SpecialistCardProps {
   id: number;
   name: string;
-  title: string;
+  university: string; // Changed from title to university
   specialties: string;
   experience: string;
   imageUrl: string;
 }
 
-const SpecialistCard: FC<SpecialistCardProps> = ({ id, name, title, specialties, experience, imageUrl }) => {
+const SpecialistCard: FC<SpecialistCardProps> = ({ id, name, university, specialties, experience, imageUrl }) => {
   return (
     <div className="bg-white p-8 flex items-start justify-between gap-6 border-b border-gray-100 hover:bg-gray-50 transition-colors">
       <Link 
@@ -25,7 +25,7 @@ const SpecialistCard: FC<SpecialistCardProps> = ({ id, name, title, specialties,
         </div>
         <div>
           <h3 className="text-xl font-semibold text-gray-900 hover:text-[#2A6877] transition-colors">{name}</h3>
-          <p className="text-[#2A6877] text-sm font-medium mt-1">{title}</p>
+          <p className="text-[#2A6877] text-sm font-medium mt-1">{university}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {specialties.split(', ').map((specialty) => (
               <span key={specialty} className="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full">

@@ -43,6 +43,9 @@ const Footer = () => {
               <li>
                 <Link to="/contacto" className="text-gray-200 hover:text-[#B4E4D3] transition-colors">Contacto</Link>
               </li>
+              <li>
+                <Link to="/terminos-y-condiciones" className="text-gray-200 hover:text-[#B4E4D3] transition-colors">Términos y Condiciones</Link>
+              </li>
             </ul>
           </div>
 
@@ -99,6 +102,15 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-white/10 mt-12 pt-8 text-center text-sm text-gray-300">
           <p>© {new Date().getFullYear()} Bienestar. Todos los derechos reservados.</p>
+          <div className="mt-2 space-x-4">
+            <Link to="/terminos-y-condiciones" className="hover:text-[#B4E4D3] transition-colors">
+              Términos y Condiciones
+            </Link>
+            <span>|</span>
+            <Link to="/privacidad" className="hover:text-[#B4E4D3] transition-colors">
+              Política de Privacidad
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

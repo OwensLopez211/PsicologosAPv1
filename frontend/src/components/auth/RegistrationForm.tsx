@@ -1,9 +1,10 @@
 // src/components/auth/RegistrationForm.tsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import FormField from './FormField';
 import SubmitButton from './SubmitButton';
+import TermsPopup from '../public-components/TermsPopup';
 
 type UserType = 'patient' | 'psychologist' | null;
 
@@ -37,6 +38,7 @@ const RegistrationForm = ({
     phoneNumber: '',
     terms: false
   });
+  const [showTerms, setShowTerms] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -49,6 +51,23 @@ const RegistrationForm = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
+  };
+
+  const openTermsPopup = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowTerms(true);
+  };
+
+  const closeTermsPopup = () => {
+    setShowTerms(false);
+  };
+
+  const acceptTerms = () => {
+    setFormData({
+      ...formData,
+      terms: true
+    });
+    setShowTerms(false);
   };
 
   return (
@@ -154,9 +173,12 @@ const RegistrationForm = ({
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
                 Acepto los{' '}
-                <Link to="/terminos" className="text-[#2A6877] hover:text-[#235A67]">
+                <button 
+                  onClick={openTermsPopup}
+                  className="text-[#2A6877] hover:text-[#235A67] font-medium underline"
+                >
                   términos y condiciones
-                </Link>
+                </button>
               </label>
             </div>
 
@@ -164,6 +186,15 @@ const RegistrationForm = ({
           </form>
         </div>
       </motion.div>
+
+      {/* Using the reusable TermsPopup component */}
+      <AnimatePresence>
+        <TermsPopup 
+          isOpen={showTerms}
+          onClose={closeTermsPopup}
+          onAccept={acceptTerms}
+        />
+      </AnimatePresence>
     </div>
   );
 };

@@ -27,9 +27,9 @@ const Navbar = () => {
 
   const getDashboardLink = () => {
     switch (user?.user_type) {
-      case 'PSYCHOLOGIST':
+      case 'psychologist':
         return '/psicologo/dashboard';
-      case 'ADMIN':
+      case 'admin':
         return '/admin/dashboard';
       default:
         return '/dashboard';

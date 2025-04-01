@@ -58,7 +58,6 @@ const ContactContainer = () => {
               <div className="space-y-2 text-gray-600">
                 <p>📧 contacto@bienestar.cl</p>
                 <p>📱 +56 9 1234 5678</p>
-                <p>📍 Santiago, Chile</p>
               </div>
             </div>
           </div>

@@ -11,6 +11,14 @@ router.register(r'psychologist-profiles', PsychologistProfileViewSet, basename='
 
 urlpatterns = [
     path('', include(router.urls)),
+    # Explicitly register the upload_image endpoint
+    path('psychologist-profiles/me/upload_image/', 
+         PsychologistProfileViewSet.as_view({'post': 'upload_image'}), 
+         name='psychologist-upload-image'),
+    # Add professional info update endpoint
+    path('psychologist-profiles/me/professional-info/', 
+         PsychologistProfileViewSet.as_view({'patch': 'update_professional_info'}), 
+         name='psychologist-professional-info'),
     path('public/psychologists/', PublicPsychologistListView.as_view(), name='public-psychologists'),
     path('public/psychologists/<int:pk>/', PsychologistDetailView.as_view(), name='public-psychologist-detail'),
 ]

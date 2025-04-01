@@ -7,7 +7,7 @@ const ContactPage = () => {
     <PageTransition>
       <HeaderPage 
         title="Contáctanos"
-        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ornare egestas ultrices. Maecenas ultrices, purus sit amet scelerisque scelerisque."
+        description="¿Tienes preguntas o necesitas ayuda? Estamos aquí para asistirte. Completa el formulario a continuación y nuestro equipo se pondrá en contacto contigo lo antes posible."
       />
       <ContactContainer />
     </PageTransition>

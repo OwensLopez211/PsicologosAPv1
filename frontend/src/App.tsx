@@ -13,8 +13,9 @@ import ContactPage from './pages/public-pages/ContactPage';
 import AboutPage from './pages/public-pages/AboutPage';
 import SpecialistPage from './pages/public-pages/SpecialistPage';
 import SpecialistProfilePage from './pages/public-pages/SpecialistProfilePage';
+import TermsPage from './pages/public-pages/TermsPage';
 // import DashboardHome from './pages/dashboard/DashboardHome';
-// import ProfilePage from './pages/dashboard/ProfilePage';
+import ProfilePage from './pages/dashboard/ProfilePage';
 // import SchedulePage from './pages/dashboard/SchedulePage';
 // import PatientsPage from './pages/dashboard/PatientsPage';
 // import DocumentsPage from './pages/dashboard/DocumentsPage';
@@ -47,6 +48,7 @@ function App() {
               <Route path="/especialistas/:id" element={<SpecialistProfilePage />} />
               <Route path="/quienes-somos" element={<AboutPage />} />
               <Route path="/contacto" element={<ContactPage />} />
+              <Route path="/terminos-y-condiciones" element={<TermsPage />} />
             </Route>
 
             {/* Client Dashboard routes */}
@@ -54,21 +56,27 @@ function App() {
               <PrivateRoute allowedRoles={['client']}>
                 <DashboardLayout />
               </PrivateRoute>
-            } />
+            }>
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
 
             {/* Psychologist Dashboard routes */}
             <Route path="/psicologo/dashboard/*" element={
               <PrivateRoute allowedRoles={['psychologist']}>
                 <DashboardLayout />
               </PrivateRoute>
-            } />
+            }>
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
 
             {/* Admin Dashboard routes */}
             <Route path="/admin/dashboard/*" element={
               <PrivateRoute allowedRoles={['admin']}>
                 <DashboardLayout />
               </PrivateRoute>
-            } />
+            }>
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
 
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />

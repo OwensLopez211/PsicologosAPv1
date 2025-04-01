@@ -1,6 +1,6 @@
 // src/pages/public-pages/RegisterPage.tsx
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import PageTransition from '../../components/public-components/PageTransition';
 import UserTypeSelection from '../../components/auth/UserTypeSelection';
@@ -34,7 +34,12 @@ const RegisterPage = () => {
     
     try {
       if (!formData.terms) {
-        toast.error('Debe aceptar los términos y condiciones');
+        toast.error(
+          <div>
+            Debes aceptar los <Link to="/terminos-y-condiciones" className="underline" target="_blank">Términos y Condiciones</Link>
+          </div>,
+          { duration: 5000 }
+        );
         setIsLoading(false);
         return;
       }
@@ -63,7 +68,10 @@ const RegisterPage = () => {
         } : {})
       };
 
-      const response = await register(registerData);
+      const response = await register({
+        ...registerData,
+        user_type: backendUserType as 'psychologist' | 'client' | 'admin'
+      });
       
       // Normalizar el tipo de usuario para la consistencia en la aplicación
       const normalizedUserType = response.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';

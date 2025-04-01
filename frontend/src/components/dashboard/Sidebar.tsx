@@ -18,12 +18,9 @@ interface SidebarProps {
 
 const Sidebar = ({ userType, onClose }: SidebarProps) => {
   const location = useLocation();
-  
-  // Normalize user type to uppercase for consistency with the menu items
   const normalizedUserType = userType?.toUpperCase() as 'CLIENT' | 'PSYCHOLOGIST' | 'ADMIN';
-  
-  const getMenuItems = () => {
 
+  const getMenuItems = () => {
     const roleSpecificItems = {
       CLIENT: [
         { path: '/dashboard', label: 'Inicio', icon: HomeIcon },

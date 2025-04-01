@@ -14,7 +14,7 @@ const SpecialistPage = () => {
     {
       id: 1,
       name: "Dra. María González",
-      title: "Psicóloga Clínica",
+      university: "Universidad de Chile", // Changed from title to university
       specialties: "Terapia Individual, Ansiedad, Depresión",
       experience: "8 años",
       imageUrl: "https://ui-avatars.com/api/?name=María+González&background=2A6877&color=fff&size=300"
@@ -22,7 +22,7 @@ const SpecialistPage = () => {
     {
       id: 2,
       name: "Dr. Carlos Mendoza",
-      title: "Psicólogo Clínico",
+      university: "Universidad Católica", // Changed from title to university
       specialties: "Terapia Infantil, TDAH, Problemas de Aprendizaje",
       experience: "12 años",
       imageUrl: "https://ui-avatars.com/api/?name=Carlos+Mendoza&background=235A67&color=fff&size=300"
@@ -30,7 +30,7 @@ const SpecialistPage = () => {
     {
       id: 3,
       name: "Dra. Ana Silva",
-      title: "Psicólogo Clínico",
+      university: "Universidad de Santiago", // Changed from title to university
       specialties: "Terapia Familiar, Relaciones de Pareja, Mediación",
       experience: "15 años",
       imageUrl: "https://ui-avatars.com/api/?name=Ana+Silva&background=3A7887&color=fff&size=300"
@@ -38,7 +38,7 @@ const SpecialistPage = () => {
     {
       id: 4,
       name: "Dr. Roberto Pérez",
-      title: "Psicólogo Clínico",
+      university: "Universidad Andrés Bello", // Changed from title to university
       specialties: "Trauma, Estrés Post-traumático, Duelo",
       experience: "10 años",
       imageUrl: "https://ui-avatars.com/api/?name=Roberto+Pérez&background=1A5867&color=fff&size=300"
@@ -46,7 +46,7 @@ const SpecialistPage = () => {
     {
       id: 5,
       name: "Dra. Laura Martínez",
-      title: "Psicólogo Clínico",
+      university: "Universidad Diego Portales", // Changed from title to university
       specialties: "Terapia Adolescente, Autoestima, Desarrollo Personal",
       experience: "9 años",
       imageUrl: "https://ui-avatars.com/api/?name=Laura+Martínez&background=4A8897&color=fff&size=300"
@@ -54,7 +54,7 @@ const SpecialistPage = () => {
     {
       id: 6,
       name: "Dr. Daniel Torres",
-      title: "Psicólogo Clínico",
+      university: "Universidad de Los Andes", // Changed from title to university
       specialties: "Gerontología, Deterioro Cognitivo, Adaptación",
       experience: "14 años",
       imageUrl: "https://ui-avatars.com/api/?name=Daniel+Torres&background=2A7887&color=fff&size=300"
