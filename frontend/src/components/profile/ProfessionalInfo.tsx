@@ -26,12 +26,28 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
     intervention_areas: []
   });
 
+  // Function to determine professional title based on gender
+  const getProfessionalTitleByGender = (gender: string): string => {
+    if (gender === 'FEMALE') {
+      return 'Psicóloga Clínica';
+    } else if (gender === 'MALE') {
+      return 'Psicólogo Clínico';
+    } else {
+      // Default or non-binary option
+      return 'Profesional en Psicología Clínica';
+    }
+  };
+
   // Single useEffect to handle profile data
   useEffect(() => {
     if (profile) {
       console.log('Setting profile data:', profile);
+      
+      // Set professional title based on gender
+      const professionalTitle = getProfessionalTitleByGender(profile.gender || '');
+      
       setFormData({
-        professional_title: profile.professional_title || '',
+        professional_title: professionalTitle,
         specialties: Array.isArray(profile.specialties) ? profile.specialties : [],
         health_register_number: profile.health_register_number || '',
         university: profile.university || '',
@@ -43,6 +59,21 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
     }
   }, [profile]);
 
+  // Listen for gender changes in the profile
+  useEffect(() => {
+    if (profile && profile.gender) {
+      const professionalTitle = getProfessionalTitleByGender(profile.gender);
+      
+      // Only update if the title needs to change
+      if (formData.professional_title !== professionalTitle) {
+        setFormData(prevData => ({
+          ...prevData,
+          professional_title: professionalTitle
+        }));
+      }
+    }
+  }, [profile?.gender, formData.professional_title]);
+
   // Debug formData changes
   useEffect(() => {
     console.log('Current formData:', formData);
@@ -51,11 +82,23 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Submitting data:', formData);
-    await onSave(formData);
+    
+    // Ensure professional_title is set correctly before saving
+    const dataToSave = {
+      ...formData,
+      professional_title: getProfessionalTitleByGender(profile?.gender || '')
+    };
+    
+    await onSave(dataToSave);
     setIsEditing(false);
   };
 
   const handleFormChange = (field: string, value: any) => {
+    // Prevent changing professional_title directly
+    if (field === 'professional_title') {
+      return;
+    }
+    
     setFormData({ ...formData, [field]: value });
   };
 
@@ -153,7 +196,31 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
         formData={formData}
         isEditing={isEditing}
         onChange={handleFormChange}
+        disabledFields={['professional_title']} // Keep professional_title field disabled
       />
+      
+      {isEditing && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-xs text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-100 mt-2"
+        >
+          <div className="flex items-start">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <p className="font-medium text-gray-700">Título profesional</p>
+              <p>El título profesional se actualiza automáticamente según tu género seleccionado en la información personal.</p>
+              <ul className="list-disc pl-5 mt-1 text-gray-500">
+                <li>Género femenino: <span className="font-medium">Psicóloga Clínica</span></li>
+                <li>Género masculino: <span className="font-medium">Psicólogo Clínico</span></li>
+                <li>Sin género seleccionado: <span className="font-medium">Profesional en Psicología Clínica</span></li>
+              </ul>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <ExperienceField 
         value={formData.experience_description || ''}
@@ -201,8 +268,11 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
               onClick={() => {
                 setIsEditing(false);
                 if (profile) {
+                  // Reset form data but ensure professional_title is based on gender
+                  const professionalTitle = getProfessionalTitleByGender(profile.gender || '');
+                  
                   setFormData({
-                    professional_title: profile.professional_title || '',
+                    professional_title: professionalTitle,
                     specialties: profile.specialties || [],
                     health_register_number: profile.health_register_number || '',
                     university: profile.university || '',

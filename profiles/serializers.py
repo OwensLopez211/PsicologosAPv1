@@ -66,14 +66,42 @@ class PsychologistProfileSerializer(BaseProfileSerializer):
         )
         read_only_fields = ('id', 'verification_status', 'created_at', 'updated_at')
 
-class PsychologistProfileBasicSerializer(serializers.ModelSerializer):
-    """Serializer simplificado para listado de psicólogos"""
-    user = UserBasicSerializer(read_only=True)
+class PsychologistProfileBasicSerializer(BaseProfileSerializer):
+    """Serializer básico para listado de psicólogos"""
+    id = serializers.IntegerField(source='user.id', read_only=True)
+    name = serializers.SerializerMethodField()
+    university = serializers.CharField(required=False)
+    specialties = serializers.ListField(child=serializers.CharField(), required=False)
+    experience = serializers.SerializerMethodField()
     
-    class Meta:
+    class Meta(BaseProfileSerializer.Meta):
         model = PsychologistProfile
-        fields = (
-            'id', 'user', 'profile_image', 'professional_title', 
-            'specialties', 'verification_status'  # Changed is_verified to verification_status
+        fields = BaseProfileSerializer.Meta.fields + (
+            'id', 'name', 'university', 'specialties', 'experience', 
+            'professional_title', 'verification_status'
         )
-        read_only_fields = fields
+    
+    def get_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}"
+    
+    def get_experience(self, obj):
+        # Calculate years of experience if graduation_year is available
+        if obj.graduation_year:
+            import datetime
+            current_year = datetime.datetime.now().year
+            years = current_year - obj.graduation_year
+            return f"{years} años"
+        return ""
+
+class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
+    """Serializer completo para detalles de psicólogo"""
+    documents = ProfessionalDocumentSerializer(many=True, read_only=True, source='professionaldocument_set')
+    schedule = ScheduleSerializer(read_only=True)
+    
+    class Meta(PsychologistProfileBasicSerializer.Meta):
+        model = PsychologistProfile
+        fields = PsychologistProfileBasicSerializer.Meta.fields + (
+            'rut', 'phone', 'gender', 'region', 'city', 'health_register_number',
+            'graduation_year', 'experience_description', 'target_populations',
+            'intervention_areas', 'documents', 'schedule', 'verification_status'
+        )

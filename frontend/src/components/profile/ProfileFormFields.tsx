@@ -1,11 +1,13 @@
-import { useState } from 'react';
+//  import { useState } from 'react';
 import { motion } from 'framer-motion';
 import GenderDropdown from './GenderDropdown';
-import { Gender } from '../../types/psychologist';
+// import { Gender } from '../../types/psychologist';
 
+// Update the interface to match the formData structure in BasicInfo.tsx
 interface FormData {
   first_name: string;
   last_name: string;
+  profile_image: string;
   rut: string;
   gender: string;
   email: string;
@@ -18,6 +20,7 @@ interface ProfileFormFieldsProps {
   formData: FormData;
   isEditing: boolean;
   onChange: (formData: FormData) => void;
+  disabledFields?: string[]; // Add this prop to support disabling specific fields
 }
 
 // Reusable form field component to maintain consistency
@@ -56,7 +59,7 @@ const FormField = ({
   </div>
 );
 
-const ProfileFormFields = ({ formData, isEditing, onChange }: ProfileFormFieldsProps) => {
+const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] }: ProfileFormFieldsProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     onChange({
@@ -66,10 +69,13 @@ const ProfileFormFields = ({ formData, isEditing, onChange }: ProfileFormFieldsP
   };
 
   const handleGenderChange = (value: string) => {
-    onChange({
-      ...formData,
-      gender: value
-    });
+    // Only update gender if it's not in the disabled fields
+    if (!disabledFields.includes('gender')) {
+      onChange({
+        ...formData,
+        gender: value
+      });
+    }
   };
 
   return (
@@ -114,8 +120,17 @@ const ProfileFormFields = ({ formData, isEditing, onChange }: ProfileFormFieldsP
       <GenderDropdown 
         value={formData.gender}
         onChange={handleGenderChange}
-        isEditing={isEditing}
+        isEditing={isEditing && !disabledFields.includes('gender')}
       />
+      
+      {/* Keep the existing note for when gender is disabled */}
+      {isEditing && disabledFields.includes('gender') && (
+        <div className="col-span-2 -mt-4">
+          <p className="text-xs text-gray-500 italic">
+            El género no se puede modificar ya que afecta al título profesional
+          </p>
+        </div>
+      )}
 
       <motion.div
         initial={{ opacity: 0 }}

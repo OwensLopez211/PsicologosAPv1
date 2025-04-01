@@ -9,11 +9,17 @@ interface FormFieldProps {
   };
   isEditing: boolean;
   onChange: (field: string, value: any) => void;
+  disabledFields?: string[]; // Add this prop to support disabling specific fields
 }
 
-const ProfessionalFormFields = ({ formData, isEditing, onChange }: FormFieldProps) => {
+const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields = [] }: FormFieldProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.id, e.target.value);
+  };
+
+  // Helper function to check if a field should be disabled
+  const isFieldDisabled = (fieldId: string): boolean => {
+    return !isEditing || disabledFields.includes(fieldId);
   };
 
   const formFields = [
@@ -76,7 +82,7 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange }: FormFieldProp
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
         >
-          <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+          <label htmlFor={field.id} className="flex text-sm font-medium text-gray-700 items-center gap-1">
             <span>{field.icon}</span> {field.label}
           </label>
           <div className="mt-1 relative">
@@ -85,14 +91,14 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange }: FormFieldProp
               id={field.id}
               value={field.value}
               onChange={handleChange}
-              disabled={!isEditing}
+              disabled={isFieldDisabled(field.id)}
               placeholder={field.placeholder}
               min={field.min}
               max={field.max}
               className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-[#2A6877] focus:ring-[#2A6877] transition-all
-                ${!isEditing ? 'bg-gray-50 cursor-not-allowed' : 'hover:border-[#2A6877]'}`}
+                ${isFieldDisabled(field.id) ? 'bg-gray-50 cursor-not-allowed' : 'hover:border-[#2A6877]'}`}
             />
-            {isEditing && (
+            {isEditing && !disabledFields.includes(field.id) && (
               <motion.div 
                 className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                 initial={{ opacity: 0 }}
@@ -105,6 +111,13 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange }: FormFieldProp
               </motion.div>
             )}
           </div>
+          
+          {/* Add a note for professional_title when it's disabled but in edit mode */}
+          {isEditing && field.id === 'professional_title' && disabledFields.includes('professional_title') && (
+            <p className="mt-1 text-xs text-amber-600">
+              Este campo se actualiza automáticamente según tu género
+            </p>
+          )}
         </motion.div>
       ))}
     </motion.div>

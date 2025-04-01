@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404  # Add this import
 from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, Schedule
 from .serializers import (
     ClientProfileSerializer, PsychologistProfileSerializer,
@@ -82,7 +83,7 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
             return PsychologistProfile.objects.all()
         elif user.user_type == 'client':
             # Los clientes solo pueden ver psicólogos verificados
-            return PsychologistProfile.objects.filter(is_verified=True)
+            return PsychologistProfile.objects.filter(verification_status='VERIFIED')
         return PsychologistProfile.objects.filter(user=user)
     
     def perform_create(self, serializer):
@@ -194,8 +195,6 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(profile)
         return Response(serializer.data)
-# Añadir las vistas públicas que faltan
-# Fix these view methods to use verification_status instead of is_verified
 class PublicPsychologistListView(generics.ListAPIView):
     """API endpoint para listar psicólogos públicamente"""
     serializer_class = PsychologistProfileBasicSerializer
@@ -203,7 +202,7 @@ class PublicPsychologistListView(generics.ListAPIView):
     
     def get_queryset(self):
         # Solo mostrar psicólogos verificados
-        return PsychologistProfile.objects.filter(verification_status='VERIFIED')  # Changed from is_verified=True
+        return PsychologistProfile.objects.filter(verification_status='VERIFIED')
 
 class PsychologistDetailView(generics.RetrieveAPIView):
     """API endpoint para ver detalles de un psicólogo públicamente"""
@@ -212,7 +211,21 @@ class PsychologistDetailView(generics.RetrieveAPIView):
     
     def get_queryset(self):
         # Solo mostrar psicólogos verificados
-        return PsychologistProfile.objects.filter(verification_status='VERIFIED')  # Changed from is_verified=True
+        return PsychologistProfile.objects.filter(verification_status='VERIFIED')
+    
+    def get_object(self):
+        pk = self.kwargs['pk']
+        # Try to find by profile ID first
+        try:
+            return self.get_queryset().get(id=pk)
+        except PsychologistProfile.DoesNotExist:
+            # If not found, try to find by user ID
+            try:
+                return self.get_queryset().get(user__id=pk)
+            except PsychologistProfile.DoesNotExist:
+                # If still not found, raise 404
+                from django.http import Http404
+                raise Http404(f"No PsychologistProfile found with ID {pk}")
     
     @action(detail=True, methods=['put', 'patch'])
     def update_schedule(self, request, pk=None):

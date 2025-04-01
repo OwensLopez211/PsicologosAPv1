@@ -5,6 +5,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    allowedHosts: ['mentaliza.loca.lt', 'localhost']
+    port: 5173,
+    allowedHosts: ['mentaliza.loca.lt', 'localhost'],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   }
 })

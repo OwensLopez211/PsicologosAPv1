@@ -1,93 +1,92 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import HeaderPage from '../../components/public-components/HeaderPage';
 import PageTransition from '../../components/public-components/PageTransition';
 import SpecialistCard from '../../components/public-components/SpecialistCard';
 import SpecialistFilters from '../../components/specialist-list/SpecialistFilters';
 
+interface Specialist {
+  id: number;
+  name: string;
+  university: string;
+  specialties: string[];
+  experience: string;
+  profile_image?: string;
+  verification_status: string;
+  professional_title?: string;
+}
+
 const SpecialistPage = () => {
+  const [specialists, setSpecialists] = useState<Specialist[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filters, setFilters] = useState({
     specialty: '',
     sort: ''
   });
 
-  const specialists = [
-    {
-      id: 1,
-      name: "Dra. María González",
-      university: "Universidad de Chile", // Changed from title to university
-      specialties: "Terapia Individual, Ansiedad, Depresión",
-      experience: "8 años",
-      imageUrl: "https://ui-avatars.com/api/?name=María+González&background=2A6877&color=fff&size=300"
-    },
-    {
-      id: 2,
-      name: "Dr. Carlos Mendoza",
-      university: "Universidad Católica", // Changed from title to university
-      specialties: "Terapia Infantil, TDAH, Problemas de Aprendizaje",
-      experience: "12 años",
-      imageUrl: "https://ui-avatars.com/api/?name=Carlos+Mendoza&background=235A67&color=fff&size=300"
-    },
-    {
-      id: 3,
-      name: "Dra. Ana Silva",
-      university: "Universidad de Santiago", // Changed from title to university
-      specialties: "Terapia Familiar, Relaciones de Pareja, Mediación",
-      experience: "15 años",
-      imageUrl: "https://ui-avatars.com/api/?name=Ana+Silva&background=3A7887&color=fff&size=300"
-    },
-    {
-      id: 4,
-      name: "Dr. Roberto Pérez",
-      university: "Universidad Andrés Bello", // Changed from title to university
-      specialties: "Trauma, Estrés Post-traumático, Duelo",
-      experience: "10 años",
-      imageUrl: "https://ui-avatars.com/api/?name=Roberto+Pérez&background=1A5867&color=fff&size=300"
-    },
-    {
-      id: 5,
-      name: "Dra. Laura Martínez",
-      university: "Universidad Diego Portales", // Changed from title to university
-      specialties: "Terapia Adolescente, Autoestima, Desarrollo Personal",
-      experience: "9 años",
-      imageUrl: "https://ui-avatars.com/api/?name=Laura+Martínez&background=4A8897&color=fff&size=300"
-    },
-    {
-      id: 6,
-      name: "Dr. Daniel Torres",
-      university: "Universidad de Los Andes", // Changed from title to university
-      specialties: "Gerontología, Deterioro Cognitivo, Adaptación",
-      experience: "14 años",
-      imageUrl: "https://ui-avatars.com/api/?name=Daniel+Torres&background=2A7887&color=fff&size=300"
-    }
-  ];
+  useEffect(() => {
+    // In your fetchSpecialists function, update the API endpoint path
+    const fetchSpecialists = async () => {
+      try {
+        setLoading(true);
+        // Update this URL to match your Django URL configuration
+        const response = await axios.get('/api/profiles/public/psychologists/', {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // Check if the response contains data property
+        const responseData = response.data;
+        
+        if (Array.isArray(responseData)) {
+          setSpecialists(responseData);
+        } else if (responseData && Array.isArray(responseData.results)) {
+          // Some APIs wrap the array in a results property
+          setSpecialists(responseData.results);
+        } else {
+          console.error('API response is not in expected format:', responseData);
+          setSpecialists([]);
+          setError('Formato de datos incorrecto. Por favor, contacte al administrador.');
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching specialists:', err);
+        // For debugging, log more details about the error
+        if (axios.isAxiosError(err)) {
+          console.error('Response:', err.response?.data);
+          console.error('Status:', err.response?.status);
+        }
+        setError('No se pudieron cargar los especialistas. Por favor, intenta de nuevo más tarde.');
+        setLoading(false);
+      }
+    };
 
-  const filteredSpecialists = useMemo(() => {
-    let result = [...specialists];
+    fetchSpecialists();
+  }, []);
 
-    // Apply specialty filter
-    if (filters.specialty) {
-      result = result.filter(specialist => 
-        specialist.specialties.includes(filters.specialty)
+  // Rest of the component remains the same
+  const filteredSpecialists = specialists.length > 0 ? specialists.filter(specialist => {
+    // Only include specialists with specialties that match the filter
+    if (filters.specialty && specialist.specialties) {
+      return specialist.specialties.some(specialty => 
+        specialty.toLowerCase().includes(filters.specialty.toLowerCase())
       );
     }
-
-    // Apply sorting
-    if (filters.sort) {
-      result.sort((a, b) => {
-        if (filters.sort === 'experience') {
-          const aYears = parseInt(a.experience);
-          const bYears = parseInt(b.experience);
-          return bYears - aYears;
-        }
-        if (filters.sort === 'name') {
-          return a.name.localeCompare(b.name);
-        }
-        return 0;
-      });
+    return true;
+  }).sort((a, b) => {
+    if (filters.sort === 'experience') {
+      const aYears = parseInt(a.experience);
+      const bYears = parseInt(b.experience);
+      return isNaN(aYears) || isNaN(bYears) ? 0 : bYears - aYears;
     }
-
-    return result;
-  }, [specialists, filters]);
+    if (filters.sort === 'name') {
+      return a.name.localeCompare(b.name);
+    }
+    return 0;
+  }) : [];
 
   const handleFilterChange = (type: string, value: string) => {
     setFilters(prev => ({
@@ -95,6 +94,34 @@ const SpecialistPage = () => {
       [type]: value
     }));
   };
+
+  if (loading) {
+    return (
+      <PageTransition>
+        <HeaderPage 
+          title="Nuestros Especialistas"
+          description="Encuentra el psicólogo ideal para ti entre nuestros profesionales certificados y con amplia experiencia"
+        />
+        <div className="container mx-auto px-6 py-12 flex justify-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#2A6877]"></div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageTransition>
+        <HeaderPage 
+          title="Nuestros Especialistas"
+          description="Encuentra el psicólogo ideal para ti entre nuestros profesionales certificados y con amplia experiencia"
+        />
+        <div className="container mx-auto px-6 py-12 text-center">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>
@@ -109,14 +136,28 @@ const SpecialistPage = () => {
             totalSpecialists={filteredSpecialists.length}
             onFilterChange={handleFilterChange}
           />
-          <div className="divide-y divide-gray-100">
-            {filteredSpecialists.map((specialist) => (
-              <SpecialistCard
-                key={specialist.id}
-                {...specialist}
-              />
-            ))}
-          </div>
+          {filteredSpecialists.length > 0 ? (
+            <div className="divide-y divide-gray-100">
+              {filteredSpecialists.map((specialist) => (
+                <SpecialistCard
+                  key={specialist.id}
+                  id={specialist.id}
+                  name={specialist.name}
+                  university={specialist.university || ''}
+                  specialties={Array.isArray(specialist.specialties) ? specialist.specialties.join(', ') : ''}
+                  experience={specialist.experience || ''}
+                  imageUrl={specialist.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(specialist.name)}&background=2A6877&color=fff&size=300`}
+                  verification_status={specialist.verification_status}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="p-12 text-center">
+              <div className="text-5xl mb-4">🔍</div>
+              <h3 className="text-xl font-medium text-gray-700 mb-2">No se encontraron especialistas</h3>
+              <p className="text-gray-500">No hay especialistas verificados que coincidan con tus criterios de búsqueda.</p>
+            </div>
+          )}
         </div>
       </section>
     </PageTransition>
