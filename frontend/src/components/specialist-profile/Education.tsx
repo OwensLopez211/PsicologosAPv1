@@ -1,55 +1,80 @@
 import { FC } from 'react';
+import { motion } from 'framer-motion';
 
 interface EducationProps {
   university: string;
   graduationYear: string;
-  targetPopulations?: string[]; // Add this prop
+  targetPopulations?: string[];
   academicDistinction?: boolean;
   researchParticipation?: boolean;
   teachingAssistantships?: Array<{
     subject: string;
     period: string;
   }>;
-  previousExperience?: Array<{
-    role: string;
-    institution: string;
-    period: string;
-  }>;
+  professionalTitle?: string; // Added professional title
 }
 
 const Education: FC<EducationProps> = ({
   university,
   graduationYear,
-  targetPopulations = [], // Add default value
+  targetPopulations = [],
   academicDistinction = false,
   researchParticipation = false,
   teachingAssistantships = [],
-  previousExperience = []
+  professionalTitle = '' // Default value for professional title
 }) => (
-  <section className="bg-white rounded-lg shadow-sm p-6">
-    <h2 className="text-xl font-semibold mb-4">Formación y Experiencia</h2>
+  <motion.section 
+    className="bg-white rounded-lg shadow-sm p-6"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5 }}
+  >
+    <div className="flex items-center gap-2 mb-4">
+      <span className="text-2xl">🎓</span>
+      <h2 className="text-xl font-semibold">Formación Académica</h2>
+    </div>
+    
     <div className="space-y-6">
-      <div>
-        <h3 className="font-medium text-gray-900 mb-2">Formación Académica</h3>
-        <p className="text-gray-600">
-          {university || 'No especificado'} {graduationYear ? `(${graduationYear})` : ''}
-        </p>
-        {academicDistinction && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mt-2">
-            Distinción Académica
-          </span>
+      <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+        {/* Professional Title Section */}
+        {professionalTitle && (
+          <div className="mb-4 pb-3 border-b border-gray-200">
+            <h3 className="font-medium text-gray-900 mb-2">Título Profesional</h3>
+            <div className="flex items-center">
+              <span className="text-lg mr-2">📜</span>
+              <p className="text-gray-700 font-medium">{professionalTitle}</p>
+            </div>
+          </div>
         )}
-        {researchParticipation && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-2 ml-2">
-            Participación en Investigaciones
-          </span>
-        )}
+        
+        {/* University Section */}
+        <h3 className="font-medium text-gray-900 mb-2">Universidad</h3>
+        <div className="flex items-center">
+          <span className="text-lg mr-2">🏛️</span>
+          <p className="text-gray-700 font-medium">
+            {university || 'No especificado'} {graduationYear ? `(${graduationYear})` : ''}
+          </p>
+        </div>
+        
+        <div className="mt-3 flex flex-wrap gap-2">
+          {academicDistinction && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+              <span className="mr-1">✨</span> Distinción Académica
+            </span>
+          )}
+          {researchParticipation && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <span className="mr-1">🔬</span> Participación en Investigaciones
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Add target populations section */}
       {targetPopulations && targetPopulations.length > 0 && (
         <div>
-          <h3 className="font-medium text-gray-900 mb-2">Poblaciones Objetivo</h3>
+          <h3 className="font-medium text-gray-900 mb-2 flex items-center">
+            <span className="text-lg mr-2">👥</span>Poblaciones Objetivo
+          </h3>
           <div className="flex flex-wrap gap-2">
             {targetPopulations.map((population, index) => (
               <span key={index} className="px-3 py-1 bg-[#2A6877] bg-opacity-10 text-[#2A6877] rounded-full text-sm">
@@ -62,34 +87,21 @@ const Education: FC<EducationProps> = ({
 
       {teachingAssistantships && teachingAssistantships.length > 0 && (
         <div>
-          <h3 className="font-medium text-gray-900 mb-2">Ayudantías</h3>
-          <div className="space-y-2">
+          <h3 className="font-medium text-gray-900 mb-2 flex items-center">
+            <span className="text-lg mr-2">👨‍🏫</span>Ayudantías Académicas
+          </h3>
+          <div className="space-y-2 divide-y divide-gray-100">
             {teachingAssistantships.map((assistantship, index) => (
-              <div key={index} className="text-gray-600">
-                <span className="font-medium">{assistantship.subject}</span>
-                <span className="text-gray-500"> • {assistantship.period}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {previousExperience && previousExperience.length > 0 && (
-        <div>
-          <h3 className="font-medium text-gray-900 mb-2">Experiencia Profesional</h3>
-          <div className="space-y-2">
-            {previousExperience.map((experience, index) => (
-              <div key={index} className="text-gray-600">
-                <span className="font-medium">{experience.role}</span>
-                <span className="text-gray-500"> • {experience.institution}</span>
-                <span className="text-gray-500"> • {experience.period}</span>
+              <div key={index} className="py-2">
+                <div className="font-medium text-gray-800">{assistantship.subject}</div>
+                <div className="text-gray-500 text-sm">{assistantship.period}</div>
               </div>
             ))}
           </div>
         </div>
       )}
     </div>
-  </section>
+  </motion.section>
 );
 
 export default Education;

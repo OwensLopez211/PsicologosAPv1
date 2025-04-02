@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProfileImageUploader from './ProfileImageUploader';
 import ProfileFormFields from './ProfileFormFields';
 
+// Update interface to be more generic
 interface BasicInfoProps {
-  profile?: PsychologistProfile;
-  onSave: (data: Partial<PsychologistProfile>) => void;
+  profile?: any; // Make this more generic to accept any profile type
+  onSave: (data: any) => void; // Accept any data type for saving
   isLoading: boolean;
 }
 
@@ -27,6 +28,7 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // In the useEffect that sets form data
   useEffect(() => {
@@ -60,6 +62,7 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
   }, [saveSuccess]);
 
   const handleFormChange = (newFormData: typeof formData) => {
+    console.log("Form data changed:", newFormData);
     setFormData(newFormData);
   };
 
@@ -73,17 +76,25 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveError(null);
     
     try {
-      // Create a copy of formData without the profile_image field for the PATCH request
-      const { profile_image, ...dataToSave } = formData;
+      console.log("Submitting form data:", formData);
       
-      // Save the rest of the form data
+      // Create a copy of the data to send
+      const dataToSave = { ...formData };
+      
+      // If profile_image is a URL string, remove it to avoid sending it in the regular update
+      if (typeof dataToSave.profile_image === 'string') {
+        delete dataToSave.profile_image;
+      }
+      
       await onSave(dataToSave);
       setIsEditing(false);
       setSaveSuccess(true);
     } catch (error) {
       console.error('Error saving profile:', error);
+      setSaveError('Error al guardar los cambios. Por favor, inténtalo de nuevo.');
     }
   };
 
@@ -100,6 +111,17 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
       region: profile?.region || '',
       city: profile?.city || '',
     });
+  };
+
+  // Determine which fields should be disabled based on user type
+  const getDisabledFields = () => {
+    // Common disabled fields for all user types
+    const disabledFields: string[] = [];
+    
+    // For all user types, email is typically not editable after registration
+    disabledFields.push('email');
+    
+    return disabledFields;
   };
 
   return (
@@ -175,9 +197,17 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
             formData={formData}
             isEditing={isEditing}
             onChange={handleFormChange}
-            disabledFields={[]} // Remove gender from disabled fields
+            disabledFields={getDisabledFields()}
           />
         </div>
+
+        {saveError && (
+          <div className="px-6">
+            <div className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-md">
+              {saveError}
+            </div>
+          </div>
+        )}
 
         <AnimatePresence>
           {isEditing && (

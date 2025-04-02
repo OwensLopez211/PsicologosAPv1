@@ -23,6 +23,8 @@ const GenderDropdown = ({ value, onChange, isEditing }: GenderDropdownProps) => 
     { value: "", label: "Seleccionar", icon: "🔍" },
     { value: "MALE", label: "Masculino", icon: "👨" },
     { value: "FEMALE", label: "Femenino", icon: "👩" },
+    { value: "OTHER", label: "Otro", icon: "⭐" },
+    { value: "PREFER_NOT_TO_SAY", label: "Prefiero no decir", icon: "🔒" },
   ];
 
   // Get the current selected option

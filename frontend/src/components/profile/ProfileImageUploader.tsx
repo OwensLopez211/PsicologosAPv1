@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { uploadProfileImage } from '../../services/profileService';
+import { uploadProfileImage, deleteProfileImage } from '../../services/profileService';
 
 interface ProfileImageUploaderProps {
   profileImage: string;
@@ -19,6 +19,33 @@ const ProfileImageUploader = ({
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Function to handle image deletion
+  const handleDeleteImage = async () => {
+    if (!userType) {
+      setUploadError('User type is required');
+      return;
+    }
+    
+    try {
+      // Call the API to delete the image
+      await deleteProfileImage(userType);
+      
+      // Clear the preview if it exists
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+        setImagePreview(null);
+      }
+      
+      // Notify parent component that image has been removed
+      onImageUploaded('');
+      
+      console.log('Profile image removed successfully');
+    } catch (error) {
+      console.error('Error deleting profile image:', error);
+      setUploadError('Error al eliminar la imagen de perfil. Por favor, inténtalo de nuevo.');
+    }
+  };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -64,6 +91,16 @@ const ProfileImageUploader = ({
     }
   };
 
+  // Function to get the appropriate image source
+  const getImageSource = () => {
+    if (imagePreview) return imagePreview;
+    if (profileImage) return profileImage;
+    return '/no_profile_photo.webp'; // Placeholder image path
+  };
+
+  // Check if there's an actual profile image (not the default)
+  const hasProfileImage = profileImage && profileImage !== '/no_profile_photo.webp';
+
   return (
     <motion.div 
       className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-white rounded-xl shadow-sm"
@@ -85,9 +122,13 @@ const ProfileImageUploader = ({
         >
           <div className={`h-36 w-36 rounded-full overflow-hidden border-4 ${isEditing ? 'border-[#2A6877]' : 'border-[#B4E4D3]'} shadow-md transition-all duration-300`}>
             <img
-              src={imagePreview || profileImage || '/default-avatar.png'}
+              src={getImageSource()}
               alt="Profile"
               className={`h-full w-full object-cover transition-all duration-300 ${isHovered && isEditing ? 'opacity-80 scale-105' : 'opacity-100'}`}
+              onError={(e) => {
+                // Fallback if the image fails to load
+                (e.target as HTMLImageElement).src = '/assets/images/no-profile-photo.png';
+              }}
             />
           </div>
           
@@ -108,6 +149,7 @@ const ProfileImageUploader = ({
           </AnimatePresence>
         </motion.div>
         
+        {/* Upload button */}
         <AnimatePresence>
           {isEditing && (
             <motion.label 
@@ -135,6 +177,26 @@ const ProfileImageUploader = ({
                 </svg>
               )}
             </motion.label>
+          )}
+        </AnimatePresence>
+        
+        {/* Delete button - only show when editing and there's a profile image */}
+        <AnimatePresence>
+          {isEditing && (hasProfileImage || imagePreview) && (
+            <motion.button
+              type="button"
+              onClick={handleDeleteImage}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute bottom-0 left-0 bg-red-500 text-white p-2.5 rounded-full cursor-pointer hover:bg-red-600 transition-all duration-200 shadow-md"
+              disabled={isUploadingImage}
+              title="Eliminar foto de perfil"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </motion.button>
           )}
         </AnimatePresence>
       </div>

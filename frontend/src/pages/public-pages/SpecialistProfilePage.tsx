@@ -8,6 +8,7 @@ import PresentationVideo from '../../components/specialist-profile/PresentationV
 import Specialties from '../../components/specialist-profile/Specialties';
 import Education from '../../components/specialist-profile/Education';
 import ScheduleSection from '../../components/specialist-profile/ScheduleSection';
+import ProfessionalExperience from '../../components/specialist-profile/ProfessionalExperience';
 
 interface Specialist {
   id: number;
@@ -165,7 +166,9 @@ const SpecialistProfilePage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
             <div className="md:col-span-2 space-y-6">
-              <PresentationVideo videoUrl={specialist.experience_description || ''} />
+              {/* Replace this line with separate components for video and experience */}
+              <PresentationVideo videoUrl="" />
+              <ProfessionalExperience experienceDescription={specialist.experience_description || ''} />
               
               <Specialties 
                 therapeuticApproaches={specialties}
@@ -176,6 +179,7 @@ const SpecialistProfilePage = () => {
                 university={specialist.university || ''}
                 graduationYear={specialist.graduation_year?.toString() || ''}
                 targetPopulations={targetPopulations}
+                professionalTitle={specialist.professional_title || ''}
               />
             </div>
             

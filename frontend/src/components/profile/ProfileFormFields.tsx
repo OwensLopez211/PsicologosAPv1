@@ -69,6 +69,7 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
   };
 
   const handleGenderChange = (value: string) => {
+    console.log("Gender changed to:", value);
     // Only update gender if it's not in the disabled fields
     if (!disabledFields.includes('gender')) {
       onChange({
@@ -113,7 +114,7 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
         label="RUT"
         value={formData.rut}
         onChange={handleChange}
-        disabled={!isEditing}
+        disabled={!isEditing || disabledFields.includes('rut')}
         optional={true}
       />
 
@@ -122,33 +123,13 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
         onChange={handleGenderChange}
         isEditing={isEditing && !disabledFields.includes('gender')}
       />
-      
-      {/* Keep the existing note for when gender is disabled */}
-      {isEditing && disabledFields.includes('gender') && (
-        <div className="col-span-2 -mt-4">
-          <p className="text-xs text-gray-500 italic">
-            El género no se puede modificar ya que afecta al título profesional
-          </p>
-        </div>
-      )}
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="col-span-2 mt-4 mb-2"
-      >
-        <h3 className="text-md font-medium text-gray-700 border-b border-gray-200 pb-2">
-          Información de Contacto
-        </h3>
-      </motion.div>
 
       <FormField
         id="email"
-        label="Email"
+        label="Correo Electrónico"
         value={formData.email}
         onChange={handleChange}
-        disabled={true}
+        disabled={true} // Email is always disabled
         type="email"
       />
 
@@ -157,27 +138,23 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
         label="Teléfono"
         value={formData.phone}
         onChange={handleChange}
-        disabled={!isEditing}
-        type="tel"
+        disabled={!isEditing || disabledFields.includes('phone')}
+        optional={true}
       />
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="col-span-2 mt-4 mb-2"
-      >
+      <div className="col-span-2 mt-4 mb-2">
         <h3 className="text-md font-medium text-gray-700 border-b border-gray-200 pb-2">
           Ubicación
         </h3>
-      </motion.div>
+      </div>
 
       <FormField
         id="region"
         label="Región"
         value={formData.region}
         onChange={handleChange}
-        disabled={!isEditing}
+        disabled={!isEditing || disabledFields.includes('region')}
+        optional={true}
       />
 
       <FormField
@@ -185,7 +162,8 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
         label="Ciudad"
         value={formData.city}
         onChange={handleChange}
-        disabled={!isEditing}
+        disabled={!isEditing || disabledFields.includes('city')}
+        optional={true}
       />
     </motion.div>
   );

@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from .models import ClientProfile, PsychologistProfile, ProfessionalDocument
+from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, AdminProfile
 
 User = get_user_model()
 
@@ -35,6 +35,17 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
                 for key, value in profile_data.items():
                     setattr(instance.psychologistprofile_profile, key, value)
                 instance.psychologistprofile_profile.save()
+    
+    elif instance.user_type == 'admin':
+        if created:
+            # Crear nuevo perfil de administrador
+            AdminProfile.objects.create(user=instance, **profile_data)
+        else:
+            # Actualizar perfil existente si hay datos
+            if profile_data and hasattr(instance, 'adminprofile_profile'):
+                for key, value in profile_data.items():
+                    setattr(instance.adminprofile_profile, key, value)
+                instance.adminprofile_profile.save()
 
 @receiver(post_save, sender=ProfessionalDocument)
 def update_verification_status(sender, instance, created, **kwargs):

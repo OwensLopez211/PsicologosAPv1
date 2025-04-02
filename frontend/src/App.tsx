@@ -21,6 +21,7 @@ import ProfilePage from './pages/dashboard/ProfilePage';
 // import DocumentsPage from './pages/dashboard/DocumentsPage';
 // import UsersPage from './pages/dashboard/UsersPage';
 // import VerificationsPage from './pages/dashboard/VerificationsPage';
+import PatientsManagement from './pages/dashboard/admin/PatientsManagement';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
@@ -76,6 +77,7 @@ function App() {
               </PrivateRoute>
             }>
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="pacients" element={<PatientsManagement />} />
             </Route>
 
             {/* Catch all route */}

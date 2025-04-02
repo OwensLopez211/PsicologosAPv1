@@ -1,8 +1,22 @@
 import { FC } from 'react';
-import { CalendarIcon } from '@heroicons/react/24/solid';
+import { CalendarIcon, ClockIcon } from '@heroicons/react/24/solid';
+
+interface TimeBlock {
+  startTime: string;
+  endTime: string;
+}
+
+interface DaySchedule {
+  enabled: boolean;
+  timeBlocks: TimeBlock[];
+}
+
+interface ScheduleData {
+  [key: string]: DaySchedule;
+}
 
 interface ScheduleSectionProps {
-  schedule?: any; // Changed from availability to schedule
+  schedule?: ScheduleData | any;
   onSchedule: () => void;
 }
 
@@ -10,10 +24,23 @@ const ScheduleSection: FC<ScheduleSectionProps> = ({
   schedule = {},
   onSchedule
 }) => {
-  // Format schedule data into readable strings
+  // Format time for display (e.g., "09:00" to "9:00 AM")
+  const formatTime = (time: string) => {
+    try {
+      const [hours, minutes] = time.split(':');
+      const hour = parseInt(hours, 10);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const formattedHour = hour % 12 || 12;
+      return `${formattedHour}:${minutes} ${ampm}`;
+    } catch (e) {
+      return time;
+    }
+  };
+
+  // Format schedule data into readable format
   const formatSchedule = () => {
     if (!schedule || Object.keys(schedule).length === 0) {
-      return ["Horarios no disponibles"];
+      return [];
     }
 
     const days = {
@@ -28,29 +55,61 @@ const ScheduleSection: FC<ScheduleSectionProps> = ({
 
     const formattedSchedule = [];
     
-    for (const [day, slots] of Object.entries(schedule)) {
-      if (Array.isArray(slots) && slots.length > 0) {
+    // Check if we're dealing with the new schedule format
+    const scheduleData = schedule.schedule_config || schedule;
+    
+    for (const day in scheduleData) {
+      const dayData = scheduleData[day];
+      if (dayData && dayData.enabled && dayData.timeBlocks && dayData.timeBlocks.length > 0) {
         const spanishDay = days[day as keyof typeof days] || day;
-        formattedSchedule.push(`${spanishDay}: ${slots.join(', ')}`);
+        formattedSchedule.push({
+          day: spanishDay,
+          timeBlocks: dayData.timeBlocks.map((block: TimeBlock) => ({
+            start: formatTime(block.startTime),
+            end: formatTime(block.endTime)
+          }))
+        });
       }
     }
 
-    return formattedSchedule.length > 0 ? formattedSchedule : ["Horarios no disponibles"];
+    return formattedSchedule;
   };
 
-  const availabilityList = formatSchedule();
+  const scheduleData = formatSchedule();
+  const hasSchedule = scheduleData.length > 0;
 
   return (
     <section className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold mb-4">Horarios disponibles</h2>
-      <div className="space-y-4">
-        {availabilityList.map((time, index) => (
-          <div key={index} className="flex items-start gap-3">
-            <CalendarIcon className="h-5 w-5 text-[#2A6877] flex-shrink-0" />
-            <span className="text-gray-600">{time}</span>
-          </div>
-        ))}
-      </div>
+      <h2 className="text-xl font-semibold mb-4 flex items-center">
+        <CalendarIcon className="h-5 w-5 text-[#2A6877] mr-2" />
+        Horarios disponibles
+      </h2>
+      
+      {hasSchedule ? (
+        <div className="space-y-6">
+          {scheduleData.map((daySchedule, dayIndex) => (
+            <div key={dayIndex} className="border-b pb-4 last:border-b-0 last:pb-0">
+              <h3 className="font-medium text-gray-800 mb-2">{daySchedule.day}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {daySchedule.timeBlocks.map((block, blockIndex) => (
+                  <div 
+                    key={blockIndex} 
+                    className="bg-blue-50 text-blue-800 px-3 py-2 rounded-md flex items-center"
+                  >
+                    <ClockIcon className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>{block.start} - {block.end}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-gray-500 italic py-4">
+          Horarios no disponibles
+        </div>
+      )}
+      
       <div className="mt-6">
         <h3 className="font-medium mb-2">Modalidad de atención</h3>
         <span className="bg-[#2A6877] bg-opacity-10 text-[#2A6877] px-3 py-1 rounded-full text-sm inline-flex items-center">

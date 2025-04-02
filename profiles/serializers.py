@@ -13,10 +13,20 @@ class UserBasicSerializer(serializers.ModelSerializer):
 
 class ProfessionalDocumentSerializer(serializers.ModelSerializer):
     """Serializer para documentos profesionales"""
+    document_type_display = serializers.CharField(source='get_document_type_display', read_only=True)
+    verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
+    
     class Meta:
         model = ProfessionalDocument
-        fields = ('id', 'document_type', 'file', 'description', 'is_verified', 'uploaded_at')
-        read_only_fields = ('id', 'is_verified', 'uploaded_at')
+        fields = (
+            'id', 'document_type', 'document_type_display', 'file', 'description', 
+            'is_verified', 'verification_status', 'verification_status_display', 
+            'rejection_reason', 'uploaded_at', 'verified_at'
+        )
+        read_only_fields = (
+            'id', 'is_verified', 'verification_status', 'verification_status_display', 
+            'rejection_reason', 'uploaded_at', 'verified_at'
+        )
 
 class ScheduleSerializer(serializers.ModelSerializer):
     """Serializer para horarios de psicólogos"""
@@ -39,11 +49,43 @@ class BaseProfileSerializer(serializers.ModelSerializer):
         )
 
 class ClientProfileSerializer(BaseProfileSerializer):
-    phone = serializers.CharField(source='phone_number', required=False)
+    phone = serializers.CharField(source='phone_number', required=False, allow_blank=True, allow_null=True)
+    gender = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    rut = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    region = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    city = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    user = serializers.SerializerMethodField()
+    
+    def get_user(self, obj):
+        return {
+            'id': obj.user.id,
+            'email': obj.user.email,
+            'first_name': obj.user.first_name,
+            'last_name': obj.user.last_name,
+            'is_active': obj.user.is_active
+        }
     
     class Meta(BaseProfileSerializer.Meta):
         model = ClientProfile
-        fields = BaseProfileSerializer.Meta.fields + ('phone',)
+        fields = BaseProfileSerializer.Meta.fields + (
+            'id', 'phone', 'birth_date', 'gender', 'rut', 'region', 'city', 'user'
+        )
+        read_only_fields = ('id',)
+
+class AdminProfileSerializer(BaseProfileSerializer):
+    """Serializer para perfiles de administrador"""
+    phone = serializers.CharField(source='phone_number', required=False, allow_blank=True, allow_null=True)
+    gender = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    rut = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    region = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    city = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
+    class Meta(BaseProfileSerializer.Meta):
+        model = ClientProfile  # Usamos ClientProfile como base para el admin
+        fields = BaseProfileSerializer.Meta.fields + (
+            'id', 'phone', 'gender', 'rut', 'region', 'city'
+        )
+        read_only_fields = ('id',)
 
 class PsychologistProfileSerializer(BaseProfileSerializer):
     phone = serializers.CharField(required=False)

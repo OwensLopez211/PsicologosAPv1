@@ -38,7 +38,7 @@ const Sidebar = ({ userType, onClose }: SidebarProps) => {
       ADMIN: [
         { path: '/admin/dashboard', label: 'Inicio', icon: HomeIcon },
         { path: '/admin/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
-        { path: '/admin/dashboard/users', label: 'Usuarios', icon: UsersIcon },
+        { path: '/admin/dashboard/pacients', label: 'Pacientes', icon: UsersIcon },
         { path: '/admin/dashboard/psychologists', label: 'Psicólogos', icon: UserIcon },
         { path: '/admin/dashboard/verifications', label: 'Verificaciones', icon: ClipboardDocumentCheckIcon },
         { path: '/admin/dashboard/reports', label: 'Reportes', icon: ChartBarIcon },

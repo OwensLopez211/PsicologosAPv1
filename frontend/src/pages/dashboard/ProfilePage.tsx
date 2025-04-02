@@ -5,6 +5,7 @@ import BasicInfo from '../../components/profile/BasicInfo';
 import ProfessionalInfo from '../../components/profile/ProfessionalInfo';
 import PageTransition from '../../components/public-components/PageTransition';
 import ScheduleAndFees from '../../components/profile/ScheduleAndFees';
+import DocumentsUpload from '../../components/profile/DocumentsUpload';
 // import Loader from '../../components/ui/Loader'; // Make sure you have this component
 
 const ProfilePage = () => {
@@ -177,10 +178,11 @@ const ProfilePage = () => {
               )}
               
               {activeTab === 'documents' && user?.user_type === 'psychologist' && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4">Documentos</h2>
-                  <p>Sección en desarrollo...</p>
-                </div>
+                <DocumentsUpload
+                  profile={profile}
+                  isLoading={isLoading}
+                  onLoadingChange={setIsLoading}
+                />
               )}
             </div>
           </>

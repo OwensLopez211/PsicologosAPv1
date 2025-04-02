@@ -16,7 +16,7 @@ const DashboardHeader = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <img src="/logo.jpeg" alt="MentAliza" className="h-8 w-8 rounded-full" />
-            <span className="ml-2 text-xl font-semibold text-gray-900">MentAliza</span>
+            <span className="ml-2 text-xl font-semibold text-gray-900">Bienestar</span>
           </div>
           
           <div className="flex items-center">

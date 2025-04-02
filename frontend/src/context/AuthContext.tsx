@@ -18,6 +18,7 @@ interface AuthContextType {
   loading: boolean;
   logout: () => void;
   refreshUserSession: () => Promise<boolean>;
+  token: string | null; // Add token to the context
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null); // Add token state
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -32,13 +34,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('user');
     localStorage.removeItem('lastRefreshAttempt');
     setUser(null);
+    setToken(null); // Clear token state
   };
 
   // Nueva función para refrescar la sesión del usuario
   const refreshUserSession = async (): Promise<boolean> => {
     try {
       const refreshed = await refreshToken();
-      // No actualices ningún estado aquí que pueda causar re-renderizados innecesarios
+      // Update token state if refresh was successful
+      if (refreshed) {
+        const newToken = localStorage.getItem('token');
+        setToken(newToken);
+      }
       return !!refreshed;
     } catch (error) {
       console.error('Error refreshing token:', error);
@@ -50,10 +57,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const initAuth = async () => {
       try {
         const savedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
+        const storedToken = localStorage.getItem('token');
         const refreshTokenValue = localStorage.getItem('refresh_token');
 
-        if (savedUser && (token || refreshTokenValue)) {
+        if (savedUser && (storedToken || refreshTokenValue)) {
           const parsedUser = JSON.parse(savedUser);
           
           // Normalizar el tipo de usuario a minúsculas
@@ -64,8 +71,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           setUser(normalizedUser);
           
+          // Set token state
+          if (storedToken) {
+            setToken(storedToken);
+          }
           // Solo intentar refrescar el token si existe un refresh token
-          if (refreshTokenValue && !token) {
+          else if (refreshTokenValue) {
             const success = await refreshUserSession();
             if (!success) {
               logout();
@@ -90,7 +101,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isAuthenticated: !!user,
       loading,
       logout,
-      refreshUserSession
+      refreshUserSession,
+      token // Include token in the context
     }}>
       {children}
     </AuthContext.Provider>
