@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../../context/AuthContext';
+// Remove unused import since useAuth is not being used
 import { toast } from 'react-hot-toast';
 import PatientService, { Patient } from '../../../services/PatientService';
 
 const PatientsManagement = () => {
   // Get token directly from localStorage
   const storedToken = localStorage.getItem('token');
-  const { user } = useAuth();
+// Remove unused user declaration since it's not being used
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,11 +26,17 @@ const PatientsManagement = () => {
         setLoading(true);
         // Use the token from localStorage directly
         const data = await PatientService.getAllPatients(storedToken);
-        setPatients(data);
+        
+        // Filter to only include client users
+        const clientPatients = data.filter(patient => 
+          patient.user.user_type === 'client' || !patient.user.user_type
+        );
+        
+        setPatients(clientPatients);
         setError(null);
       } catch (err) {
         console.error('Error fetching patients:', err);
-        if (err.message === 'No authentication token provided') {
+        if (err instanceof Error && err.message === 'No authentication token provided') {
           setError('No se ha encontrado un token de autenticación. Por favor, inicie sesión nuevamente.');
         } else {
           setError('Error al cargar los pacientes. Por favor, intente de nuevo más tarde.');
@@ -63,7 +69,7 @@ const PatientsManagement = () => {
   // Handle patient activation/deactivation
   const togglePatientStatus = async (patientId: number, isActive: boolean) => {
     try {
-      await PatientService.togglePatientStatus(token, patientId, isActive);
+await PatientService.togglePatientStatus(storedToken, patientId);
       
       // Update local state
       setPatients(

@@ -172,3 +172,29 @@ export const deleteProfileImage = async (userType: string) => {
     throw error;
   }
 }
+
+// Add a new function for updating bank information
+// Update the function for updating bank information to return the updated data
+export const updateBankInfo = async (bankData: any) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.error('No authentication token found');
+    throw new Error('Authentication required');
+  }
+  
+  const endpoint = '/profiles/psychologist-profiles/me/update_bank_info/';
+  
+  try {
+    console.log('Updating bank information with data:', bankData);
+    const response = await api.patch(endpoint, bankData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data; // This will return the updated bank info from the server
+  } catch (error) {
+    console.error('Error updating bank information:', error);
+    throw error;
+  }
+}

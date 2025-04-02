@@ -1,5 +1,6 @@
 import React from 'react';
 import { Patient } from '../../services/PatientService';
+import PatientService from '../../services/PatientService';
 
 interface PatientListProps {
   patients: Patient[];
@@ -48,24 +49,42 @@ const PatientList: React.FC<PatientListProps> = ({
           <div key={patient.id} className="bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
             <div className="flex items-center mb-3">
               <div className="h-12 w-12 flex-shrink-0">
-                <img
-                  className="h-12 w-12 rounded-full object-cover border-2 border-[#2A6877]"
-                  src={patient.profile_image || '/default-avatar.png'}
-                  alt={`${patient.user.first_name} ${patient.user.last_name}`}
-                />
+                {patient.profile_image ? (
+                  <img
+                    className="h-12 w-12 rounded-full object-cover border-2 border-[#2A6877]"
+                    src={patient.profile_image}
+                    alt={`${patient.user.first_name} ${patient.user.last_name}`}
+                    onError={(e) => {
+                      // If image fails to load, replace with initials
+                      const target = e.target as HTMLElement;
+                      const parent = target.parentNode as HTMLElement;
+                      if (parent) {
+                        const initials = PatientService.getPatientInitials(patient);
+                        const div = document.createElement('div');
+                        div.className = "h-12 w-12 rounded-full bg-[#2A6877] text-white flex items-center justify-center border-2 border-[#2A6877] text-sm font-medium";
+                        div.textContent = initials;
+                        parent.replaceChild(div, target);
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-[#2A6877] text-white flex items-center justify-center border-2 border-[#2A6877] text-sm font-medium">
+                    {PatientService.getPatientInitials(patient)}
+                  </div>
+                )}
               </div>
               <div className="ml-3 flex-grow">
                 <div className="text-base font-medium text-gray-900">
-                  {patient.user.first_name} {patient.user.last_name}
+                  {patient.user?.first_name || ''} {patient.user?.last_name || ''}
                 </div>
                 <span
                   className={`mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    patient.user.is_active
+                    patient.user?.is_active
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}
                 >
-                  {patient.user.is_active ? 'Activo' : 'Inactivo'}
+                  {patient.user?.is_active ? 'Activo' : 'Inactivo'}
                 </span>
               </div>
             </div>
@@ -139,15 +158,33 @@ const PatientList: React.FC<PatientListProps> = ({
                 <td className="py-2 px-3 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="h-8 w-8 flex-shrink-0">
-                      <img
-                        className="h-8 w-8 rounded-full object-cover"
-                        src={patient.profile_image || '/default-avatar.png'}
-                        alt={`${patient.user.first_name} ${patient.user.last_name}`}
-                      />
+                      {patient.profile_image ? (
+                        <img
+                          className="h-8 w-8 rounded-full object-cover"
+                          src={patient.profile_image}
+                          alt={`${patient.user.first_name} ${patient.user.last_name}`}
+                          onError={(e) => {
+                            // If image fails to load, replace with initials
+                            const target = e.target as HTMLElement;
+                            const parent = target.parentNode as HTMLElement;
+                            if (parent) {
+                              const initials = PatientService.getPatientInitials(patient);
+                              const div = document.createElement('div');
+                              div.className = "h-8 w-8 rounded-full bg-[#2A6877] text-white flex items-center justify-center text-xs font-medium";
+                              div.textContent = initials;
+                              parent.replaceChild(div, target);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-[#2A6877] text-white flex items-center justify-center text-xs font-medium">
+                          {PatientService.getPatientInitials(patient)}
+                        </div>
+                      )}
                     </div>
                     <div className="ml-3">
                       <div className="text-sm font-medium text-gray-900">
-                        {patient.user.first_name} {patient.user.last_name}
+                        {patient.user?.first_name || ''} {patient.user?.last_name || ''}
                       </div>
                     </div>
                   </div>

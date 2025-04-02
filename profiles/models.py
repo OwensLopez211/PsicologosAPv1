@@ -105,6 +105,22 @@ class PsychologistProfile(BaseProfile):
     target_populations = models.JSONField(default=list, blank=True)
     intervention_areas = models.JSONField(default=list, blank=True)
     
+    # Información bancaria
+    bank_account_number = models.CharField(max_length=50, blank=True)
+    bank_account_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('CORRIENTE', 'Cuenta Corriente'),
+            ('AHORRO', 'Cuenta de Ahorro'),
+            ('VISTA', 'Cuenta Vista')
+        ],
+        blank=True
+    )
+    bank_account_owner = models.CharField(max_length=100, blank=True)
+    bank_account_owner_rut = models.CharField(max_length=20, blank=True)
+    bank_account_owner_email = models.EmailField(blank=True)
+    bank_name = models.CharField(max_length=100, blank=True)
+    
     # Estado de verificación
     verification_status = models.CharField(
         max_length=30,  # Aumentamos el valor a 30 para asegurarnos

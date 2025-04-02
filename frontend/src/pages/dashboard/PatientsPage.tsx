@@ -15,7 +15,15 @@ const PatientsPage = () => {
       try {
         setLoading(true);
         const data = await PatientService.getAllPatients(token);
-        setPatients(data);
+        
+        // Filter to only include client users
+        // This assumes your backend includes user_type in the response
+        // If not, you'll need to make a separate API call to get user types
+        const clientPatients = data.filter(patient => 
+          patient.user.user_type === 'client' || !patient.user.user_type
+        );
+        
+        setPatients(clientPatients);
       } catch (err) {
         console.error('Error fetching patients:', err);
         setError('Error al cargar los pacientes');

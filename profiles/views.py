@@ -172,7 +172,8 @@ class ClientProfileViewSet(viewsets.ModelViewSet):
             )
             
         # Get all client profiles with related user data
-        profiles = ClientProfile.objects.all().select_related('user')
+        # Filter to only include users with user_type='client'
+        profiles = ClientProfile.objects.filter(user__user_type='client').select_related('user')
         serializer = self.get_serializer(profiles, many=True)
         return Response(serializer.data)
     
@@ -591,6 +592,33 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         """Alias para el endpoint delete_document"""
         return self.delete_document(request)
 
+    @action(detail=False, methods=['patch'])
+    def update_bank_info(self, request):
+        """Endpoint para actualizar información bancaria del psicólogo"""
+        user = self.request.user
+        if user.user_type != 'psychologist':
+            return Response(
+                {"detail": "Este endpoint es solo para psicólogos."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        profile = PsychologistProfile.objects.get(user=user)
+        
+        # Campos permitidos para actualización bancaria
+        allowed_fields = [
+            'bank_account_number', 'bank_account_type', 'bank_account_owner', 
+            'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name'
+        ]
+        
+        # Filtrar solo los campos permitidos
+        bank_data = {k: v for k, v in request.data.items() if k in allowed_fields}
+        
+        serializer = self.get_serializer(profile, data=bank_data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class PublicPsychologistListView(generics.ListAPIView):
     """API endpoint para listar psicólogos públicamente"""
@@ -826,6 +854,7 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
             "detail": f"Usuario {'activado' if client_user.is_active else 'desactivado'} exitosamente",
             "profile": serializer.data
         })
+
 
     
     

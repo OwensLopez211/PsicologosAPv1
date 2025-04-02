@@ -136,14 +136,19 @@ class PsychologistProfileBasicSerializer(BaseProfileSerializer):
         return ""
 
 class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
-    """Serializer completo para detalles de psicólogo"""
-    documents = ProfessionalDocumentSerializer(many=True, read_only=True, source='professionaldocument_set')
-    schedule = ScheduleSerializer(read_only=True)
+    """Serializer para perfil de psicólogo con datos completos"""
+    user = UserBasicSerializer(read_only=True)
+    verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
+    bank_account_type_display = serializers.CharField(source='get_bank_account_type_display', read_only=True)
     
-    class Meta(PsychologistProfileBasicSerializer.Meta):
+    class Meta:
         model = PsychologistProfile
-        fields = PsychologistProfileBasicSerializer.Meta.fields + (
-            'rut', 'phone', 'gender', 'region', 'city', 'health_register_number',
-            'graduation_year', 'experience_description', 'target_populations',
-            'intervention_areas', 'documents', 'schedule', 'verification_status'
+        fields = (
+            'id', 'user', 'profile_image', 'rut', 'phone', 'gender', 'region', 'city',
+            'professional_title', 'specialties', 'health_register_number', 'university',
+            'graduation_year', 'experience_description', 'target_populations', 'intervention_areas',
+            'verification_status', 'verification_status_display', 'created_at', 'updated_at',
+            'bank_account_number', 'bank_account_type', 'bank_account_type_display', 
+            'bank_account_owner', 'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name'
         )
+        read_only_fields = ('id', 'user', 'verification_status', 'verification_status_display', 'created_at', 'updated_at')

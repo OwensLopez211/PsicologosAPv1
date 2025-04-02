@@ -6,6 +6,7 @@ import ProfessionalInfo from '../../components/profile/ProfessionalInfo';
 import PageTransition from '../../components/public-components/PageTransition';
 import ScheduleAndFees from '../../components/profile/ScheduleAndFees';
 import DocumentsUpload from '../../components/profile/DocumentsUpload';
+import BankInfo from '../../components/profile/BankInfo';
 // import Loader from '../../components/ui/Loader'; // Make sure you have this component
 
 const ProfilePage = () => {
@@ -26,7 +27,8 @@ const ProfilePage = () => {
       baseTabs.push(
         { id: 'professional', label: 'Información Profesional' },
         { id: 'schedule', label: 'Horarios y Tarifas' },
-        { id: 'documents', label: 'Documentos' }
+        { id: 'documents', label: 'Documentos' },
+        { id: 'bankinfo', label: 'Datos Bancarios' } // Add the new tab
       );
     }
 
@@ -66,6 +68,12 @@ const ProfilePage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Add this new function to handle bank info updates
+  const handleProfileUpdate = (updatedProfile: any) => {
+    // Update the profile state with the new data
+    setProfile(updatedProfile);
   };
 
   // If the active tab is not available for the current user type, reset to basic
@@ -182,6 +190,16 @@ const ProfilePage = () => {
                   profile={profile}
                   isLoading={isLoading}
                   onLoadingChange={setIsLoading}
+                />
+              )}
+              
+              {/* Update the BankInfo component to include onProfileUpdate */}
+              {activeTab === 'bankinfo' && user?.user_type === 'psychologist' && (
+                <BankInfo
+                  profile={profile}
+                  onSave={handleSaveBasicInfo}
+                  isLoading={isLoading}
+                  onProfileUpdate={handleProfileUpdate}
                 />
               )}
             </div>

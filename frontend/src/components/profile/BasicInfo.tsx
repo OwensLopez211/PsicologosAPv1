@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PsychologistProfile } from '../../types/psychologist';
+
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProfileImageUploader from './ProfileImageUploader';
@@ -34,13 +34,17 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
   useEffect(() => {
     if (profile) {
       console.log("Profile data received:", profile);
+      
+      // Check if we're dealing with a nested user structure or flat structure
+      const isNestedUserStructure = profile.user && typeof profile.user === 'object';
+      
       setFormData({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
+        first_name: isNestedUserStructure ? profile.user?.first_name : profile.first_name || '',
+        last_name: isNestedUserStructure ? profile.user?.last_name : profile.last_name || '',
         profile_image: profile.profile_image || '',
         rut: profile.rut || '',
         gender: profile.gender || '',
-        email: profile.email || '',
+        email: isNestedUserStructure ? profile.user?.email : profile.email || '',
         phone: profile.phone || '',
         region: profile.region || '',
         city: profile.city || '',
@@ -84,9 +88,9 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
       // Create a copy of the data to send
       const dataToSave = { ...formData };
       
-      // If profile_image is a URL string, remove it to avoid sending it in the regular update
+      // If profile_image is a URL string, set it to undefined instead of using delete
       if (typeof dataToSave.profile_image === 'string') {
-        delete dataToSave.profile_image;
+        dataToSave.profile_image = '';
       }
       
       await onSave(dataToSave);
@@ -100,16 +104,22 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
 
   const resetForm = () => {
     setIsEditing(false);
+    
+    if (!profile) return;
+    
+    // Check if we're dealing with a nested user structure or flat structure
+    const isNestedUserStructure = profile.user && typeof profile.user === 'object';
+    
     setFormData({
-      first_name: profile?.first_name || '',
-      last_name: profile?.last_name || '',
-      profile_image: profile?.profile_image || '',
-      rut: profile?.rut || '',
-      gender: profile?.gender || '',
-      email: profile?.email || '',
-      phone: profile?.phone || '',
-      region: profile?.region || '',
-      city: profile?.city || '',
+      first_name: isNestedUserStructure ? profile.user?.first_name : profile.first_name || '',
+      last_name: isNestedUserStructure ? profile.user?.last_name : profile.last_name || '',
+      profile_image: profile.profile_image || '',
+      rut: profile.rut || '',
+      gender: profile.gender || '',
+      email: isNestedUserStructure ? profile.user?.email : profile.email || '',
+      phone: profile.phone || '',
+      region: profile.region || '',
+      city: profile.city || '',
     });
   };
 

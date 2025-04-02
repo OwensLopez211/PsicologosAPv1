@@ -63,7 +63,7 @@ const DocumentsUpload = ({  isLoading, onLoadingChange, onSave }: DocumentsUploa
     
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = () => {
         // Preview logic if needed
       };
       reader.readAsDataURL(file);

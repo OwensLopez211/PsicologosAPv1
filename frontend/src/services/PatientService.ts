@@ -8,6 +8,7 @@ export interface Patient {
     first_name: string;
     last_name: string;
     is_active: boolean;
+    user_type?: string; // Add user_type field to filter by role
   };
   phone_number: string;
   birth_date: string | null;
@@ -20,6 +21,23 @@ export interface Patient {
 
 class PatientService {
   private baseUrl = '/api/profiles/admin/patients';
+  
+  /**
+   * Get patient initials from first and last name
+   * @param patient Patient object
+   * @returns String with patient initials
+   */
+  getPatientInitials(patient: Patient): string {
+    if (!patient || !patient.user) return '??';
+    
+    const firstName = patient.user.first_name || '';
+    const lastName = patient.user.last_name || '';
+    
+    const firstInitial = firstName.length > 0 ? firstName.charAt(0).toUpperCase() : '';
+    const lastInitial = lastName.length > 0 ? lastName.charAt(0).toUpperCase() : '';
+    
+    return (firstInitial + lastInitial) || '??';
+  }
   
   /**
    * Get all patients
@@ -40,7 +58,11 @@ class PatientService {
         },
       });
       
-      return response.data;
+      // Filter out non-client users if user_type is available
+      const patients = response.data;
+      return patients.filter((patient: Patient) =>
+        !patient.user.user_type || patient.user.user_type === 'client'
+      );
     } catch (error) {
       console.error('Error fetching patients:', error);
       throw error;
@@ -54,7 +76,7 @@ class PatientService {
    * @param isActive Current active status
    * @returns Promise with updated status
    */
-  async togglePatientStatus(token: string | null, patientId: number, isActive: boolean): Promise<{ status: string; is_active: boolean }> {
+  async togglePatientStatus(token: string | null, patientId: number): Promise<{ status: string; is_active: boolean }> {
     try {
       if (!token) {
         throw new Error('No authentication token provided');
