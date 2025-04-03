@@ -27,8 +27,8 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <img src="/logo.jpeg" alt="MentAliza" className="h-8 w-8 rounded-full ml-2 md:ml-0" />
-            <span className="ml-2 text-xl font-semibold text-gray-900">MentAliza</span>
+            <img src="/logo.jpeg" alt="Bienestar" className="h-8 w-8 rounded-full ml-2 md:ml-0" />
+            <span className="ml-2 text-xl font-semibold text-gray-900">Bienestar</span>
           </div>
           
           <div className="flex items-center">

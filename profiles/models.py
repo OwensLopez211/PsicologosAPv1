@@ -41,6 +41,22 @@ class ClientProfile(BaseProfile):
     region = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=100, blank=True)
     
+    # Información bancaria
+    bank_account_number = models.CharField(max_length=50, blank=True)
+    bank_account_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('CORRIENTE', 'Cuenta Corriente'),
+            ('AHORRO', 'Cuenta de Ahorro'),
+            ('VISTA', 'Cuenta Vista')
+        ],
+        blank=True
+    )
+    bank_account_owner = models.CharField(max_length=100, blank=True)
+    bank_account_owner_rut = models.CharField(max_length=20, blank=True)
+    bank_account_owner_email = models.EmailField(blank=True)
+    bank_name = models.CharField(max_length=100, blank=True)
+    
     def __str__(self):
         return f"Cliente: {self.user.email}"
 
@@ -64,6 +80,22 @@ class AdminProfile(BaseProfile):
     city = models.CharField(max_length=100, blank=True)
     role = models.CharField(max_length=100, blank=True, default="Administrator")
     department = models.CharField(max_length=100, blank=True)
+
+    # Información bancaria
+    bank_account_number = models.CharField(max_length=50, blank=True)
+    bank_account_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('CORRIENTE', 'Cuenta Corriente'),
+            ('AHORRO', 'Cuenta de Ahorro'),
+            ('VISTA', 'Cuenta Vista')
+        ],
+        blank=True
+    )
+    bank_account_owner = models.CharField(max_length=100, blank=True)
+    bank_account_owner_rut = models.CharField(max_length=20, blank=True)
+    bank_account_owner_email = models.EmailField(blank=True)
+    bank_name = models.CharField(max_length=100, blank=True)
     
     def __str__(self):
         return f"Administrador: {self.user.email}"

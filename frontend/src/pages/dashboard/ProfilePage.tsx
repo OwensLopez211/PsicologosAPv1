@@ -34,7 +34,7 @@ const ProfilePage = () => {
 
     if (user?.user_type === 'client') {
       baseTabs.push(
-        { id: 'professional', label: 'Información Profesional' },
+        { id: 'bankinfo', label: 'Datos Bancarios' },
       );
     }
     
