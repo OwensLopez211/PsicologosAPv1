@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, Schedule
+from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, Schedule, AdminProfile  # Add AdminProfile import here
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -56,6 +56,14 @@ class ClientProfileSerializer(BaseProfileSerializer):
     city = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     user = serializers.SerializerMethodField()
     
+    # Add bank info fields
+    bank_account_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_type = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_owner = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_owner_rut = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_owner_email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    bank_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
     def get_user(self, obj):
         return {
             'id': obj.user.id,
@@ -68,7 +76,9 @@ class ClientProfileSerializer(BaseProfileSerializer):
     class Meta(BaseProfileSerializer.Meta):
         model = ClientProfile
         fields = BaseProfileSerializer.Meta.fields + (
-            'id', 'phone', 'birth_date', 'gender', 'rut', 'region', 'city', 'user'
+            'id', 'phone', 'birth_date', 'gender', 'rut', 'region', 'city', 'user',
+            'bank_account_number', 'bank_account_type', 'bank_account_owner',
+            'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name'
         )
         read_only_fields = ('id',)
 
@@ -80,10 +90,20 @@ class AdminProfileSerializer(BaseProfileSerializer):
     region = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     city = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     
+    # Add bank info fields
+    bank_account_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_type = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_owner = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_owner_rut = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_owner_email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    bank_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
     class Meta(BaseProfileSerializer.Meta):
-        model = ClientProfile  # Usamos ClientProfile como base para el admin
+        model = AdminProfile  # Changed from ClientProfile to AdminProfile
         fields = BaseProfileSerializer.Meta.fields + (
-            'id', 'phone', 'gender', 'rut', 'region', 'city'
+            'id', 'phone', 'gender', 'rut', 'region', 'city',
+            'bank_account_number', 'bank_account_type', 'bank_account_owner',
+            'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name'
         )
         read_only_fields = ('id',)
 

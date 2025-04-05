@@ -1,224 +1,18 @@
+import os
+import mimetypes
+from django.http import HttpResponse, Http404
+from django.conf import settings
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.shortcuts import get_object_or_404  # Add this import
-from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, Schedule
-from .serializers import (
-    ClientProfileSerializer, PsychologistProfileSerializer,
-    PsychologistProfileBasicSerializer, ProfessionalDocumentSerializer,
-    ScheduleSerializer, UserBasicSerializer, AdminProfileSerializer  # Add AdminProfileSerializer here
+
+from ..models import PsychologistProfile, ProfessionalDocument, Schedule
+from ..serializers import (
+    PsychologistProfileSerializer, PsychologistProfileBasicSerializer,
+    ProfessionalDocumentSerializer, ScheduleSerializer, UserBasicSerializer
 )
-from .permissions import IsProfileOwner, IsAdminUser, IsPsychologist, IsClient
-
-class ClientProfileViewSet(viewsets.ModelViewSet):
-    """API endpoint para perfil de cliente"""
-    serializer_class = ClientProfileSerializer
-    permission_classes = [permissions.IsAuthenticated, IsProfileOwner | IsAdminUser]
-    
-    def get_queryset(self):
-        user = self.request.user
-        if user.user_type == 'admin':
-            return ClientProfile.objects.all()
-        return ClientProfile.objects.filter(user=user)
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-    
-    # In the ClientProfileViewSet class, update the 'me' action
-    
-    @action(detail=False, methods=['get', 'patch', 'put'])
-    def me(self, request):
-        """Endpoint para obtener o actualizar el perfil del usuario autenticado"""
-        user = self.request.user
-        if user.user_type != 'client':
-            return Response(
-                {"detail": "Este endpoint es solo para clientes."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile = ClientProfile.objects.get(user=user)
-        
-        if request.method == 'GET':
-            serializer = self.get_serializer(profile)
-            return Response(serializer.data)
-        
-        # Para PATCH o PUT
-        # Extract user data from request
-        user_data = {}
-        profile_data = request.data.copy()
-        
-        # Remove profile_image from regular update if it's present but not a file
-        if 'profile_image' in profile_data and not hasattr(profile_data['profile_image'], 'read'):
-            profile_data.pop('profile_image')
-        
-        # Move user-related fields to user_data
-        for field in ['first_name', 'last_name']:
-            if field in profile_data:
-                user_data[field] = profile_data.pop(field)
-        
-        # Log the data being processed
-        print("User data to update:", user_data)
-        print("Profile data to update:", profile_data)
-        
-        # Update user if needed
-        if user_data:
-            user_serializer = UserBasicSerializer(user, data=user_data, partial=True)
-            if user_serializer.is_valid():
-                user_serializer.save()
-            else:
-                return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Update profile
-        serializer = self.get_serializer(profile, data=profile_data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            
-            # Return the complete updated profile
-            updated_serializer = self.get_serializer(profile)
-            return Response(updated_serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['post'])
-    def upload_image(self, request):
-        """Endpoint para subir imagen de perfil para clientes"""
-        user = self.request.user
-        if user.user_type != 'client':
-            return Response(
-                {"detail": "Este endpoint es solo para clientes."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile = ClientProfile.objects.get(user=user)
-        
-        if 'profile_image' not in request.FILES:
-            return Response(
-                {"detail": "No se ha proporcionado ninguna imagen."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Delete previous image if it exists
-        if profile.profile_image:
-            import os
-            from django.conf import settings
-            
-            # Get the old file path
-            old_image_path = profile.profile_image.path
-            
-            # Check if the file exists and is not the default image
-            if os.path.isfile(old_image_path) and not old_image_path.endswith('default-profile.png'):
-                try:
-                    os.remove(old_image_path)
-                except (OSError, FileNotFoundError) as e:
-                    # Log the error but continue with the upload
-                    print(f"Error deleting previous image: {e}")
-        
-        # Save the new image
-        profile.profile_image = request.FILES['profile_image']
-        profile.save()
-        
-        serializer = self.get_serializer(profile)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['delete'])
-    def delete_image(self, request):
-        """Endpoint para eliminar la imagen de perfil del cliente"""
-        user = self.request.user
-        if user.user_type != 'client':
-            return Response(
-                {"detail": "Este endpoint es solo para clientes."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile = ClientProfile.objects.get(user=user)
-        
-        # Check if profile has an image
-        if not profile.profile_image:
-            return Response(
-                {"detail": "No hay imagen de perfil para eliminar."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Delete the image file from storage
-        import os
-        from django.conf import settings
-        
-        # Get the file path
-        image_path = profile.profile_image.path
-        
-        # Check if the file exists and is not the default image
-        if os.path.isfile(image_path) and not image_path.endswith('default-profile.png'):
-            try:
-                os.remove(image_path)
-                print(f"Deleted profile image: {image_path}")
-            except (OSError, FileNotFoundError) as e:
-                print(f"Error deleting profile image: {e}")
-        
-        # Set profile_image to None/null
-        profile.profile_image = None
-        profile.save()
-        
-        serializer = self.get_serializer(profile)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def admin_list(self, request):
-        """Endpoint para que los administradores vean todos los perfiles de clientes"""
-        user = self.request.user
-        if user.user_type != 'admin':
-            return Response(
-                {"detail": "Este endpoint es solo para administradores."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Get all client profiles with related user data
-        # Filter to only include users with user_type='client'
-        profiles = ClientProfile.objects.filter(user__user_type='client').select_related('user')
-        serializer = self.get_serializer(profiles, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['get'])
-    def admin_detail(self, request, pk=None):
-        """Endpoint para que los administradores vean un perfil de cliente específico"""
-        user = self.request.user
-        if user.user_type != 'admin':
-            return Response(
-                {"detail": "Este endpoint es solo para administradores."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile = self.get_object()
-        serializer = self.get_serializer(profile)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['patch'])
-    def update_bank_info(self, request):
-        """Endpoint para actualizar información bancaria del cliente"""
-        user = self.request.user
-        if user.user_type != 'client':
-            return Response(
-                {"detail": "Este endpoint es solo para clientes."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile = ClientProfile.objects.get(user=user)
-        
-        # Extract only bank-related fields
-        bank_data = {
-            k: v for k, v in request.data.items() 
-            if k in ['bank_account_number', 'bank_account_type', 'bank_account_owner',
-                    'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name']
-        }
-        
-        # Update profile with bank data
-        serializer = self.get_serializer(profile, data=bank_data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            
-            # Return the complete updated profile
-            updated_serializer = self.get_serializer(profile)
-            return Response(updated_serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from ..permissions import IsProfileOwner, IsAdminUser
 
 class PsychologistProfileViewSet(viewsets.ModelViewSet):
     """API endpoint para perfil de psicólogo"""
@@ -443,9 +237,6 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         
         # Delete previous image if it exists
         if profile.profile_image:
-            import os
-            from django.conf import settings
-            
             # Get the old file path
             old_image_path = profile.profile_image.path
             
@@ -484,9 +275,6 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
             )
         
         # Delete the image file from storage
-        import os
-        from django.conf import settings
-        
         # Get the file path
         image_path = profile.profile_image.path
         
@@ -633,9 +421,6 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
             
             # Delete the old file from storage before updating
             if document.file:
-                import os
-                from django.conf import settings
-                
                 # Get the old file path
                 old_file_path = document.file.path
                 
@@ -750,7 +535,7 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
     @action(detail=True, methods=['get'], url_path='documents/download/(?P<document_id>[^/.]+)')
     def download_document(self, request, document_id=None, *args, **kwargs):
         """Endpoint para descargar un documento específico"""
@@ -787,268 +572,165 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         
         return response
+    
+    @action(detail=True, methods=['patch'], url_path='documents/(?P<document_id>[^/.]+)/verify')
+    def verify_document(self, request, pk=None, document_id=None):
+        """Endpoint para verificar un documento específico"""
+        user = self.request.user
+        if user.user_type != 'admin':
+            return Response(
+                {"detail": "Este endpoint es solo para administradores."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        try:
+            document = ProfessionalDocument.objects.get(id=document_id)
+        except ProfessionalDocument.DoesNotExist:
+            return Response(
+                {"detail": "Documento no encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        document.verification_status = 'verified'
+        document.is_verified = True
+        document.rejection_reason = None
+        document.save()
+        
+        # Removed: Code that was checking if all documents are verified and updating psychologist status
+        
+        serializer = ProfessionalDocumentSerializer(document)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['patch'], url_path='documents/(?P<document_id>[^/.]+)/reject')
+    def reject_document(self, request, pk=None, document_id=None):
+        """Endpoint para rechazar un documento específico"""
+        user = self.request.user
+        if user.user_type != 'admin':
+            return Response(
+                {"detail": "Este endpoint es solo para administradores."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        try:
+            document = ProfessionalDocument.objects.get(id=document_id)
+        except ProfessionalDocument.DoesNotExist:
+            return Response(
+                {"detail": "Documento no encontrado."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        # Verificar que se proporciona un motivo de rechazo
+        if 'rejection_reason' not in request.data:
+            return Response(
+                {"detail": "Se requiere el campo 'rejection_reason'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        document.verification_status = 'rejected'
+        document.is_verified = False
+        document.rejection_reason = request.data['rejection_reason']
+        document.save()
+        
+        # Removed: Code that was updating psychologist status
+        
+        serializer = ProfessionalDocumentSerializer(document)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['patch'], url_path='admin/psychologists/documents/(?P<document_id>[^/.]+)/status')
+    def update_document_status(self, request, document_id=None):
+        """Actualiza el estado de verificación de un documento específico.
+        No afecta al estado de verificación del perfil del psicólogo.
+        """
+        user = self.request.user
+        if user.user_type != 'admin':
+            return Response(
+                {"detail": "Este endpoint es solo para administradores."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        try:
+            document = ProfessionalDocument.objects.get(id=document_id)
+        except ProfessionalDocument.DoesNotExist:
+            return Response(
+                {"detail": f"No se encontró ningún documento con ID {document_id}"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        # Verificar que se proporciona un nuevo estado
+        if 'verification_status' not in request.data:
+            return Response(
+                {"detail": "Se requiere el campo 'verification_status'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        new_status = request.data['verification_status']
+        valid_statuses = ['pending', 'verified', 'rejected']
+        
+        if new_status not in valid_statuses:
+            return Response(
+                {"detail": f"Estado de verificación no válido. Debe ser uno de: {', '.join(valid_statuses)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        document.verification_status = new_status
+        
+        # Si se rechaza, guardar el motivo
+        if new_status == 'rejected' and 'rejection_reason' in request.data:
+            document.rejection_reason = request.data['rejection_reason']
+        elif new_status == 'verified':
+            document.is_verified = True
+            document.rejection_reason = None
+        
+        document.save()
+        
+        # Return the updated document
+        serializer = ProfessionalDocumentSerializer(document)
+        return Response(serializer.data)
+
 
 
 class PublicPsychologistListView(generics.ListAPIView):
     """API endpoint para listar psicólogos públicamente"""
     serializer_class = PsychologistProfileBasicSerializer
-    permission_classes = []  # Acceso público
+    permission_classes = [permissions.AllowAny]
     
     def get_queryset(self):
         # Solo mostrar psicólogos verificados
-        return PsychologistProfile.objects.filter(verification_status='VERIFIED')
+        queryset = PsychologistProfile.objects.filter(verification_status='VERIFIED')
+        
+        # Filtrar por especialidad si se proporciona
+        specialty = self.request.query_params.get('specialty', None)
+        if specialty:
+            queryset = queryset.filter(specialties__contains=[specialty])
+        
+        # Filtrar por población objetivo si se proporciona
+        population = self.request.query_params.get('population', None)
+        if population:
+            queryset = queryset.filter(target_populations__contains=[population])
+        
+        # Filtrar por región si se proporciona
+        region = self.request.query_params.get('region', None)
+        if region:
+            queryset = queryset.filter(region__icontains=region)
+        
+        # Filtrar por ciudad si se proporciona
+        city = self.request.query_params.get('city', None)
+        if city:
+            queryset = queryset.filter(city__icontains=city)
+        
+        # Filtrar por nombre si se proporciona
+        name = self.request.query_params.get('name', None)
+        if name:
+            queryset = queryset.filter(user__first_name__icontains=name) | queryset.filter(user__last_name__icontains=name)
+        
+        return queryset
+
 
 class PsychologistDetailView(generics.RetrieveAPIView):
     """API endpoint para ver detalles de un psicólogo públicamente"""
     serializer_class = PsychologistProfileSerializer
-    permission_classes = []  # Acceso público
-    
-    def get_queryset(self):
-        # Solo mostrar psicólogos verificados
-        return PsychologistProfile.objects.filter(verification_status='VERIFIED')
-    
-    def get_object(self):
-        pk = self.kwargs['pk']
-        # Try to find by profile ID first
-        try:
-            return self.get_queryset().get(id=pk)
-        except PsychologistProfile.DoesNotExist:
-            # If not found, try to find by user ID
-            try:
-                return self.get_queryset().get(user__id=pk)
-            except PsychologistProfile.DoesNotExist:
-                # If still not found, raise 404
-                from django.http import Http404
-                raise Http404(f"No PsychologistProfile found with ID {pk}")
-    
-    @action(detail=False, methods=['patch'])
-    def update_professional_info(self, request):
-        """Endpoint para actualizar información profesional del psicólogo"""
-        user = self.request.user
-        if user.user_type != 'psychologist':
-            return Response(
-                {"detail": "Este endpoint es solo para psicólogos."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile = PsychologistProfile.objects.get(user=user)
-        
-        # Campos permitidos para actualización profesional
-        allowed_fields = [
-            'professional_title', 'specialties', 'health_register_number', 
-            'university', 'graduation_year', 'experience_description', 
-            'target_populations', 'intervention_areas'
-        ]
-        
-        # Filtrar solo los campos permitidos
-        professional_data = {k: v for k, v in request.data.items() if k in allowed_fields}
-        
-        serializer = self.get_serializer(profile, data=professional_data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class AdminProfileViewSet(viewsets.ModelViewSet):
-    """API endpoint para perfil de administrador"""
-    serializer_class = AdminProfileSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminUser]
-    
-    def get_queryset(self):
-        user = self.request.user
-        if user.user_type == 'admin':
-            return ClientProfile.objects.filter(user=user)
-        return ClientProfile.objects.none()
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-    
-    @action(detail=False, methods=['get', 'patch', 'put'])
-    def me(self, request):
-        """Endpoint para obtener o actualizar el perfil del administrador autenticado"""
-        user = self.request.user
-        if user.user_type != 'admin':
-            return Response(
-                {"detail": "Este endpoint es solo para administradores."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        # Obtener o crear el perfil del administrador
-        profile, created = ClientProfile.objects.get_or_create(user=user)
-        
-        if request.method == 'GET':
-            serializer = self.get_serializer(profile)
-            return Response(serializer.data)
-        
-        # Para PATCH o PUT
-        # Extract user data from request
-        user_data = {}
-        profile_data = request.data.copy()
-        
-        # Remove profile_image from regular update if it's present but not a file
-        if 'profile_image' in profile_data and not hasattr(profile_data['profile_image'], 'read'):
-            profile_data.pop('profile_image')
-        
-        # Move user-related fields to user_data
-        for field in ['first_name', 'last_name']:
-            if field in profile_data:
-                user_data[field] = profile_data.pop(field)
-        
-        # Log the data being processed
-        print("Admin user data to update:", user_data)
-        print("Admin profile data to update:", profile_data)
-        
-        # Update user if needed
-        if user_data:
-            user_serializer = UserBasicSerializer(user, data=user_data, partial=True)
-            if user_serializer.is_valid():
-                user_serializer.save()
-            else:
-                return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Update profile
-        serializer = self.get_serializer(profile, data=profile_data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            
-            # Return the complete updated profile
-            updated_serializer = self.get_serializer(profile)
-            return Response(updated_serializer.data)
-        
-        # Return detailed validation errors
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    @action(detail=False, methods=['post'])
-    def upload_image(self, request):
-        """Endpoint para subir imagen de perfil para administradores"""
-        user = self.request.user
-        if user.user_type != 'admin':
-            return Response(
-                {"detail": "Este endpoint es solo para administradores."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile, created = ClientProfile.objects.get_or_create(user=user)
-        
-        if 'profile_image' not in request.FILES:
-            return Response(
-                {"detail": "No se ha proporcionado ninguna imagen."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Delete previous image if it exists
-        if profile.profile_image:
-            import os
-            from django.conf import settings
-            
-            # Get the old file path
-            old_image_path = profile.profile_image.path
-            
-            # Check if the file exists and is not the default image
-            if os.path.isfile(old_image_path) and not old_image_path.endswith('default-profile.png'):
-                try:
-                    os.remove(old_image_path)
-                except (OSError, FileNotFoundError) as e:
-                    # Log the error but continue with the upload
-                    print(f"Error deleting previous image: {e}")
-        
-        # Save the new image
-        profile.profile_image = request.FILES['profile_image']
-        profile.save()
-        
-        serializer = self.get_serializer(profile)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['delete'])
-    def delete_image(self, request):
-        """Endpoint para eliminar la imagen de perfil del administrador"""
-        user = self.request.user
-        if user.user_type != 'admin':
-            return Response(
-                {"detail": "Este endpoint es solo para administradores."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile, created = ClientProfile.objects.get_or_create(user=user)
-        
-        # Check if profile has an image
-        if not profile.profile_image:
-            return Response(
-                {"detail": "No hay imagen de perfil para eliminar."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Delete the image file from storage
-        import os
-        from django.conf import settings
-        
-        # Get the file path
-        image_path = profile.profile_image.path
-        
-        # Check if the file exists and is not the default image
-        if os.path.isfile(image_path) and not image_path.endswith('default-profile.png'):
-            try:
-                os.remove(image_path)
-                print(f"Deleted profile image: {image_path}")
-            except (OSError, FileNotFoundError) as e:
-                print(f"Error deleting profile image: {e}")
-        
-        # Set profile_image to None/null
-        profile.profile_image = None
-        profile.save()
-        
-        serializer = self.get_serializer(profile)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['patch'])
-    def toggle_status(self, request, pk=None):
-        """Endpoint para que los administradores activen/desactiven un perfil de cliente"""
-        user = self.request.user
-        if user.user_type != 'admin':
-            return Response(
-                {"detail": "Este endpoint es solo para administradores."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile = self.get_object()
-        client_user = profile.user
-        
-        # Toggle the is_active status
-        client_user.is_active = not client_user.is_active
-        client_user.save()
-        
-        serializer = self.get_serializer(profile)
-        return Response({
-            "detail": f"Usuario {'activado' if client_user.is_active else 'desactivado'} exitosamente",
-            "profile": serializer.data
-        })
-
-    @action(detail=False, methods=['patch'])
-    def update_bank_info(self, request):
-        """Endpoint para actualizar información bancaria del administrador"""
-        user = self.request.user
-        if user.user_type != 'admin':
-            return Response(
-                {"detail": "Este endpoint es solo para administradores."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile, created = ClientProfile.objects.get_or_create(user=user)
-        
-        # Extract only bank-related fields
-        bank_data = {
-            k: v for k, v in request.data.items() 
-            if k in ['bank_account_number', 'bank_account_type', 'bank_account_owner',
-                    'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name']
-        }
-        
-        # Update profile with bank data
-        serializer = self.get_serializer(profile, data=bank_data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    permission_classes = [permissions.AllowAny]
+    queryset = PsychologistProfile.objects.filter(verification_status='VERIFIED')
+    lookup_field = 'id'
     
     

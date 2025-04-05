@@ -3,13 +3,13 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ClientProfileViewSet, PsychologistProfileViewSet,
     PublicPsychologistListView, PsychologistDetailView,
-    AdminProfileViewSet  # Add this import
+    AdminProfileViewSet
 )
 
 router = DefaultRouter()
 router.register(r'client-profiles', ClientProfileViewSet, basename='client-profile')
 router.register(r'psychologist-profiles', PsychologistProfileViewSet, basename='psychologist-profile')
-router.register(r'admin-profiles', AdminProfileViewSet, basename='admin-profile')  # Add this line
+router.register(r'admin-profiles', AdminProfileViewSet, basename='admin-profile')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -43,6 +43,25 @@ urlpatterns = [
     path('admin/patients/<int:pk>/status/', 
          ClientProfileViewSet.as_view({'patch': 'toggle_status'}), 
          name='admin-patients-toggle-status'),
+         
+    # Add admin psychologist management endpoints
+    path('admin/psychologists/', 
+         PsychologistProfileViewSet.as_view({'get': 'admin_list'}), 
+         name='admin-psychologist-list'),
+    path('admin/psychologists/<int:pk>/', 
+         PsychologistProfileViewSet.as_view({'get': 'admin_detail'}), 
+         name='admin-psychologist-detail'),
+    path('admin/psychologists/<int:pk>/toggle-status/', 
+         PsychologistProfileViewSet.as_view({'patch': 'toggle_verification_status'}), 
+         name='admin-toggle-psychologist-status'),
+    path('admin/psychologists/<int:pk>/verification-documents/', 
+         PsychologistProfileViewSet.as_view({'get': 'admin_verification_documents'}), 
+         name='admin-psychologist-documents'),
+    
+    # Add this new endpoint for document status updates
+    path('admin/psychologists/documents/<int:document_id>/status/', 
+         PsychologistProfileViewSet.as_view({'patch': 'update_document_status'}), 
+         name='admin-update-document-status'),
     
     # Psychologist profile endpoints
     path('psychologist-profiles/me/upload_image/', 
@@ -103,8 +122,17 @@ urlpatterns = [
     
     path('public/psychologists/', PublicPsychologistListView.as_view(), name='public-psychologists'),
     path('public/psychologists/<int:pk>/', PsychologistDetailView.as_view(), name='public-psychologist-detail'),
-    # Add this to the urlpatterns list
+    # Add this to the urlpatterns list for psychologist (already exists)
     path('psychologist-profiles/me/update_bank_info/',
          PsychologistProfileViewSet.as_view({'patch': 'update_bank_info'}),
          name='psychologist-update-bank-info'),
+    
+    # Add new endpoints for client and admin bank info updates
+    path('client-profiles/me/update_bank_info/',
+         ClientProfileViewSet.as_view({'patch': 'update_bank_info'}),
+         name='client-update-bank-info'),
+    
+    path('admin-profiles/me/update_bank_info/',
+         AdminProfileViewSet.as_view({'patch': 'update_bank_info'}),
+         name='admin-update-bank-info'),
 ]

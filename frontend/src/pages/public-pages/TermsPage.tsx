@@ -1,5 +1,5 @@
 import HeaderPage from '../../components/public-components/HeaderPage';
-import PageTransition from '../../components/public-components/PageTransition';
+import PageTransition from '../../components/animations/PageTransition';
 import TermsContent from '../../components/public-components/TermsContent';
 
 const TermsPage = () => {

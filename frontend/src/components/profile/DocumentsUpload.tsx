@@ -17,7 +17,7 @@ interface Document {
   file?: File | null;
   file_url?: string;
   description?: string;
-  verification_status?: 'pending' | 'approved' | 'rejected' | 'not_uploaded';
+  verification_status?: string; // Changed from enum to string to match backend values
   rejection_reason?: string | null;
   uploaded_at?: string;
 }
@@ -128,7 +128,7 @@ const DocumentsUpload = ({ profile, isLoading, onLoadingChange }: DocumentsUploa
     }
   };
 
-  const getDocumentStatus = (type: string): 'pending' | 'approved' | 'rejected' | 'not_uploaded' => {
+  const getDocumentStatus = (type: string): string => {
     const doc = documents.find(d => d.document_type === type);
     return doc?.verification_status || 'not_uploaded';
   };
@@ -137,7 +137,7 @@ const DocumentsUpload = ({ profile, isLoading, onLoadingChange }: DocumentsUploa
     switch (status) {
       case 'pending':
         return <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Pendiente de revisión</span>;
-      case 'approved':
+      case 'verified': // Changed from 'approved' to 'verified' to match backend
         return <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Aprobado</span>;
       case 'rejected':
         return <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">Rechazado</span>;

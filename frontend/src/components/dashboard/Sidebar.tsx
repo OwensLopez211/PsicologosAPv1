@@ -1,24 +1,24 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 import {
-  HomeIcon,
-  UserIcon,
-  CalendarIcon,
-  MagnifyingGlassIcon,
-  UsersIcon,
-  DocumentTextIcon,
-  ClipboardDocumentCheckIcon,
-  ChartBarIcon,
+  HomeIcon, UserIcon, CalendarIcon, UsersIcon, 
+  DocumentTextIcon, Cog6ToothIcon as CogIcon, ArrowRightOnRectangleIcon as LogoutIcon, 
+  UserGroupIcon, ClipboardDocumentCheckIcon, ChartBarIcon, MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
-  userType?: string;
+  isOpen: boolean;
+  toggleSidebar: () => void;
   onClose?: () => void;
 }
 
-const Sidebar = ({ userType, onClose }: SidebarProps) => {
+const Sidebar = ({ isOpen, toggleSidebar, onClose }: SidebarProps) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
-  const normalizedUserType = userType?.toUpperCase() as 'CLIENT' | 'PSYCHOLOGIST' | 'ADMIN';
+
+  const normalizedUserType = user?.user_type?.toUpperCase() || 'CLIENT';
 
   const getMenuItems = () => {
     const roleSpecificItems = {
@@ -39,7 +39,7 @@ const Sidebar = ({ userType, onClose }: SidebarProps) => {
         { path: '/admin/dashboard', label: 'Inicio', icon: HomeIcon },
         { path: '/admin/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
         { path: '/admin/dashboard/pacients', label: 'Pacientes', icon: UsersIcon },
-        { path: '/admin/dashboard/psychologists', label: 'Psicólogos', icon: UserIcon },
+        { path: '/admin/dashboard/psychologists', label: 'Psicólogos', icon: UserGroupIcon },
         { path: '/admin/dashboard/verifications', label: 'Verificaciones', icon: ClipboardDocumentCheckIcon },
         { path: '/admin/dashboard/reports', label: 'Reportes', icon: ChartBarIcon },
       ],

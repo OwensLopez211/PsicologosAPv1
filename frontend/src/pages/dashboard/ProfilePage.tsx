@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getProfile, updateProfile } from '../../services/profileService';
 import BasicInfo from '../../components/profile/BasicInfo';
 import ProfessionalInfo from '../../components/profile/ProfessionalInfo';
-import PageTransition from '../../components/public-components/PageTransition';
+import PageTransition from '../../components/animations/PageTransition';
 import ScheduleAndFees from '../../components/profile/ScheduleAndFees';
 import DocumentsUpload from '../../components/profile/DocumentsUpload';
 import BankInfo from '../../components/profile/BankInfo';
@@ -28,11 +28,19 @@ const ProfilePage = () => {
         { id: 'professional', label: 'Información Profesional' },
         { id: 'schedule', label: 'Horarios y Tarifas' },
         { id: 'documents', label: 'Documentos' },
-        { id: 'bankinfo', label: 'Datos Bancarios' } // Add the new tab
+        { id: 'bankinfo', label: 'Datos Bancarios' }
       );
     }
 
+    // Add bank info tab for clients
     if (user?.user_type === 'client') {
+      baseTabs.push(
+        { id: 'bankinfo', label: 'Datos Bancarios' },
+      );
+    }
+    
+    // Add bank info tab for admins
+    if (user?.user_type === 'admin') {
       baseTabs.push(
         { id: 'bankinfo', label: 'Datos Bancarios' },
       );
@@ -163,7 +171,7 @@ const ProfilePage = () => {
             <div className="bg-white rounded-lg shadow-lg p-4 md:p-6">
               {activeTab === 'basic' && (
                 <BasicInfo
-                  profile={profile || undefined}
+                  profile={profile}
                   onSave={handleSaveBasicInfo}
                   isLoading={isLoading}
                 />
@@ -171,7 +179,7 @@ const ProfilePage = () => {
               
               {activeTab === 'professional' && user?.user_type === 'psychologist' && (
                 <ProfessionalInfo
-                  profile={profile || undefined}
+                  profile={profile}
                   onSave={handleSaveBasicInfo}
                   isLoading={isLoading}
                 />
@@ -180,7 +188,6 @@ const ProfilePage = () => {
               {activeTab === 'schedule' && user?.user_type === 'psychologist' && (
                 <ScheduleAndFees
                   profile={profile}
-                  onSave={handleSaveBasicInfo}
                   isLoading={isLoading}
                 />
               )}
@@ -189,15 +196,12 @@ const ProfilePage = () => {
                 <DocumentsUpload
                   profile={profile}
                   isLoading={isLoading}
-                  onLoadingChange={setIsLoading}
                 />
               )}
               
-              {/* Update the BankInfo component to include onProfileUpdate */}
-              {activeTab === 'bankinfo' && user?.user_type === 'psychologist' && (
+              {activeTab === 'bankinfo' && (
                 <BankInfo
                   profile={profile}
-                  onSave={handleSaveBasicInfo}
                   isLoading={isLoading}
                   onProfileUpdate={handleProfileUpdate}
                 />

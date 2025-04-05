@@ -1,5 +1,5 @@
 import HeaderPage from '../../components/public-components/HeaderPage';
-import PageTransition from '../../components/public-components/PageTransition';
+import PageTransition from '../../components/animations/PageTransition';
 import MissionSection from '../../components/public-components/MissionSection';
 import VisionSection from '../../components/public-components/VisionSection';
 import ValuesSection from '../../components/public-components/ValuesSection';

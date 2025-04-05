@@ -173,28 +173,48 @@ export const deleteProfileImage = async (userType: string) => {
   }
 }
 
-// Add a new function for updating bank information
-// Update the function for updating bank information to return the updated data
+// Add this new function for updating bank information
 export const updateBankInfo = async (bankData: any) => {
   const token = localStorage.getItem('token');
   if (!token) {
-    console.error('No authentication token found');
     throw new Error('Authentication required');
   }
   
-  const endpoint = '/profiles/psychologist-profiles/me/update_bank_info/';
+  // Get the user type from local storage
+  const userDataStr = localStorage.getItem('user');
+  if (!userDataStr) {
+    throw new Error('User data not found');
+  }
+  
+  const userData = JSON.parse(userDataStr);
+  const userType = userData.user_type;
+  
+  if (!userType) {
+    throw new Error('User type is required');
+  }
+  
+  let endpoint = '';
+  switch(userType.toLowerCase()) {
+    case 'psychologist':
+      endpoint = '/profiles/psychologist-profiles/me/update_bank_info/';
+      break;
+    case 'client':
+      endpoint = '/profiles/client-profiles/me/update_bank_info/';
+      break;
+    case 'admin':
+      endpoint = '/profiles/admin-profiles/me/update_bank_info/';
+      break;
+    default:
+      throw new Error(`Unsupported user type: ${userType}`);
+  }
   
   try {
-    console.log('Updating bank information with data:', bankData);
-    const response = await api.patch(endpoint, bankData, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    return response.data; // This will return the updated bank info from the server
+    console.log('Updating bank info with data:', bankData);
+    const response = await api.patch(endpoint, bankData);
+    console.log('Bank info updated successfully:', response.data);
+    return response.data;
   } catch (error) {
-    console.error('Error updating bank information:', error);
+    console.error('Error updating bank info:', error);
     throw error;
   }
-}
+};

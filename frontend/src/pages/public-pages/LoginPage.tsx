@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { login } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
-import PageTransition from '../../components/public-components/PageTransition';
+import PageTransition from '../../components/animations/PageTransition';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 

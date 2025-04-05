@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import PageTransition from '../../components/public-components/PageTransition';
+import PageTransition from '../../components/animations/PageTransition';
 import UserTypeSelection from '../../components/auth/UserTypeSelection';
 import RegistrationForm from '../../components/auth/RegistrationForm';
 import { register } from '../../services/authService';

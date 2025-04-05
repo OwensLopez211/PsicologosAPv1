@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import HeaderPage from '../../components/public-components/HeaderPage';
-import PageTransition from '../../components/public-components/PageTransition';
+import PageTransition from '../../components/animations/PageTransition';
 import SpecialistCard from '../../components/public-components/SpecialistCard';
 import SpecialistFilters from '../../components/specialist-list/SpecialistFilters';
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { updateBankInfo } from '../../services/profileService';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 interface BankInfoProps {
   profile: any;
@@ -10,6 +11,7 @@ interface BankInfoProps {
 }
 
 const BankInfo = ({ profile, isLoading, onProfileUpdate }: Omit<BankInfoProps, 'onSave'>) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     bank_account_number: '',
     bank_account_type: '',
@@ -52,6 +54,7 @@ const BankInfo = ({ profile, isLoading, onProfileUpdate }: Omit<BankInfoProps, '
         bank_account_owner: profile.bank_account_owner || '',
         bank_account_owner_rut: profile.bank_account_owner_rut || '',
         bank_account_owner_email: profile.bank_account_owner_email || '',
+        bank_name: profile.bank_account_owner_email || '',
         bank_name: profile.bank_name || '',
       });
     }
@@ -109,11 +112,25 @@ const BankInfo = ({ profile, isLoading, onProfileUpdate }: Omit<BankInfoProps, '
     }
   };
 
+  // Get description text based on user type
+  const getDescriptionText = () => {
+    switch(user?.user_type) {
+      case 'psychologist':
+        return 'Esta información será utilizada para realizar transferencias por tus servicios profesionales.';
+      case 'client':
+        return 'Esta información será utilizada para procesar reembolsos o devoluciones si fuera necesario.';
+      case 'admin':
+        return 'Esta información será utilizada para procesar transacciones administrativas.';
+      default:
+        return 'Esta información será utilizada para realizar transferencias.';
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       <h2 className="text-xl font-semibold text-gray-800 mb-6">Información Bancaria</h2>
       <p className="text-gray-600 mb-6">
-        Esta información será utilizada para realizar transferencias por tus servicios.
+        {getDescriptionText()}
         Por favor, asegúrate de que los datos sean correctos.
       </p>
       

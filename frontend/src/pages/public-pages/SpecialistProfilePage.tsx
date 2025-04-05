@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import PageTransition from '../../components/public-components/PageTransition';
+import PageTransition from '../../components/animations/PageTransition';
 import ScheduleModal from '../../components/scheduling/ScheduleModal';
 import ProfileHeader from '../../components/specialist-profile/ProfileHeader';
 import PresentationVideo from '../../components/specialist-profile/PresentationVideo';

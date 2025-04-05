@@ -22,6 +22,8 @@ import ProfilePage from './pages/dashboard/ProfilePage';
 // import UsersPage from './pages/dashboard/UsersPage';
 // import VerificationsPage from './pages/dashboard/VerificationsPage';
 import PatientsManagement from './pages/dashboard/admin/PatientsManagement';
+import PsychologistListPage from './pages/admin/PsychologistListPage';
+import PsychologistDetailPage from './pages/admin/PsychologistDetailPage';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
@@ -78,6 +80,8 @@ function App() {
             }>
               <Route path="profile" element={<ProfilePage />} />
               <Route path="pacients" element={<PatientsManagement />} />
+              <Route path="psychologists" element={<PsychologistListPage />} />
+              <Route path="psychologists/:id" element={<PsychologistDetailPage />} />
             </Route>
 
             {/* Catch all route */}

@@ -48,13 +48,19 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
                 instance.adminprofile_profile.save()
 
 @receiver(post_save, sender=ProfessionalDocument)
-def update_verification_status(sender, instance, created, **kwargs):
+def update_verification_status(sender, instance, **kwargs):
     """
     Actualiza el estado de verificación si todos los documentos están verificados.
+    Solo si el documento fue verificado manualmente desde el panel de administración
+    y no desde la API con el flag update_profile_status=False.
     """
-    if instance.is_verified:
+    # Check if this is an automatic update from the API with update_profile_status=False
+    update_profile_status = getattr(instance, 'update_profile_status', True)
+    
+    # Only update profile status if the flag is True and document is verified
+    if update_profile_status and instance.is_verified:
         # Obtener todos los documentos del psicólogo
-        all_documents = instance.psychologist.documents.all()
+        all_documents = ProfessionalDocument.objects.filter(psychologist=instance.psychologist)
         
         # Si todos están verificados y hay al menos uno
         if all_documents.exists() and all_documents.filter(is_verified=True).count() == all_documents.count():
