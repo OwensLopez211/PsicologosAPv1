@@ -33,13 +33,27 @@ const RegisterPage = () => {
     setIsLoading(true);
     
     try {
-      if (!formData.terms) {
-        toast.error(
-          <div>
-            Debes aceptar los <Link to="/terminos-y-condiciones" className="underline" target="_blank">Términos y Condiciones</Link>
-          </div>,
-          { duration: 5000 }
-        );
+      // Add password validation
+      if (formData.password.length < 8) {
+        toast.error('La contraseña debe tener al menos 8 caracteres');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[A-Z]/.test(formData.password)) {
+        toast.error('La contraseña debe incluir al menos una letra mayúscula');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[0-9]/.test(formData.password)) {
+        toast.error('La contraseña debe incluir al menos un número');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[^A-Za-z0-9]/.test(formData.password)) {
+        toast.error('La contraseña debe incluir al menos un símbolo especial');
         setIsLoading(false);
         return;
       }

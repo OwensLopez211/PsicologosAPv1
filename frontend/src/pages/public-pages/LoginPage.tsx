@@ -75,14 +75,20 @@ const LoginPage = () => {
     } catch (err: any) {
       console.error('Login error:', err);
       
-      if (!err.response) {
-        toast.error('Error de conexión. Por favor, verifica tu conexión a internet.');
-      } else if (err.response?.status === 401) {
-        toast.error('Correo electrónico o contraseña incorrectos');
-      } else if (err.response?.data?.detail) {
-        toast.error(err.response.data.detail);
-      } else {
-        toast.error('Error al iniciar sesión. Por favor, intente nuevamente.');
+      const errorMessage = err.message;
+      
+      switch (errorMessage) {
+        case 'NETWORK_ERROR':
+          toast.error('Error de conexión. Por favor, verifica tu conexión a internet.');
+          break;
+        case 'INVALID_CREDENTIALS':
+          toast.error('Correo electrónico o contraseña incorrectos');
+          break;
+        case 'USER_INACTIVE':
+          toast.error('Tu cuenta está inactiva. Por favor, contacta al soporte.');
+          break;
+        default:
+          toast.error('Error al iniciar sesión. Por favor, intente nuevamente.');
       }
     } finally {
       setIsLoading(false);

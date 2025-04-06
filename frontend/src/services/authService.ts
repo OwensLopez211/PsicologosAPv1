@@ -49,11 +49,20 @@ export const login = async (email: string, password: string): Promise<AuthRespon
   } catch (error: any) {
     console.error('Login error:', error.response || error);
     
-    if (error.response?.status === 401) {
-      throw new Error('Credenciales inválidas');
+    // More specific error handling
+    if (!error.response) {
+      throw new Error('NETWORK_ERROR');
     }
     
-    throw error;
+    if (error.response?.status === 401) {
+      throw new Error('INVALID_CREDENTIALS');
+    }
+
+    if (error.response?.data?.detail) {
+      throw new Error(error.response.data.detail);
+    }
+    
+    throw new Error('UNKNOWN_ERROR');
   }
 };
 

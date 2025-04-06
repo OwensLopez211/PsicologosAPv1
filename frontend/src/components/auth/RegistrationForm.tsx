@@ -150,6 +150,8 @@ const RegistrationForm = ({
               required
               value={formData.password}
               onChange={handleChange}
+              placeholder="Mínimo 8 caracteres"
+              isPassword={true}
             />
 
             <FormField
