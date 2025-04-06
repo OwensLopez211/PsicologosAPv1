@@ -190,9 +190,9 @@ const Navbar = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden fixed top-[92px] left-0 right-0 border-t border-gray-100"
+              className="lg:hidden fixed top-[64px] left-0 right-0 border-t border-gray-100" // Changed from top-[92px] to top-[64px]
             >
-              <div className="px-4 py-4 space-y-4 bg-white/95 backdrop-blur-sm">
+              <div className="px-4 py-4 space-y-4 bg-white/95 backdrop-blur-sm shadow-lg"> {/* Added shadow-lg */}
                 <a 
                   onClick={() => handleNavigation('/')} 
                   className={`block transition-colors font-medium text-sm py-2 cursor-pointer ${
