@@ -122,6 +122,10 @@ urlpatterns = [
     
     path('public/psychologists/', PublicPsychologistListView.as_view(), name='public-psychologists'),
     path('public/psychologists/<int:pk>/', PsychologistDetailView.as_view(), name='public-psychologist-detail'),
+    # Add this to the urlpatterns list
+    path('public/psychologists/<int:pk>/presentation-video/', 
+         PsychologistProfileViewSet.as_view({'get': 'get_presentation_video'}), 
+         name='psychologist-presentation-video'),
     # Add this to the urlpatterns list for psychologist (already exists)
     path('psychologist-profiles/me/update_bank_info/',
          PsychologistProfileViewSet.as_view({'patch': 'update_bank_info'}),

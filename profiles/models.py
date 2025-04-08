@@ -229,4 +229,5 @@ class Schedule(models.Model):
             duration: Duración de la cita en minutos (por defecto 50 min)
             
         Returns:
-            Lista de slots disponibles en formato {"start": "HH:MM", "end": "HH:MM"}        """
+            Lista de slots disponibles en formato {"start": "HH:MM", "end": "HH:MM"}
+        """

@@ -165,14 +165,14 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get', 'patch', 'put'])
     def me(self, request):
-        """Endpoint para obtener o actualizar el psicólogo autenticado"""
+        """Endpoint para obtener o actualizar el perfil del psicólogo autenticado"""
         user = self.request.user
         if user.user_type != 'psychologist':
             return Response(
                 {"detail": "Este endpoint es solo para psicólogos."},
                 status=status.HTTP_403_FORBIDDEN
             )
-                
+            
         profile = PsychologistProfile.objects.get(user=user)
         
         if request.method == 'GET':
@@ -184,18 +184,10 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         user_data = {}
         profile_data = request.data.copy()
         
-        # Handle graduation_year specifically
-        if 'graduation_year' in profile_data:
-            try:
-                if profile_data['graduation_year'] == '' or profile_data['graduation_year'] is None:
-                    profile_data['graduation_year'] = None
-                else:
-                    profile_data['graduation_year'] = int(profile_data['graduation_year'])
-            except (ValueError, TypeError):
-                return Response(
-                    {"graduation_year": ["Introduzca un número entero válido."]},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        # Move user-related fields to user_data
+        for field in ['first_name', 'last_name']:
+            if field in profile_data:
+                user_data[field] = profile_data.pop(field)
         
         # Update user if needed
         if user_data:
@@ -210,11 +202,9 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             
-            # Return the complete updated profile
+            # Return updated profile with user data
             updated_serializer = self.get_serializer(profile)
             return Response(updated_serializer.data)
-        
-        # Return detailed validation errors
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
@@ -731,6 +721,49 @@ class PsychologistDetailView(generics.RetrieveAPIView):
     serializer_class = PsychologistProfileSerializer
     permission_classes = [permissions.AllowAny]
     queryset = PsychologistProfile.objects.filter(verification_status='VERIFIED')
-    lookup_field = 'id'
+    
+    def get_object(self):
+        """
+        Override to allow lookup by either profile ID or user ID
+        """
+        pk = self.kwargs.get('pk')
+        
+        # First try to find by profile ID
+        try:
+            return PsychologistProfile.objects.get(id=pk, verification_status='VERIFIED')
+        except PsychologistProfile.DoesNotExist:
+            # If not found, try to find by user ID
+            try:
+                return PsychologistProfile.objects.get(user_id=pk, verification_status='VERIFIED')
+            except PsychologistProfile.DoesNotExist:
+                raise Http404("No se encontró el perfil del psicólogo")
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        
+        # Get the presentation video document if it exists
+        presentation_video = ProfessionalDocument.objects.filter(
+            psychologist=instance,
+            document_type='presentation_video',
+            verification_status='verified'
+        ).first()
+        
+        # Add verification documents to the response
+        documents = ProfessionalDocument.objects.filter(
+            psychologist=instance,
+            verification_status='verified'
+        )
+        document_serializer = ProfessionalDocumentSerializer(documents, many=True)
+        data['verification_documents'] = document_serializer.data
+        
+        # Add presentation video URL specifically
+        if presentation_video:
+            data['presentation_video_url'] = presentation_video.file.url if presentation_video.file else None
+        else:
+            data['presentation_video_url'] = None
+            
+        return Response(data)
     
     
