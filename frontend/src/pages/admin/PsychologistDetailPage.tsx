@@ -71,14 +71,8 @@ const PsychologistDetailPage = () => {
     }
   };
 
-  // Similarly, update the rejection handler
-  const handleDocumentRejection = async (documentId: number) => {
-    const rejectionReason = prompt('Por favor, indique el motivo del rechazo:');
-    
-    if (rejectionReason === null) {
-      return;
-    }
-    
+  // Updated to accept rejection reason from the modal
+  const handleDocumentRejection = async (documentId: number, rejectionReason: string) => {
     try {
       toast.loading('Rechazando documento...');
       await PsychologistService.updateDocumentStatus(documentId, 'rejected', rejectionReason);
@@ -224,7 +218,7 @@ const PsychologistDetailPage = () => {
               </p>
             </div>
             
-            {/* Document Viewer Section */}
+            {/* Document Viewer Section - Pass the updated handler */}
             <DocumentsSection 
               documents={psychologist.verification_documents}
               onViewDocument={handleViewDocument}

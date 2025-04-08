@@ -55,6 +55,7 @@ export const updateProfile = async (userType: string, profileData: any) => {
   }
 
   let endpoint = '';
+  
   switch(userType.toLowerCase()) {
     case 'psychologist':
       endpoint = '/profiles/psychologist-profiles/me/';
@@ -66,41 +67,40 @@ export const updateProfile = async (userType: string, profileData: any) => {
       endpoint = '/profiles/admin-profiles/me/';
       break;
     default:
-      throw new Error(`Unsupported user type: ${userType}`);
+      console.error(`Invalid user type: ${userType}`);
+      throw new Error('Invalid user type');
   }
 
+  console.log(`Updating profile at: ${endpoint}`);
+  console.log('Profile data to update:', profileData);
+  
   try {
-    console.log('Updating profile with data:', profileData);
-    
-    // If profile_image is a File object, handle it separately
-    if (profileData.profile_image instanceof File) {
-      // Handle file upload separately
-      await uploadProfileImage(userType, profileData.profile_image);
+    // For psychologist profiles, we need to handle the nested user structure differently
+    if (userType.toLowerCase() === 'psychologist') {
+      // Extract first_name and last_name to send them directly
+      const { first_name, last_name, ...otherData } = profileData;
       
-      // Remove profile_image from the data to be sent
-      const { profile_image, ...dataToUpdate } = profileData;
+      // Create a new object with the correct structure
+      const formattedData = {
+        ...otherData,
+        first_name, // Include these at the top level for the backend
+        last_name
+      };
       
-      // Update the rest of the profile data
-      const response = await api.patch(endpoint, dataToUpdate);
+      console.log('Formatted data for psychologist update:', formattedData);
+      const response = await api.patch(endpoint, formattedData);
       return response.data;
     } else {
-      // Make sure we're not sending the profile_image URL in the regular update
-      const dataToUpdate = { ...profileData };
-      
-      // If profile_image is a string (URL), remove it from the update data
-      if (typeof dataToUpdate.profile_image === 'string') {
-        delete dataToUpdate.profile_image;
-      }
-      
-      // Send the data as JSON
-      const response = await api.patch(endpoint, dataToUpdate);
+      // For other user types, proceed as normal
+      const response = await api.patch(endpoint, profileData);
       return response.data;
     }
   } catch (error) {
-    console.error('Error updating profile:', error);
+    console.error(`Error updating profile for ${userType}:`, error);
+    console.error('Response details:', (error as any).response?.data);
     throw error;
   }
-}
+};
 
 // Add a new function specifically for uploading profile images
 export const uploadProfileImage = async (userType: string, imageFile: File) => {

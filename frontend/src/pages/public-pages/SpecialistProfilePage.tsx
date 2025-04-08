@@ -10,6 +10,14 @@ import Education from '../../components/specialist-profile/Education';
 import ScheduleSection from '../../components/specialist-profile/ScheduleSection';
 import ProfessionalExperience from '../../components/specialist-profile/ProfessionalExperience';
 
+interface Document {
+  id: number;
+  document_type: string;
+  file: string;
+  verification_status: string;
+  uploaded_at: string;
+}
+
 interface Specialist {
   id: number;
   profile_id?: number;
@@ -25,6 +33,7 @@ interface Specialist {
   experience_description: string;
   verification_status: string;
   schedule: any;
+  verification_documents?: Document[];
 }
 
 const SpecialistProfilePage = () => {
@@ -33,12 +42,13 @@ const SpecialistProfilePage = () => {
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [presentationVideoUrl, setPresentationVideoUrl] = useState('');
   
+  // Remove the comment that was added by the previous update
   useEffect(() => {
     const fetchSpecialist = async () => {
       try {
         setLoading(true);
-        // Try to fetch using the ID directly (assuming it's a profile ID)
         try {
           const response = await axios.get(`/api/profiles/public/psychologists/${id}/`, {
             headers: {
@@ -47,66 +57,61 @@ const SpecialistProfilePage = () => {
             }
           });
           
-          // Filter out sensitive information before logging or setting state
-          const specialistData = response.data;
-          if (specialistData) {
-            // Remove email and phone if they exist in the response
-            const { email, phone, ...safeData } = specialistData;
-            console.log('API Response:', safeData);
-            setSpecialist(safeData);
-          } else {
-            console.log('API Response: No data received');
-            setSpecialist(null);
-          }
-          setLoading(false);
-        } catch (err) {
-          // If that fails, it might be a user ID, so try with a different parameter
-          if (axios.isAxiosError(err) && err.response?.status === 404) {
-            console.log('Profile not found with ID, trying as user ID...');
-            const userResponse = await axios.get(`/api/profiles/public/psychologists/${id}/`, {
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-              params: {
-                lookup_by: 'user_id'
-              }
-            });
-            
-            // Filter out sensitive information before logging or setting state
-            const specialistData = userResponse.data;
-            if (specialistData) {
-              // Remove email and phone if they exist in the response
-              const { email, phone, ...safeData } = specialistData;
-              console.log('API Response (user lookup):', safeData);
-              setSpecialist(safeData);
-            } else {
-              console.log('API Response (user lookup): No data received');
-              setSpecialist(null);
-            }
-            setLoading(false);
-          } else {
-            throw err; // Re-throw if it's not a 404 error
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching specialist:', err);
-        if (axios.isAxiosError(err)) {
-          // Don't log response data that might contain sensitive info
-          console.error('Status:', err.response?.status);
+          console.log('Specialist data:', response.data);
           
-          if (err.response?.status === 404) {
-            setError('No se encontró el especialista solicitado. Verifique el ID e intente nuevamente.');
-          } else {
-            setError('No se pudo cargar la información del especialista. Por favor, intenta de nuevo más tarde.');
+          // Process the response data
+          const specialistData = response.data;
+          
+          // Create a properly formatted specialist object
+          const formattedSpecialist: Specialist = {
+            id: specialistData.id,
+            name: `${specialistData.user?.first_name || ''} ${specialistData.user?.last_name || ''}`.trim(),
+            professional_title: specialistData.professional_title || '',
+            health_register_number: specialistData.health_register_number || '',
+            profile_image: specialistData.profile_image || '',
+            specialties: specialistData.specialties || [],
+            target_populations: specialistData.target_populations || [],
+            intervention_areas: specialistData.intervention_areas || [],
+            university: specialistData.university || '',
+            graduation_year: specialistData.graduation_year || 0,
+            experience_description: specialistData.experience_description || '',
+            verification_status: specialistData.verification_status || '',
+            schedule: specialistData.schedule || {}
+          };
+          
+          // Make sure we're getting the presentation_video_url from the response
+          if (specialistData.presentation_video_url) {
+            console.log('Found presentation video:', specialistData.presentation_video_url);
+            setPresentationVideoUrl(specialistData.presentation_video_url);
+            // Add the URL to the specialist object as well
+            formattedSpecialist.presentation_video_url = specialistData.presentation_video_url;
+          } else if (specialistData.verification_documents) {
+            // Try to find the presentation video in verification documents
+            const videoDoc = specialistData.verification_documents.find(
+              (doc: Document) => doc.document_type === 'presentation_video' && doc.verification_status === 'verified'
+            );
+            
+            if (videoDoc && videoDoc.file) {
+              console.log('Found presentation video in documents:', videoDoc.file);
+              setPresentationVideoUrl(videoDoc.file);
+              formattedSpecialist.presentation_video_url = videoDoc.file;
+            }
           }
-        } else {
-          setError('Ocurrió un error inesperado. Por favor, intenta de nuevo más tarde.');
+          
+          setSpecialist(formattedSpecialist);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching specialist by ID:', error);
+          setError('No se pudo cargar la información del especialista. Por favor, intenta de nuevo más tarde.');
+          setLoading(false);
         }
+      } catch (error) {
+        console.error('Error in fetchSpecialist:', error);
+        setError('No se pudo cargar la información del especialista. Por favor, intenta de nuevo más tarde.');
         setLoading(false);
       }
     };
-
+  
     if (id) {
       fetchSpecialist();
     }
@@ -166,8 +171,8 @@ const SpecialistProfilePage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
             <div className="md:col-span-2 space-y-6">
-              {/* Replace this line with separate components for video and experience */}
-              <PresentationVideo videoUrl="" />
+              {/* Use the presentationVideoUrl state variable instead of the specialist object property */}
+              <PresentationVideo videoUrl={presentationVideoUrl} />
               <ProfessionalExperience experienceDescription={specialist.experience_description || ''} />
               
               <Specialties 
@@ -195,7 +200,7 @@ const SpecialistProfilePage = () => {
       
       {isScheduleModalOpen && (
         <ScheduleModal 
-          specialistId={profileId} // Use the profile ID here
+          specialistId={profileId}
           specialistName={specialist.name || 'Especialista'}
           onClose={() => setIsScheduleModalOpen(false)}
         />

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import DocumentCard from './DocumentCard';
+import RejectDocumentModal from './RejectDocumentModal';
 
 interface Document {
   id: number;
@@ -16,7 +17,7 @@ interface DocumentsSectionProps {
   onViewDocument: (documentUrl: string) => void;
   onDownloadDocument: (documentId: number, fileName: string) => void;
   onVerifyDocument: (documentId: number, status: string) => void;
-  onRejectDocument: (documentId: number) => void;
+  onRejectDocument: (documentId: number, rejectionReason: string) => void;
 }
 
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({
@@ -26,6 +27,30 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   onVerifyDocument,
   onRejectDocument
 }) => {
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<number | null>(null);
+  const [selectedDocumentName, setSelectedDocumentName] = useState('');
+
+  const handleOpenRejectModal = (documentId: number) => {
+    const document = documents?.find(doc => doc.id === documentId);
+    if (document) {
+      setSelectedDocumentId(documentId);
+      setSelectedDocumentName(document.file.split('/').pop() || `documento_${documentId}`);
+      setRejectModalOpen(true);
+    }
+  };
+
+  const handleCloseRejectModal = () => {
+    setRejectModalOpen(false);
+    setSelectedDocumentId(null);
+    setSelectedDocumentName('');
+  };
+
+  const handleConfirmReject = (documentId: number, rejectionReason: string) => {
+    onRejectDocument(documentId, rejectionReason);
+    handleCloseRejectModal();
+  };
+
   return (
     <div className="mt-8">
       <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
@@ -41,13 +66,21 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
               onView={onViewDocument}
               onDownload={onDownloadDocument}
               onVerify={onVerifyDocument}
-              onReject={onRejectDocument}
+              onReject={handleOpenRejectModal}
             />
           ))}
         </div>
       ) : (
         <p className="text-gray-500">No hay documentos de verificación disponibles</p>
       )}
+
+      <RejectDocumentModal
+        isOpen={rejectModalOpen}
+        documentId={selectedDocumentId}
+        documentName={selectedDocumentName}
+        onClose={handleCloseRejectModal}
+        onConfirm={handleConfirmReject}
+      />
     </div>
   );
 };

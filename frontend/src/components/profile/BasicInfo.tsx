@@ -88,10 +88,9 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
       // Create a copy of the data to send
       const dataToSave = { ...formData };
       
-      // If profile_image is a URL string, set it to undefined instead of using delete
-      if (typeof dataToSave.profile_image === 'string') {
-        dataToSave.profile_image = '';
-      }
+      // Remove profile_image from the data to save
+      // The profile image should be handled separately through the image uploader
+      delete dataToSave.profile_image;
       
       await onSave(dataToSave);
       setIsEditing(false);

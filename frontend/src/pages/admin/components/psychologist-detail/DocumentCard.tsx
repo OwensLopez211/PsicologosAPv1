@@ -122,23 +122,24 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
             </button>
           </div>
           
-          {/* Only show approve/reject buttons if document is not already verified */}
-          {document.verification_status !== 'verified' && (
-            <div className="flex space-x-2">
+          {/* Modified: Show appropriate action buttons based on document status */}
+          <div className="flex space-x-2">
+            {document.verification_status !== 'verified' && (
               <button 
                 onClick={() => onVerify(document.id, 'verified')}
                 className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
               >
                 Aprobar
               </button>
-              <button 
-                onClick={() => onReject(document.id)}
-                className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
-              >
-                Rechazar
-              </button>
-            </div>
-          )}
+            )}
+            {/* Always show the reject button, regardless of verification status */}
+            <button 
+              onClick={() => onReject(document.id)}
+              className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+            >
+              Rechazar
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -33,15 +33,12 @@ const Sidebar = ({ isOpen, toggleSidebar, onClose }: SidebarProps) => {
         { path: '/psicologo/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
         { path: '/psicologo/dashboard/schedule', label: 'Mi Agenda', icon: CalendarIcon },
         { path: '/psicologo/dashboard/patients', label: 'Mis Pacientes', icon: UsersIcon },
-        { path: '/psicologo/dashboard/documents', label: 'Mis Documentos', icon: DocumentTextIcon },
       ],
       ADMIN: [
         { path: '/admin/dashboard', label: 'Inicio', icon: HomeIcon },
         { path: '/admin/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
         { path: '/admin/dashboard/pacients', label: 'Pacientes', icon: UsersIcon },
         { path: '/admin/dashboard/psychologists', label: 'Psicólogos', icon: UserGroupIcon },
-        { path: '/admin/dashboard/verifications', label: 'Verificaciones', icon: ClipboardDocumentCheckIcon },
-        { path: '/admin/dashboard/reports', label: 'Reportes', icon: ChartBarIcon },
       ],
     };
 
