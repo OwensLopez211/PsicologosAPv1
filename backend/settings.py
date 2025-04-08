@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',  # Add JWT support
     # Local apps
     'authentication',
-    'appointments',
+    # 'appointments',  # Make sure this line is added
     'payments',
     'settlements',
     'profiles.apps.ProfilesConfig',

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { updateSchedule, getCurrentUserSchedule } from '../../services/scheduleService';
-import { toast } from 'react-toastify'; // Asegúrate de tener esta dependencia instalada
+import toast from 'react-hot-toast';
 
 interface TimeBlock {
   startTime: string;
@@ -19,7 +19,7 @@ interface ScheduleData {
 
 interface ScheduleAndFeesProps {
   profile?: any;
-  onSave: (data: any) => void;
+  onSave?: (data: any) => void; // Make onSave optional
   isLoading: boolean;
   onLoadingChange?: (loading: boolean) => void;
 }
@@ -114,7 +114,18 @@ const ScheduleAndFees = ({ profile, onSave, isLoading, onLoadingChange }: Schedu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar horarios antes de enviar
+    // Check if at least one day is enabled and has time blocks
+    const hasValidSchedule = Object.values(schedule).some(day => 
+      day.enabled && day.timeBlocks.length > 0
+    );
+    
+    console.log('Schedule validation:', { hasValidSchedule, schedule });
+    
+    if (!hasValidSchedule) {
+      toast.error('Debes configurar al menos un día de atención con horarios.');
+      return;
+    }
+    
     const isValid = validateSchedule();
     if (!isValid) {
       toast.error('Por favor, verifica que los horarios de inicio sean anteriores a los de fin.');
@@ -125,31 +136,27 @@ const ScheduleAndFees = ({ profile, onSave, isLoading, onLoadingChange }: Schedu
     if (onLoadingChange) onLoadingChange(true);
     
     try {
-      // Filter out days that are not enabled to keep the data clean
+      // Create cleaned schedule with all days, but only enabled ones have timeBlocks
       const cleanedSchedule = Object.keys(schedule).reduce((acc, day) => {
-        if (schedule[day].enabled) {
-          acc[day] = schedule[day];
-        }
+        acc[day] = {
+          enabled: schedule[day].enabled,
+          timeBlocks: schedule[day].enabled ? schedule[day].timeBlocks : []
+        };
         return acc;
       }, {} as ScheduleData);
       
-      // Llamar al servicio para actualizar el horario
       await updateSchedule({ schedule: cleanedSchedule });
-      
-      // Store the updated schedule locally for immediate display
       setLocalSchedule(schedule);
       
-      // Notificar al componente padre
-      onSave({ schedule: cleanedSchedule });
+      // Only call onSave if it exists
+      if (onSave) {
+        onSave({ schedule: cleanedSchedule });
+      }
       
-      // Mostrar mensaje de éxito
       toast.success('Horario actualizado correctamente');
-      
-      // Salir del modo edición y mostrar el resumen
       setIsEditing(false);
       setShowScheduleSummary(true);
       
-      // Log the saved schedule for debugging
       console.log('Schedule saved:', cleanedSchedule);
     } catch (error) {
       console.error('Error al actualizar el horario:', error);

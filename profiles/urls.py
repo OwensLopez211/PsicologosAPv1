@@ -11,6 +11,9 @@ router.register(r'client-profiles', ClientProfileViewSet, basename='client-profi
 router.register(r'psychologist-profiles', PsychologistProfileViewSet, basename='psychologist-profile')
 router.register(r'admin-profiles', AdminProfileViewSet, basename='admin-profile')
 
+# Add this new URL pattern in urls.py
+from .views.psychologist_views import get_psychologist_schedule
+
 urlpatterns = [
     path('', include(router.urls)),
     
@@ -122,7 +125,10 @@ urlpatterns = [
     
     path('public/psychologists/', PublicPsychologistListView.as_view(), name='public-psychologists'),
     path('public/psychologists/<int:pk>/', PsychologistDetailView.as_view(), name='public-psychologist-detail'),
-    # Add this to the urlpatterns list
+    # Public schedule endpoint
+    path('psychologist-profiles/<int:psychologist_id>/schedule/', 
+         get_psychologist_schedule, 
+         name='public-psychologist-schedule'),
     path('public/psychologists/<int:pk>/presentation-video/', 
          PsychologistProfileViewSet.as_view({'get': 'get_presentation_video'}), 
          name='psychologist-presentation-video'),

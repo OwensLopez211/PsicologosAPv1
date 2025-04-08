@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
 import { CalendarIcon, ClockIcon } from '@heroicons/react/24/solid';
 
 interface TimeBlock {
@@ -12,19 +12,20 @@ interface DaySchedule {
 }
 
 interface ScheduleData {
-  [key: string]: DaySchedule;
+  schedule_config?: {
+    [key: string]: DaySchedule;
+  };
 }
 
 interface ScheduleSectionProps {
-  schedule?: ScheduleData | any;
+  schedule: ScheduleData;
   onSchedule: () => void;
 }
 
 const ScheduleSection: FC<ScheduleSectionProps> = ({
-  schedule = {},
+  schedule,
   onSchedule
 }) => {
-  // Format time for display (e.g., "09:00" to "9:00 AM")
   const formatTime = (time: string) => {
     try {
       const [hours, minutes] = time.split(':');
@@ -37,9 +38,10 @@ const ScheduleSection: FC<ScheduleSectionProps> = ({
     }
   };
 
-  // Format schedule data into readable format
   const formatSchedule = () => {
-    if (!schedule || Object.keys(schedule).length === 0) {
+    const scheduleConfig = schedule?.schedule_config;
+    if (!scheduleConfig) {
+      console.log('No schedule configuration found');
       return [];
     }
 
@@ -54,23 +56,22 @@ const ScheduleSection: FC<ScheduleSectionProps> = ({
     };
 
     const formattedSchedule = [];
-    
-    // Check if we're dealing with the new schedule format
-    const scheduleData = schedule.schedule_config || schedule;
-    
-    for (const day in scheduleData) {
-      const dayData = scheduleData[day];
-      if (dayData && dayData.enabled && dayData.timeBlocks && dayData.timeBlocks.length > 0) {
-        const spanishDay = days[day as keyof typeof days] || day;
+
+    Object.entries(scheduleConfig).forEach(([day, dayData]) => {
+      if (days[day as keyof typeof days] && dayData.enabled && dayData.timeBlocks?.length > 0) {
         formattedSchedule.push({
-          day: spanishDay,
-          timeBlocks: dayData.timeBlocks.map((block: TimeBlock) => ({
+          day: days[day as keyof typeof days],
+          timeBlocks: dayData.timeBlocks.map(block => ({
             start: formatTime(block.startTime),
             end: formatTime(block.endTime)
           }))
         });
       }
-    }
+    });
+
+    // Sort days in correct order
+    const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+    formattedSchedule.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
 
     return formattedSchedule;
   };
@@ -121,7 +122,7 @@ const ScheduleSection: FC<ScheduleSectionProps> = ({
       </div>
       <button 
         className="w-full bg-[#2A6877] text-white px-6 py-3 rounded-md hover:bg-[#235A67] transition-colors mt-6"
-        onClick={onSchedule}
+        onClick={() => onSchedule()} // Ensure we're calling the function
       >
         Agendar Consulta
       </button>

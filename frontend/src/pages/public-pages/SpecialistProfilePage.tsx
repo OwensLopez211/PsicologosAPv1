@@ -32,7 +32,7 @@ interface Specialist {
   graduation_year: number;
   experience_description: string;
   verification_status: string;
-  schedule: any;
+  schedule_config: any; // Update this to match the schedule structure
   verification_documents?: Document[];
 }
 
@@ -76,7 +76,8 @@ const SpecialistProfilePage = () => {
             graduation_year: specialistData.graduation_year || 0,
             experience_description: specialistData.experience_description || '',
             verification_status: specialistData.verification_status || '',
-            schedule: specialistData.schedule || {}
+            schedule_config: specialistData.schedule_config || {}, // Update this line
+            verification_status: specialistData.verification_status || '',
           };
           
           // Make sure we're getting the presentation_video_url from the response
@@ -190,8 +191,8 @@ const SpecialistProfilePage = () => {
             
             <div className="md:col-span-1">
               <ScheduleSection 
+                schedule={{ schedule_config: specialist.schedule_config }}
                 onSchedule={() => setIsScheduleModalOpen(true)}
-                schedule={specialist.schedule || {}}
               />
             </div>
           </div>

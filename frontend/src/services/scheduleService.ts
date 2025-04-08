@@ -103,3 +103,4 @@ export const getSchedule = async (psychologistId: number) => {
     throw error;
   }
 };
+

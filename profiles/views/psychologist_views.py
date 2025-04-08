@@ -4,6 +4,7 @@ from django.http import HttpResponse, Http404
 from django.conf import settings
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny  # Add this import
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 
@@ -329,29 +330,34 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         )
         
     @action(detail=False, methods=['get'])
-    def schedule(self, request):
-        """Endpoint para obtener el horario del psicólogo autenticado"""
-        user = self.request.user
-        if user.user_type != 'psychologist':
-            return Response(
-                {"detail": "Este endpoint es solo para psicólogos."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-            
-        profile = PsychologistProfile.objects.get(user=user)
-        
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def schedule(self, request, pk=None):
+        """Endpoint para obtener el horario de un psicólogo específico o del autenticado"""
         try:
-            schedule = Schedule.objects.get(psychologist=profile)
+            if pk:
+                # For public access to specific psychologist schedule
+                profile = self.get_object()
+                schedule = Schedule.objects.get(psychologist=profile)
+            else:
+                # For authenticated psychologist accessing their own schedule
+                if not request.user.is_authenticated or request.user.user_type != 'psychologist':
+                    return Response(
+                        {"detail": "Authentication required for accessing own schedule."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+                profile = PsychologistProfile.objects.get(user=request.user)
+                schedule = Schedule.objects.get(psychologist=profile)
+
             return Response({
                 "id": schedule.id,
                 "schedule_config": schedule.schedule_config,
                 "psychologist": profile.id
             })
-        except Schedule.DoesNotExist:
+        except (PsychologistProfile.DoesNotExist, Schedule.DoesNotExist):
             return Response({
                 "id": None,
                 "schedule_config": {},
-                "psychologist": profile.id
+                "psychologist": pk if pk else None
             })
 
     @action(detail=False, methods=['get'])
@@ -743,6 +749,13 @@ class PsychologistDetailView(generics.RetrieveAPIView):
         serializer = self.get_serializer(instance)
         data = serializer.data
         
+        # Get schedule data
+        try:
+            schedule = Schedule.objects.get(psychologist=instance)
+            data['schedule_config'] = schedule.schedule_config
+        except Schedule.DoesNotExist:
+            data['schedule_config'] = {}
+        
         # Get the presentation video document if it exists
         presentation_video = ProfessionalDocument.objects.filter(
             psychologist=instance,
@@ -765,5 +778,23 @@ class PsychologistDetailView(generics.RetrieveAPIView):
             data['presentation_video_url'] = None
             
         return Response(data)
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_psychologist_schedule(request, psychologist_id):
+    try:
+        profile = PsychologistProfile.objects.get(id=psychologist_id)
+        schedule_data = profile.schedule_config if profile.schedule_config else {}
+        
+        return Response({
+            'schedule_config': schedule_data,
+            'psychologist_id': psychologist_id,
+            'name': f"{profile.user.first_name} {profile.user.last_name}"
+        })
+    except PsychologistProfile.DoesNotExist:
+        return Response({'error': 'Psychologist not found'}, status=404)
     
     
