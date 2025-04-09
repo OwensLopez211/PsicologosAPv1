@@ -1,151 +1,226 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { getMonthlyAvailability, DailyAvailability } from '../../services/appointmentService';
 
 interface DatePickerProps {
-  onSelectDate: (date: Date) => void;
-  schedule: any;
-  minDate?: Date;
-  maxDate?: Date;
+  psychologistId: number;
+  onSelectDate: (date: Date | null) => void;
 }
 
-const DatePicker: React.FC<DatePickerProps> = ({
-  onSelectDate,
-  schedule,
-  minDate = new Date(),
-  maxDate = new Date(new Date().setMonth(new Date().getMonth() + 3)) // 3 months from now
-}) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+const DatePicker: React.FC<DatePickerProps> = ({ psychologistId, onSelectDate }) => {
+  const [currentDate] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(currentDate.getMonth());
+  const [currentYear, setCurrentYear] = useState(currentDate.getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [availabilityData, setAvailabilityData] = useState<DailyAvailability[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Get days of the week in Spanish
-  const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  
-  // Get month names in Spanish
-  const monthNames = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ];
+  // Fetch availability data when month or psychologist changes
+  useEffect(() => {
+    if (psychologistId) {
+      setLoading(true);
+      setError('');
+      
+      getMonthlyAvailability(psychologistId, currentYear, currentMonth)
+        .then(data => {
+          console.log('Monthly availability data:', data);
+          setAvailabilityData(data);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching monthly availability:', err);
+          setError('Error al cargar la disponibilidad');
+          setAvailabilityData([]);
+          setLoading(false);
+        });
+    }
+  }, [psychologistId, currentMonth, currentYear]);
 
   // Get days in month
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  // Get day of week for first day of month (0 = Sunday, 1 = Monday, etc.)
+  const getFirstDayOfMonth = (year: number, month: number) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  // Navigate to previous month
+  const goToPreviousMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+    setSelectedDate(null);
+    onSelectDate(null);
+  };
+
+  // Navigate to next month
+  const goToNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+    setSelectedDate(null);
+    onSelectDate(null);
+  };
+
+  // Handle date selection
+  const handleDateClick = (day: number) => {
+    const newDate = new Date(currentYear, currentMonth, day);
     
-    const days = [];
-    const firstDayOfMonth = new Date(year, month, 1).getDay();
-    
-    // Add empty days for the start of the month
-    for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(null);
+    // Don't allow selecting dates in the past
+    if (newDate < new Date(currentDate.setHours(0, 0, 0, 0))) {
+      return;
     }
     
-    // Add days of the month
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
+    // Check if the date has available slots
+    const dateString = newDate.toISOString().split('T')[0];
+    const dateAvailability = availabilityData.find(d => d.date === dateString);
+    
+    if (!dateAvailability || !dateAvailability.hasAvailableSlots) {
+      return; // Don't select dates without available slots
+    }
+    
+    if (selectedDate && 
+        selectedDate.getDate() === day && 
+        selectedDate.getMonth() === currentMonth && 
+        selectedDate.getFullYear() === currentYear) {
+      // Deselect if already selected
+      setSelectedDate(null);
+      onSelectDate(null);
+    } else {
+      // Select new date
+      setSelectedDate(newDate);
+      onSelectDate(newDate);
+    }
+  };
+
+  // Check if a date has available slots
+  const hasAvailableSlots = (day: number) => {
+    const dateString = new Date(currentYear, currentMonth, day).toISOString().split('T')[0];
+    const dateAvailability = availabilityData.find(d => d.date === dateString);
+    return dateAvailability?.hasAvailableSlots || false;
+  };
+
+  // Check if a date is in the past
+  const isDateInPast = (day: number) => {
+    const date = new Date(currentYear, currentMonth, day);
+    return date < new Date(currentDate.setHours(0, 0, 0, 0));
+  };
+
+  // Render calendar
+  const renderCalendar = () => {
+    const daysInMonth = getDaysInMonth(currentYear, currentMonth);
+    const firstDayOfMonth = getFirstDayOfMonth(currentYear, currentMonth);
+    
+    // Adjust for Monday as first day of week (0 = Monday, 6 = Sunday)
+    const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+    
+    const days = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < adjustedFirstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-10"></div>);
+    }
+    
+    // Add cells for each day of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isPast = isDateInPast(day);
+      const isAvailable = hasAvailableSlots(day);
+      const isSelected = selectedDate && 
+                         selectedDate.getDate() === day && 
+                         selectedDate.getMonth() === currentMonth && 
+                         selectedDate.getFullYear() === currentYear;
+      
+      days.push(
+        <button
+          key={day}
+          onClick={() => handleDateClick(day)}
+          disabled={isPast || !isAvailable}
+          className={`h-10 w-10 rounded-full flex items-center justify-center text-sm
+            ${isSelected ? 'bg-blue-600 text-white' : ''}
+            ${!isSelected && isAvailable && !isPast ? 'hover:bg-gray-200' : ''}
+            ${isPast ? 'text-gray-300 cursor-not-allowed' : ''}
+            ${!isAvailable && !isPast ? 'text-gray-400 cursor-not-allowed' : ''}
+            ${isAvailable && !isPast && !isSelected ? 'text-blue-600 font-medium' : ''}
+          `}
+        >
+          {day}
+        </button>
+      );
     }
     
     return days;
   };
 
-  // Check if a date is available based on the psychologist's schedule
-  const isDateAvailable = (date: Date) => {
-    if (!schedule) return false;
-    
-    const dayOfWeek = date.getDay();
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const dayName = dayNames[dayOfWeek];
-    
-    // Check if the psychologist works on this day
-    return schedule[dayName]?.enabled || false;
+  // Get month name
+  const getMonthName = (month: number) => {
+    const monthNames = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return monthNames[month];
   };
-
-  // Check if a date is selectable (within min/max range and available)
-  const isDateSelectable = (date: Date | null) => {
-    if (!date) return false;
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    return (
-      date >= today &&
-      date >= minDate &&
-      date <= maxDate &&
-      isDateAvailable(date)
-    );
-  };
-
-  // Format date as YYYY-MM-DD
-  const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
-  };
-
-  // Handle date selection
-  const handleDateClick = (date: Date | null) => {
-    if (date && isDateSelectable(date)) {
-      setSelectedDate(date);
-      onSelectDate(date);
-    }
-  };
-
-  // Navigate to previous month
-  const prevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-  };
-
-  // Navigate to next month
-  const nextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
-  };
-
-  // Get days for the current month
-  const days = getDaysInMonth(currentMonth);
 
   return (
-    <div className="w-full">
+    <div className="p-4">
       <div className="flex items-center justify-between mb-4">
         <button
-          onClick={prevMonth}
-          className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+          onClick={goToPreviousMonth}
+          className="p-1 rounded-full hover:bg-gray-200"
           aria-label="Mes anterior"
         >
-          <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
+          <ChevronLeftIcon className="h-5 w-5" />
         </button>
-        <h3 className="font-medium text-gray-900">
-          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+        <h3 className="text-lg font-medium">
+          {getMonthName(currentMonth)} {currentYear}
         </h3>
         <button
-          onClick={nextMonth}
-          className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+          onClick={goToNextMonth}
+          className="p-1 rounded-full hover:bg-gray-200"
           aria-label="Mes siguiente"
         >
-          <ChevronRightIcon className="h-5 w-5 text-gray-600" />
+          <ChevronRightIcon className="h-5 w-5" />
         </button>
       </div>
       
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {daysOfWeek.map((day, index) => (
-          <div key={index} className="text-center text-xs font-medium text-gray-500">
-            {day}
+      {loading ? (
+        <div className="text-center py-4">
+          <div className="animate-pulse">Cargando disponibilidad...</div>
+        </div>
+      ) : error ? (
+        <div className="text-center py-4 text-red-500">{error}</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day, index) => (
+              <div key={index} className="h-8 flex items-center justify-center text-sm font-medium text-gray-500">
+                {day}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+          <div className="grid grid-cols-7 gap-1">
+            {renderCalendar()}
+          </div>
+        </>
+      )}
       
-      <div className="grid grid-cols-7 gap-1">
-        {days.map((day, index) => (
-          <div
-            key={index}
-            className={`
-              h-9 flex items-center justify-center text-sm rounded-full cursor-pointer
-              ${!day ? 'invisible' : ''}
-              ${day && isDateSelectable(day) ? 'hover:bg-blue-100' : 'text-gray-300 cursor-not-allowed'}
-              ${selectedDate && day && formatDate(selectedDate) === formatDate(day) ? 'bg-[#2A6877] text-white' : ''}
-            `}
-            onClick={() => handleDateClick(day)}
-          >
-            {day ? day.getDate() : ''}
-          </div>
-        ))}
+      <div className="mt-4 text-xs text-gray-500">
+        <div className="flex items-center mb-1">
+          <div className="h-3 w-3 rounded-full bg-blue-600 mr-2"></div>
+          <span>Días con horarios disponibles</span>
+        </div>
+        <div className="flex items-center">
+          <div className="h-3 w-3 rounded-full bg-gray-300 mr-2"></div>
+          <span>Días sin disponibilidad</span>
+        </div>
       </div>
     </div>
   );

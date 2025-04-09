@@ -9,6 +9,7 @@ import Specialties from '../../components/specialist-profile/Specialties';
 import Education from '../../components/specialist-profile/Education';
 import ScheduleSection from '../../components/specialist-profile/ScheduleSection';
 import ProfessionalExperience from '../../components/specialist-profile/ProfessionalExperience';
+import { useAuth } from '../../context/AuthContext';
 
 interface Document {
   id: number;
@@ -18,13 +19,41 @@ interface Document {
   uploaded_at: string;
 }
 
+// Actualizar la interfaz para que coincida con la estructura real de los datos
+interface TimeBlock {
+  endTime: string;
+  startTime: string;
+  length?: number;
+}
+
+interface DaySchedule {
+  enabled: boolean;
+  timeBlocks: TimeBlock[];
+}
+
+interface ScheduleConfig {
+  sunday?: DaySchedule;
+  monday?: DaySchedule;
+  tuesday?: DaySchedule;
+  wednesday?: DaySchedule;
+  thursday?: DaySchedule;
+  friday?: DaySchedule;
+  saturday?: DaySchedule;
+}
+
+interface User {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+}
+
 interface Specialist {
   id: number;
-  profile_id?: number;
-  name: string;
+  user: User;
+  profile_image: string;
   professional_title: string;
   health_register_number: string;
-  profile_image: string;
   specialties: string[];
   target_populations: string[];
   intervention_areas: string[];
@@ -32,8 +61,20 @@ interface Specialist {
   graduation_year: number;
   experience_description: string;
   verification_status: string;
-  schedule_config: any; // Update this to match the schedule structure
+  schedule_config: ScheduleConfig;
   verification_documents?: Document[];
+  presentation_video_url?: string;
+  rut: string;
+  phone: string;
+  city: string;
+  region: string;
+  gender: string;
+  bank_account_number?: string;
+  bank_account_type?: string;
+  bank_account_owner?: string;
+  bank_account_owner_rut?: string;
+  bank_account_owner_email?: string;
+  bank_name?: string;
 }
 
 const SpecialistProfilePage = () => {
@@ -43,71 +84,70 @@ const SpecialistProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [presentationVideoUrl, setPresentationVideoUrl] = useState('');
+  const { user } = useAuth();
   
-  // Remove the comment that was added by the previous update
   useEffect(() => {
     const fetchSpecialist = async () => {
       try {
         setLoading(true);
-        try {
-          const response = await axios.get(`/api/profiles/public/psychologists/${id}/`, {
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          console.log('Specialist data:', response.data);
-          
-          // Process the response data
-          const specialistData = response.data;
-          
-          // Create a properly formatted specialist object
-          const formattedSpecialist: Specialist = {
-            id: specialistData.id,
-            name: `${specialistData.user?.first_name || ''} ${specialistData.user?.last_name || ''}`.trim(),
-            professional_title: specialistData.professional_title || '',
-            health_register_number: specialistData.health_register_number || '',
-            profile_image: specialistData.profile_image || '',
-            specialties: specialistData.specialties || [],
-            target_populations: specialistData.target_populations || [],
-            intervention_areas: specialistData.intervention_areas || [],
-            university: specialistData.university || '',
-            graduation_year: specialistData.graduation_year || 0,
-            experience_description: specialistData.experience_description || '',
-            verification_status: specialistData.verification_status || '',
-            schedule_config: specialistData.schedule_config || {}, // Update this line
-            verification_status: specialistData.verification_status || '',
-          };
-          
-          // Make sure we're getting the presentation_video_url from the response
-          if (specialistData.presentation_video_url) {
-            console.log('Found presentation video:', specialistData.presentation_video_url);
-            setPresentationVideoUrl(specialistData.presentation_video_url);
-            // Add the URL to the specialist object as well
-            formattedSpecialist.presentation_video_url = specialistData.presentation_video_url;
-          } else if (specialistData.verification_documents) {
-            // Try to find the presentation video in verification documents
-            const videoDoc = specialistData.verification_documents.find(
-              (doc: Document) => doc.document_type === 'presentation_video' && doc.verification_status === 'verified'
-            );
-            
-            if (videoDoc && videoDoc.file) {
-              console.log('Found presentation video in documents:', videoDoc.file);
-              setPresentationVideoUrl(videoDoc.file);
-              formattedSpecialist.presentation_video_url = videoDoc.file;
-            }
+        // Corregir la URL para evitar el doble /api/
+        const response = await axios.get(`/api/profiles/public/psychologists/${id}/`, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           }
+        });
+        
+        console.log('Specialist data:', response.data);
+        
+        // Procesar los datos de respuesta
+        const specialistData = response.data;
+        
+        // Asegurarse de que schedule_config tenga el formato correcto
+        const formattedScheduleConfig: ScheduleConfig = {};
+        
+        // Procesar cada día de la semana si existe en los datos
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        days.forEach(day => {
+          if (specialistData.schedule_config && specialistData.schedule_config[day]) {
+            formattedScheduleConfig[day] = {
+              enabled: specialistData.schedule_config[day].enabled || false,
+              timeBlocks: specialistData.schedule_config[day].timeBlocks || []
+            };
+          }
+        });
+        
+        // Crear un objeto especialista con formato adecuado
+        const formattedSpecialist: Specialist = {
+          ...specialistData,
+          schedule_config: formattedScheduleConfig
+        };
+        
+        // Manejar la URL del video de presentación
+        if (specialistData.presentation_video_url) {
+          console.log('Found presentation video:', specialistData.presentation_video_url);
+          setPresentationVideoUrl(specialistData.presentation_video_url);
+        } else if (specialistData.verification_documents) {
+          // Intentar encontrar el video de presentación en los documentos de verificación
+          const videoDoc = specialistData.verification_documents.find(
+            (doc: Document) => doc.document_type === 'presentation_video' && doc.verification_status === 'verified'
+          );
           
-          setSpecialist(formattedSpecialist);
-          setLoading(false);
-        } catch (error) {
-          console.error('Error fetching specialist by ID:', error);
-          setError('No se pudo cargar la información del especialista. Por favor, intenta de nuevo más tarde.');
-          setLoading(false);
+          if (videoDoc && videoDoc.file) {
+            console.log('Found presentation video in documents:', videoDoc.file);
+            setPresentationVideoUrl(videoDoc.file);
+            formattedSpecialist.presentation_video_url = videoDoc.file;
+          }
         }
+        
+        // Add debug logging to clearly show the IDs
+        console.log('Specialist profile ID:', specialistData.id);
+        console.log('Specialist user ID:', specialistData.user.id);
+        
+        setSpecialist(formattedSpecialist);
+        setLoading(false);
       } catch (error) {
-        console.error('Error in fetchSpecialist:', error);
+        console.error('Error fetching specialist by ID:', error);
         setError('No se pudo cargar la información del especialista. Por favor, intenta de nuevo más tarde.');
         setLoading(false);
       }
@@ -118,7 +158,7 @@ const SpecialistProfilePage = () => {
     }
   }, [id]);
 
-  // Loading and error handling remains the same
+  // Loading and error handling
   if (loading) {
     return (
       <PageTransition>
@@ -139,7 +179,7 @@ const SpecialistProfilePage = () => {
     );
   }
 
-  // Only show verified specialists
+  // Solo mostrar especialistas verificados
   if (specialist.verification_status !== 'VERIFIED') {
     return (
       <PageTransition>
@@ -150,29 +190,30 @@ const SpecialistProfilePage = () => {
     );
   }
 
-  // Ensure all arrays are defined
+  // Asegurar que todos los arrays estén definidos
   const specialties = specialist.specialties || [];
   const interventionAreas = specialist.intervention_areas || [];
   const targetPopulations = specialist.target_populations || [];
 
-  // Use the profile_id for scheduling if available, otherwise fall back to id
-  const profileId = specialist.profile_id || specialist.id;
+  // Obtener el nombre completo del especialista
+  const specialistName = specialist.user ? 
+    `${specialist.user.first_name} ${specialist.user.last_name}`.trim() : 
+    'Especialista';
 
   return (
     <PageTransition>
       <div className="container mx-auto px-6 py-12">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <ProfileHeader 
-            name={specialist.name || 'Especialista'}
+            name={specialistName}
             title={specialist.professional_title || 'Psicólogo'}
             registrationNumber={specialist.health_register_number || 'No disponible'}
-            profileImage={specialist.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(specialist.name || 'Especialista')}&background=2A6877&color=fff&size=400`}
+            profileImage={specialist.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(specialistName)}&background=2A6877&color=fff&size=400`}
             onSchedule={() => setIsScheduleModalOpen(true)}
           />
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
             <div className="md:col-span-2 space-y-6">
-              {/* Use the presentationVideoUrl state variable instead of the specialist object property */}
               <PresentationVideo videoUrl={presentationVideoUrl} />
               <ProfessionalExperience experienceDescription={specialist.experience_description || ''} />
               
@@ -192,7 +233,16 @@ const SpecialistProfilePage = () => {
             <div className="md:col-span-1">
               <ScheduleSection 
                 schedule={{ schedule_config: specialist.schedule_config }}
-                onSchedule={() => setIsScheduleModalOpen(true)}
+                onSchedule={() => {
+                  if (user && user.user_type === 'client') {
+                    setIsScheduleModalOpen(true);
+                  } else if (!user) {
+                    // Redirigir a login o mostrar mensaje
+                    alert('Debes iniciar sesión como cliente para agendar una cita');
+                  } else {
+                    alert('Solo los clientes pueden agendar citas');
+                  }
+                }}
               />
             </div>
           </div>
@@ -201,8 +251,10 @@ const SpecialistProfilePage = () => {
       
       {isScheduleModalOpen && (
         <ScheduleModal 
-          specialistId={profileId}
-          specialistName={specialist.name || 'Especialista'}
+          // Asegúrate de que estás pasando el ID del perfil, no el ID del usuario
+          specialistId={specialist.id} // Debería ser el ID del perfil (9)
+          specialistName={specialistName}
+          schedule={{ schedule_config: specialist.schedule_config }}
           onClose={() => setIsScheduleModalOpen(false)}
         />
       )}

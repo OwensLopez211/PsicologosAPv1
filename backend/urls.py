@@ -6,9 +6,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('authentication.urls')),
-    path('api/profiles/', include('profiles.urls')),  # Add this line to include profiles URLs
-    # Comentamos las rutas que aún no están implementadas
-    # path('api/', include('appointments.urls')),
+    path('api/profiles/', include('profiles.urls')),
+    path('api/appointments/', include('appointments.urls')),
     # path('api/', include('payments.urls')),
     # path('api/', include('settlements.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

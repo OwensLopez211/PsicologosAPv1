@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',  # Add JWT support
     # Local apps
     'authentication',
-    # 'appointments',  # Make sure this line is added
+    'appointments',  # Make sure this line is added
     'payments',
     'settlements',
     'profiles.apps.ProfilesConfig',
@@ -156,3 +156,22 @@ TEMPLATES = [
         },
     },
 ]
+
+
+# Añade esto al final del archivo
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

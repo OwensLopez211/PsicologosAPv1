@@ -1,5 +1,5 @@
 import { FC, useEffect } from 'react';
-import { CalendarIcon, ClockIcon } from '@heroicons/react/24/solid';
+import { CalendarIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 interface TimeBlock {
   startTime: string;
@@ -11,21 +11,36 @@ interface DaySchedule {
   timeBlocks: TimeBlock[];
 }
 
-interface ScheduleData {
-  schedule_config?: {
-    [key: string]: DaySchedule;
-  };
+interface ScheduleConfig {
+  sunday?: DaySchedule;
+  monday?: DaySchedule;
+  tuesday?: DaySchedule;
+  wednesday?: DaySchedule;
+  thursday?: DaySchedule;
+  friday?: DaySchedule;
+  saturday?: DaySchedule;
 }
 
 interface ScheduleSectionProps {
-  schedule: ScheduleData;
+  schedule: {
+    schedule_config: ScheduleConfig;
+  };
   onSchedule: () => void;
 }
 
-const ScheduleSection: FC<ScheduleSectionProps> = ({
-  schedule,
-  onSchedule
-}) => {
+const ScheduleSection: React.FC<ScheduleSectionProps> = ({ schedule, onSchedule }) => {
+  // Mapeo de días en inglés a español
+  const dayTranslations: Record<string, string> = {
+    'sunday': 'Domingo',
+    'monday': 'Lunes',
+    'tuesday': 'Martes',
+    'wednesday': 'Miércoles',
+    'thursday': 'Jueves',
+    'friday': 'Viernes',
+    'saturday': 'Sábado'
+  };
+
+  // Formatear hora de 24h a 12h con AM/PM
   const formatTime = (time: string) => {
     try {
       const [hours, minutes] = time.split(':');
@@ -38,95 +53,67 @@ const ScheduleSection: FC<ScheduleSectionProps> = ({
     }
   };
 
-  const formatSchedule = () => {
-    const scheduleConfig = schedule?.schedule_config;
-    if (!scheduleConfig) {
-      console.log('No schedule configuration found');
-      return [];
-    }
+  // Obtener días con horarios habilitados
+  const getEnabledDays = () => {
+    if (!schedule || !schedule.schedule_config) return [];
 
-    const days = {
-      monday: "Lunes",
-      tuesday: "Martes",
-      wednesday: "Miércoles",
-      thursday: "Jueves",
-      friday: "Viernes",
-      saturday: "Sábado",
-      sunday: "Domingo"
-    };
-
-    const formattedSchedule = [];
-
-    Object.entries(scheduleConfig).forEach(([day, dayData]) => {
-      if (days[day as keyof typeof days] && dayData.enabled && dayData.timeBlocks?.length > 0) {
-        formattedSchedule.push({
-          day: days[day as keyof typeof days],
-          timeBlocks: dayData.timeBlocks.map(block => ({
-            start: formatTime(block.startTime),
-            end: formatTime(block.endTime)
-          }))
-        });
-      }
-    });
-
-    // Sort days in correct order
-    const dayOrder = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-    formattedSchedule.sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
-
-    return formattedSchedule;
+    return Object.entries(schedule.schedule_config)
+      .filter(([_, dayConfig]) => dayConfig && dayConfig.enabled)
+      .map(([day, dayConfig]) => ({
+        day,
+        dayName: dayTranslations[day] || day,
+        timeBlocks: dayConfig.timeBlocks || []
+      }))
+      .sort((a, b) => {
+        // Ordenar días de la semana (domingo al final)
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        return days.indexOf(a.day) - days.indexOf(b.day);
+      });
   };
 
-  const scheduleData = formatSchedule();
-  const hasSchedule = scheduleData.length > 0;
+  const enabledDays = getEnabledDays();
 
   return (
-    <section className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold mb-4 flex items-center">
-        <CalendarIcon className="h-5 w-5 text-[#2A6877] mr-2" />
-        Horarios disponibles
-      </h2>
-      
-      {hasSchedule ? (
-        <div className="space-y-6">
-          {scheduleData.map((daySchedule, dayIndex) => (
-            <div key={dayIndex} className="border-b pb-4 last:border-b-0 last:pb-0">
-              <h3 className="font-medium text-gray-800 mb-2">{daySchedule.day}</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {daySchedule.timeBlocks.map((block, blockIndex) => (
-                  <div 
-                    key={blockIndex} 
-                    className="bg-blue-50 text-blue-800 px-3 py-2 rounded-md flex items-center"
-                  >
-                    <ClockIcon className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>{block.start} - {block.end}</span>
-                  </div>
-                ))}
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+        <CalendarIcon className="h-5 w-5 mr-2 text-[#2A6877]" />
+        Horario de atención
+      </h3>
+
+      {enabledDays.length > 0 ? (
+        <div className="space-y-3">
+          {enabledDays.map(({ day, dayName, timeBlocks }) => (
+            <div key={day} className="border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
+              <h4 className="font-medium text-gray-800">{dayName}</h4>
+              <div className="mt-1 space-y-1">
+                {timeBlocks && timeBlocks.length > 0 ? (
+                  timeBlocks.map((block, index) => (
+                    <div key={index} className="flex items-center text-sm text-gray-600">
+                      <ClockIcon className="h-4 w-4 mr-1 text-gray-400" />
+                      <span>
+                        {formatTime(block.startTime)} - {formatTime(block.endTime)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-500">Horario no especificado</div>
+                )}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-gray-500 italic py-4">
-          Horarios no disponibles
-        </div>
+        <p className="text-gray-500 text-sm">No hay horarios disponibles</p>
       )}
-      
-      <div className="mt-6">
-        <h3 className="font-medium mb-2">Modalidad de atención</h3>
-        <span className="bg-[#2A6877] bg-opacity-10 text-[#2A6877] px-3 py-1 rounded-full text-sm inline-flex items-center">
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-          Consulta Online
-        </span>
-      </div>
-      <button 
-        className="w-full bg-[#2A6877] text-white px-6 py-3 rounded-md hover:bg-[#235A67] transition-colors mt-6"
-        onClick={() => onSchedule()} // Ensure we're calling the function
+
+      <button
+        onClick={onSchedule}
+        className="mt-4 w-full flex items-center justify-center px-4 py-2 bg-[#2A6877] text-white rounded-md hover:bg-[#1d4e5a] transition-colors"
       >
-        Agendar Consulta
+        <CalendarIcon className="h-5 w-5 mr-2" />
+        Agendar consulta
       </button>
-    </section>
+    </div>
   );
 };
 
