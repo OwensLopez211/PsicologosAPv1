@@ -103,7 +103,9 @@ const PsychologistDetailPage = () => {
     window.open(documentUrl, '_blank');
   };
 
-  const handleDownloadDocument = async (documentId: number, fileName: string) => {
+  // Add the async keyword here to fix the error
+  // Rename the function to match what DocumentsSection expects
+  const handleDocumentDownload = async (documentId: number, fileName: string) => {
     if (!psychologist || !psychologist.id) {
       toast.error('No se pudo obtener la información del psicólogo');
       return;
@@ -206,13 +208,15 @@ const PsychologistDetailPage = () => {
               />
             </div>
 
-            {/* Price Management Section - New Component */}
+            {/* Price Management Section */}
             <div className="mt-8">
-              <PriceManagement 
-                psychologistId={parseInt(id as string)}
-                suggestedPrice={psychologist.suggested_price}
-                onPriceUpdated={() => fetchPsychologistData(parseInt(id as string))}
-              />
+              {psychologist && psychologist.id && (
+                <PriceManagement 
+                  psychologistId={psychologist.user.id} 
+                  suggestedPrice={psychologist.suggested_price}
+                  onPriceUpdated={() => fetchPsychologistData(parseInt(id as string))}
+                />
+              )}
             </div>
 
             {/* Specialties and Target Populations */}

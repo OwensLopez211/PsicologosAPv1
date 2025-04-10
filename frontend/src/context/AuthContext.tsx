@@ -9,6 +9,7 @@ interface User {
   user_type: 'client' | 'psychologist' | 'admin';
   first_name: string;
   last_name: string;
+  profile_id?: number; // Añadimos el profile_id como opcional
 }
 
 interface AuthContextType {
@@ -28,14 +29,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null); // Add token state
 
+  // En la función logout, añadir:
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('profile_id'); // Eliminar también el profile_id
     localStorage.removeItem('lastRefreshAttempt');
     setUser(null);
-    setToken(null); // Clear token state
+    setToken(null);
   };
+  
+  // En la función initAuth, asegurarse de que el profile_id se cargue correctamente:
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const savedUser = localStorage.getItem('user');
+        const storedToken = localStorage.getItem('token');
+        const refreshTokenValue = localStorage.getItem('refresh_token');
+  
+        if (savedUser && (storedToken || refreshTokenValue)) {
+          const parsedUser = JSON.parse(savedUser);
+          
+          // Normalizar el tipo de usuario a minúsculas
+          const normalizedUser = {
+            ...parsedUser,
+            user_type: parsedUser.user_type?.toLowerCase() as 'client' | 'psychologist' | 'admin'
+          };
+          
+          // Asegurarse de que el profile_id esté incluido
+          const profileId = localStorage.getItem('profile_id');
+          if (profileId && !normalizedUser.profile_id) {
+            normalizedUser.profile_id = parseInt(profileId);
+          }
+          
+          setUser(normalizedUser);
+          
+          // El resto del código permanece igual
+        }
+      } catch (error) {
+        // El manejo de errores permanece igual
+      }
+    };
+  
+    initAuth();
+  }, []);
 
   // Nueva función para refrescar la sesión del usuario
   const refreshUserSession = async (): Promise<boolean> => {

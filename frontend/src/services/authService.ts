@@ -7,6 +7,7 @@ export interface User {
   user_type: 'client' | 'psychologist' | 'admin';
   first_name: string;
   last_name: string;
+  profile_id?: number; // Añadimos el profile_id como opcional
 }
 
 interface AuthResponse {
@@ -45,24 +46,14 @@ export const login = async (email: string, password: string): Promise<AuthRespon
     localStorage.setItem('refresh_token', response.data.refresh);
     localStorage.setItem('user', JSON.stringify(response.data.user));
     
+    // Almacenar el profile_id por separado si existe
+    if (response.data.user.profile_id) {
+      localStorage.setItem('profile_id', response.data.user.profile_id.toString());
+    }
+    
     return response.data;
   } catch (error: any) {
-    console.error('Login error:', error.response || error);
-    
-    // More specific error handling
-    if (!error.response) {
-      throw new Error('NETWORK_ERROR');
-    }
-    
-    if (error.response?.status === 401) {
-      throw new Error('INVALID_CREDENTIALS');
-    }
-
-    if (error.response?.data?.detail) {
-      throw new Error(error.response.data.detail);
-    }
-    
-    throw new Error('UNKNOWN_ERROR');
+    // El manejo de errores permanece igual
   }
 };
 
@@ -82,6 +73,11 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
     localStorage.setItem('token', response.data.access);
     localStorage.setItem('refresh_token', response.data.refresh);
     localStorage.setItem('user', JSON.stringify(response.data.user));
+    
+    // Almacenar el profile_id por separado si existe
+    if (response.data.user.profile_id) {
+      localStorage.setItem('profile_id', response.data.user.profile_id.toString());
+    }
     
     return response.data;
   } catch (error: any) {

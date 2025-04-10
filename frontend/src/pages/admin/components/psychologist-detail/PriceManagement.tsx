@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
 import api from '../../../../services/api';
 import { CurrencyDollarIcon } from '@heroicons/react/24/solid';
 
@@ -17,6 +16,13 @@ interface PsychologistPrice {
   admin_notes: string;
 }
 
+// Default configuration values
+const DEFAULT_PRICE_CONFIG = {
+  min_price: 5000,
+  max_price: 50000,
+  platform_fee_percentage: 10
+};
+
 const PriceManagement: React.FC<PriceManagementProps> = ({ 
   psychologistId, 
   suggestedPrice,
@@ -27,55 +33,72 @@ const PriceManagement: React.FC<PriceManagementProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [newPrice, setNewPrice] = useState<number>(0);
   const [adminNotes, setAdminNotes] = useState<string>('');
-  const [priceConfig, setPriceConfig] = useState({ min_price: 5000, max_price: 15000 });
+  const [priceConfig, setPriceConfig] = useState(DEFAULT_PRICE_CONFIG);
+  const [psychologistProfileId, setPsychologistProfileId] = useState<number | null>(null);
 
+  // Fetch price configuration and psychologist profile
   useEffect(() => {
-    fetchPriceConfiguration();
-    fetchPsychologistPrice();
-  }, [psychologistId]);
-
-  const fetchPriceConfiguration = async () => {
-    try {
-      const response = await api.get('/pricing/configurations/current/');
-      setPriceConfig(response.data);
-    } catch (error) {
-      console.error('Error fetching price configuration:', error);
-      // Use default values if configuration can't be fetched
-    }
-  };
-
-  const fetchPsychologistPrice = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/pricing/psychologist-prices/?psychologist=${psychologistId}`);
-      
-      if (response.data.length > 0) {
-        setPrice(response.data[0]);
-        setNewPrice(response.data[0].price);
-        setAdminNotes(response.data[0].admin_notes || '');
-      } else {
-        // No price set yet, initialize with suggested price if available
-        setPrice(null);
-        setNewPrice(suggestedPrice || priceConfig.min_price);
-        setAdminNotes('');
+    const fetchInitialData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch price configuration
+        const configResponse = await api.get('/pricing/configurations/current/');
+        setPriceConfig(configResponse.data);
+        
+        // Find the psychologist profile ID by user ID
+        const profilesResponse = await api.get('/profiles/psychologist-profiles/', {
+          params: { user: psychologistId }
+        });
+        
+        if (profilesResponse.data.length > 0) {
+          const profileId = profilesResponse.data[0].id;
+          console.log(`Found psychologist profile ID: ${profileId} for user ID: ${psychologistId}`);
+          setPsychologistProfileId(profileId);
+          
+          // Now fetch the price using the profile ID
+          const priceResponse = await api.get(`/pricing/psychologist-prices/`, {
+            params: { psychologist: profileId }
+          });
+          
+          if (priceResponse.data.length > 0) {
+            setPrice(priceResponse.data[0]);
+            setNewPrice(priceResponse.data[0].price);
+            setAdminNotes(priceResponse.data[0].admin_notes || '');
+          } else {
+            setPrice(null);
+            setNewPrice(suggestedPrice || configResponse.data.min_price);
+            setAdminNotes('');
+          }
+        } else {
+          toast.error(`No se encontró el perfil del psicólogo para el usuario con ID ${psychologistId}`);
+        }
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        toast.error('Error al cargar los datos iniciales');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching psychologist price:', error);
-      toast.error('Error al cargar el precio del psicólogo');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    
+    fetchInitialData();
+  }, [psychologistId, suggestedPrice]);
 
   const handleSavePrice = async () => {
     try {
+      if (!psychologistProfileId) {
+        toast.error('No se pudo determinar el ID del perfil del psicólogo');
+        return;
+      }
+      
       setLoading(true);
       
       if (newPrice < priceConfig.min_price || newPrice > priceConfig.max_price) {
         toast.error(`El precio debe estar entre ${priceConfig.min_price} y ${priceConfig.max_price} CLP`);
+        setLoading(false);
         return;
       }
-
+      
       let response;
       
       if (price?.id) {
@@ -86,9 +109,10 @@ const PriceManagement: React.FC<PriceManagementProps> = ({
           admin_notes: adminNotes
         });
       } else {
-        // Create new price
+        // Create new price using the profile ID
+        console.log(`Creating new price for psychologist profile ID: ${psychologistProfileId}`);
         response = await api.post('/pricing/psychologist-prices/', {
-          psychologist: psychologistId,
+          psychologist: psychologistProfileId,
           price: newPrice,
           is_approved: true,
           admin_notes: adminNotes
@@ -103,12 +127,8 @@ const PriceManagement: React.FC<PriceManagementProps> = ({
         onPriceUpdated();
       }
     } catch (error) {
-      console.error('Error saving psychologist price:', error);
-      if (axios.isAxiosError(error) && error.response) {
-        toast.error(`Error: ${error.response.data.detail || 'No se pudo guardar el precio'}`);
-      } else {
-        toast.error('Error al guardar el precio');
-      }
+      console.error('Error saving price:', error);
+      toast.error('Error al guardar el precio');
     } finally {
       setLoading(false);
     }
