@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, Schedule, AdminProfile  # Add AdminProfile import here
+from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, AdminProfile
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -28,12 +28,7 @@ class ProfessionalDocumentSerializer(serializers.ModelSerializer):
             'rejection_reason', 'uploaded_at', 'verified_at'
         )
 
-class ScheduleSerializer(serializers.ModelSerializer):
-    """Serializer para horarios de psicólogos"""
-    class Meta:
-        model = Schedule
-        fields = '__all__'
-        read_only_fields = ('id', 'psychologist')
+# Remove ScheduleSerializer completely
 
 class BaseProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name', read_only=True)
@@ -138,10 +133,10 @@ class PsychologistProfileSerializer(BaseProfileSerializer):
             'graduation_year', 'specialties', 'target_populations', 
             'intervention_areas', 'experience_description', 'verification_status',
             'presentation_video_url'
+            'suggested_price',
         )
         read_only_fields = ('id', 'verification_status')
     documents = ProfessionalDocumentSerializer(many=True, read_only=True, source='professionaldocument_set')
-    schedule = ScheduleSerializer(read_only=True)
     
     # Ensure these fields can handle empty values properly
     specialties = serializers.ListField(child=serializers.CharField(), required=False)
@@ -155,7 +150,7 @@ class PsychologistProfileSerializer(BaseProfileSerializer):
             'id', 'rut', 'phone', 'gender', 'region', 'city',
             'professional_title', 'specialties', 'health_register_number', 'university',
             'graduation_year', 'experience_description', 'target_populations', 
-            'intervention_areas', 'verification_status', 'documents', 'schedule'
+            'intervention_areas', 'verification_status', 'documents'
         )
         read_only_fields = ('id', 'verification_status', 'created_at', 'updated_at')
 
@@ -192,7 +187,19 @@ class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
     verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
     bank_account_type_display = serializers.CharField(source='get_bank_account_type_display', read_only=True)
     
-    class Meta:
+    # Asegúrate de que el campo suggested_price esté incluido
+    suggested_price = serializers.IntegerField(required=False, allow_null=True)
+    
+    def get_user(self, obj):
+        return {
+            'id': obj.user.id,
+            'email': obj.user.email,
+            'first_name': obj.user.first_name,
+            'last_name': obj.user.last_name,
+            'is_active': obj.user.is_active
+        }
+    
+    class Meta(BaseProfileSerializer.Meta):
         model = PsychologistProfile
         fields = (
             'id', 'user', 'profile_image', 'rut', 'phone', 'gender', 'region', 'city',
@@ -200,6 +207,7 @@ class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
             'graduation_year', 'experience_description', 'target_populations', 'intervention_areas',
             'verification_status', 'verification_status_display', 'created_at', 'updated_at',
             'bank_account_number', 'bank_account_type', 'bank_account_type_display', 
-            'bank_account_owner', 'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name'
+            'bank_account_owner', 'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name',
+            'suggested_price'
         )
         read_only_fields = ('id', 'user', 'verification_status', 'verification_status_display', 'created_at', 'updated_at')

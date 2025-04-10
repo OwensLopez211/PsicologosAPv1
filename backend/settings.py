@@ -33,14 +33,15 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
-    'rest_framework_simplejwt',  # Add JWT support
+    'rest_framework_simplejwt', 
     # Local apps
     'authentication',
-    'appointments',  # Make sure this line is added
+    'appointments',  
     'payments',
     'settlements',
     'profiles.apps.ProfilesConfig',
-
+    'schedules',  
+    'pricing',
 ]
 
 MIDDLEWARE = [

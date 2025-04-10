@@ -47,6 +47,7 @@ export interface Psychologist {
   bank_account_owner_email: string;
   bank_name: string;
   verification_documents: PsychologistDocument[];
+  suggested_price: number | null;
 }
 
 export interface PsychologistDocument {

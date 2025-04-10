@@ -137,6 +137,17 @@ class PsychologistProfile(BaseProfile):
     target_populations = models.JSONField(default=list, blank=True)
     intervention_areas = models.JSONField(default=list, blank=True)
     
+    # Suggested price field
+    suggested_price = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(15000)  # Maximum 15000 CLP as per client requirement
+        ],
+        null=True,
+        blank=True,
+        help_text="Precio sugerido por el psicólogo (máximo 15000 CLP)"
+    )
+    
     # Información bancaria
     bank_account_number = models.CharField(max_length=50, blank=True)
     bank_account_type = models.CharField(
@@ -198,36 +209,3 @@ class ProfessionalDocument(models.Model):
         
     def __str__(self):
         return f"{self.get_document_type_display()} - {self.psychologist.user.email}"
-
-class Schedule(models.Model):
-    """
-    Configuración de horarios disponibles para el psicólogo
-    """
-    psychologist = models.OneToOneField(
-        PsychologistProfile,
-        on_delete=models.CASCADE,
-        related_name='schedule'
-    )
-    # Almacenamos la configuración de horario como JSON
-    # Estructura actualizada: {
-    #   "monday": {"enabled": true, "timeBlocks": [{"startTime": "09:00", "endTime": "10:00"}, ...]},
-    #   "tuesday": {"enabled": true, "timeBlocks": [...]},
-    #   ...
-    # }
-    schedule_config = models.JSONField(default=dict)
-    
-    def __str__(self):
-        return f"Horario de {self.psychologist.user.email}"
-    
-    def get_available_slots(self, date, duration=50):
-        """
-        Obtiene los slots disponibles para una fecha específica
-        basado en el horario configurado y las citas existentes
-        
-        Args:
-            date: Fecha para la que se buscan slots disponibles
-            duration: Duración de la cita en minutos (por defecto 50 min)
-            
-        Returns:
-            Lista de slots disponibles en formato {"start": "HH:MM", "end": "HH:MM"}
-        """

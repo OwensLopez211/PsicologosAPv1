@@ -1,8 +1,10 @@
 from django.contrib import admin
-from .models import (
-    ClientProfile, PsychologistProfile, 
-    ProfessionalDocument, Schedule
-)
+from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, AdminProfile
+
+class ProfessionalDocumentInline(admin.TabularInline):
+    model = ProfessionalDocument
+    extra = 1
+    readonly_fields = ('is_verified', 'verification_status', 'rejection_reason', 'uploaded_at', 'verified_at')
 
 @admin.register(ClientProfile)
 class ClientProfileAdmin(admin.ModelAdmin):
@@ -16,10 +18,6 @@ class ClientProfileAdmin(admin.ModelAdmin):
     def get_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
     get_name.short_description = 'Nombre'
-
-class ProfessionalDocumentInline(admin.TabularInline):
-    model = ProfessionalDocument
-    extra = 0
 
 @admin.register(PsychologistProfile)
 class PsychologistProfileAdmin(admin.ModelAdmin):
@@ -47,7 +45,3 @@ class ProfessionalDocumentAdmin(admin.ModelAdmin):
     list_filter = ('document_type', 'is_verified')
     search_fields = ('psychologist__user__email', 'description')
 
-@admin.register(Schedule)
-class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ('psychologist',)
-    search_fields = ('psychologist__user__email',)

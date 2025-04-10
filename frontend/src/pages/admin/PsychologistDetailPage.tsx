@@ -12,6 +12,7 @@ import PersonalInfo from './components/psychologist-detail/PersonalInfo';
 import ProfessionalInfo from './components/psychologist-detail/ProfessionalInfo';
 import SpecialtiesAndPopulations from './components/psychologist-detail/SpecialtiesAndPopulations';
 import DocumentsSection from './components/psychologist-detail/DocumentsSection';
+import PriceManagement from './components/psychologist-detail/PriceManagement';
 
 const PsychologistDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -201,31 +202,38 @@ const PsychologistDetailPage = () => {
                 university={psychologist.university}
                 graduation_year={psychologist.graduation_year}
                 health_register_number={psychologist.health_register_number}
+                suggested_price={psychologist.suggested_price}
               />
             </div>
 
-            {/* Specialties and Areas */}
-            <SpecialtiesAndPopulations 
-              specialties={psychologist.specialties}
-              target_populations={psychologist.target_populations}
-            />
-
-            {/* Experience Description */}
+            {/* Price Management Section - New Component */}
             <div className="mt-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Experiencia Profesional</h2>
-              <p className="text-gray-700 whitespace-pre-line">
-                {psychologist.experience_description || 'No se ha proporcionado información sobre la experiencia profesional.'}
-              </p>
+              <PriceManagement 
+                psychologistId={parseInt(id as string)}
+                suggestedPrice={psychologist.suggested_price}
+                onPriceUpdated={() => fetchPsychologistData(parseInt(id as string))}
+              />
             </div>
-            
-            {/* Document Viewer Section - Pass the updated handler */}
-            <DocumentsSection 
-              documents={psychologist.verification_documents}
-              onViewDocument={handleViewDocument}
-              onDownloadDocument={handleDownloadDocument}
-              onVerifyDocument={handleDocumentVerification}
-              onRejectDocument={handleDocumentRejection}
-            />
+
+            {/* Specialties and Target Populations */}
+            <div className="mt-8">
+              <SpecialtiesAndPopulations 
+                specialties={psychologist.specialties}
+                target_populations={psychologist.target_populations}
+                intervention_areas={psychologist.intervention_areas}
+                experience_description={psychologist.experience_description}
+              />
+            </div>
+
+            {/* Documents Section */}
+            <div className="mt-8">
+              <DocumentsSection 
+                documents={psychologist.verification_documents}
+                onVerify={handleDocumentVerification}
+                onReject={handleDocumentRejection}
+                onDownload={handleDocumentDownload}
+              />
+            </div>
           </div>
         </div>
       </div>

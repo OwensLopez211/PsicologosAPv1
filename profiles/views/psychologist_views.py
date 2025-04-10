@@ -8,11 +8,14 @@ from rest_framework.permissions import AllowAny  # Add this import
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 
-from ..models import PsychologistProfile, ProfessionalDocument, Schedule
+from ..models import PsychologistProfile, ProfessionalDocument
+from schedules.models import Schedule
 from ..serializers import (
     PsychologistProfileSerializer, PsychologistProfileBasicSerializer,
-    ProfessionalDocumentSerializer, ScheduleSerializer, UserBasicSerializer
+    ProfessionalDocumentSerializer, UserBasicSerializer
 )
+# Import ScheduleSerializer from the new schedules app
+from schedules.serializers import ScheduleSerializer
 from ..permissions import IsProfileOwner, IsAdminUser
 
 class PsychologistProfileViewSet(viewsets.ModelViewSet):

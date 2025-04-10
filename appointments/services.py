@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, time
 from .models import Appointment
-from profiles.models import PsychologistProfile, Schedule
+# Update the import to use the Schedule model from the new schedules app
+from profiles.models import PsychologistProfile
+from schedules.models import Schedule
 
 def get_available_slots(psychologist_id, date):
     """
