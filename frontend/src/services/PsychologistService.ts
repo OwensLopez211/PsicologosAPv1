@@ -1,5 +1,4 @@
 import api from './api';
-import axios from 'axios';
 
 // Asegúrate de que la interfaz Document tenga estos campos
 export interface Document {
@@ -47,7 +46,6 @@ export interface Psychologist {
   bank_account_owner_email: string;
   bank_name: string;
   verification_documents: PsychologistDocument[];
-  suggested_price: number | null;
 }
 
 export interface PsychologistDocument {
@@ -72,7 +70,7 @@ class PsychologistService {
   async getAllPsychologists(): Promise<Psychologist[]> {
     try {
       const response = await api.get('/profiles/admin/psychologists/');
-      return response.data;
+      return this.normalizeData(response.data);
     } catch (error) {
       console.error('Error fetching psychologists:', error);
       throw error;
@@ -87,11 +85,44 @@ class PsychologistService {
   async getPsychologistById(id: number): Promise<Psychologist> {
     try {
       const response = await api.get(`/profiles/admin/psychologists/${id}/`);
-      return response.data;
+      return this.normalizeData(response.data);
     } catch (error) {
       console.error(`Error fetching psychologist with ID ${id}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Normalize psychologist data to ensure all fields have proper values
+   * @param data Raw data from API
+   * @returns Normalized data
+   */
+  private normalizeData(data: any): any {
+    // If it's an array, normalize each item
+    if (Array.isArray(data)) {
+      return data.map(item => this.normalizeData(item));
+    }
+    
+    // Ensure arrays are properly initialized
+    const normalizedData = {
+      ...data,
+      specialties: Array.isArray(data.specialties) ? data.specialties : [],
+      target_populations: Array.isArray(data.target_populations) ? data.target_populations : [],
+      intervention_areas: Array.isArray(data.intervention_areas) ? data.intervention_areas : [],
+      verification_documents: Array.isArray(data.verification_documents) 
+        ? data.verification_documents 
+        : []
+    };
+    
+    // Ensure graduation_year is a number or null
+    if (normalizedData.graduation_year !== null && normalizedData.graduation_year !== undefined) {
+      const yearValue = parseInt(normalizedData.graduation_year.toString(), 10);
+      normalizedData.graduation_year = isNaN(yearValue) ? null : yearValue;
+    } else {
+      normalizedData.graduation_year = null;
+    }
+    
+    return normalizedData;
   }
 
   /**
@@ -227,6 +258,78 @@ class PsychologistService {
     const lastInitial = lastName.length > 0 ? lastName.charAt(0).toUpperCase() : '';
     
     return (firstInitial + lastInitial) || '??';
+  }
+
+  /**
+   * Get psychologist suggested price
+   * @param id Psychologist ID
+   * @returns Promise with suggested price data
+   */
+  async getPsychologistSuggestedPrice(id: number): Promise<{ price: number | null }> {
+    try {
+      // Obtener el psicólogo para conseguir el user_id
+      const psychologist = await this.getPsychologistById(id);
+      const userId = psychologist.user.id;
+      
+      console.log(`Fetching suggested price for psychologist ID: ${id}, user ID: ${userId}`);
+      
+      // Usar el user_id en lugar del profile_id
+      const response = await api.get(`/pricing/suggested-prices/psychologist/${userId}/`);
+      console.log('Suggested price response:', response.data);
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching suggested price for psychologist ${id}:`, error);
+      return { price: null };
+    }
+  }
+
+  /**
+   * Get psychologist approved price
+   * @param id Psychologist ID
+   * @returns Promise with approved price data
+   */
+  async getPsychologistApprovedPrice(id: number): Promise<{ price: number | null }> {
+    try {
+      // Obtener el psicólogo para conseguir el user_id
+      const psychologist = await this.getPsychologistById(id);
+      const userId = psychologist.user.id;
+      
+      console.log(`Fetching approved price for psychologist ID: ${id}, user ID: ${userId}`);
+      
+      // Usar el user_id en lugar del profile_id
+      const response = await api.get(`/pricing/psychologist-prices/psychologist/${userId}/`);
+      console.log('Approved price response:', response.data);
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching approved price for psychologist ${id}:`, error);
+      return { price: null };
+    }
+  }
+
+  /**
+   * Update psychologist approved price
+   * @param id Psychologist ID
+   * @param price New approved price
+   * @returns Promise with updated price data
+   */
+  async updatePsychologistApprovedPrice(id: number, price: number): Promise<{ price: number }> {
+    try {
+      console.log(`Updating price for psychologist ID: ${id} to ${price}`);
+      
+      // Use the updated endpoint
+      const response = await api.post(`/pricing/psychologist-prices/set_psychologist_price/${id}/`, { 
+        price
+      });
+      
+      console.log('Update price response:', response.data);
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating approved price for psychologist ${id}:`, error);
+      throw error;
+    }
   }
 }
 

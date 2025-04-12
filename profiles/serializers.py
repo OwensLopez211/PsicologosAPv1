@@ -133,7 +133,6 @@ class PsychologistProfileSerializer(BaseProfileSerializer):
             'graduation_year', 'specialties', 'target_populations', 
             'intervention_areas', 'experience_description', 'verification_status',
             'presentation_video_url'
-            'suggested_price',
         )
         read_only_fields = ('id', 'verification_status')
     documents = ProfessionalDocumentSerializer(many=True, read_only=True, source='professionaldocument_set')
@@ -187,9 +186,6 @@ class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
     verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
     bank_account_type_display = serializers.CharField(source='get_bank_account_type_display', read_only=True)
     
-    # Asegúrate de que el campo suggested_price esté incluido
-    suggested_price = serializers.IntegerField(required=False, allow_null=True)
-    
     def get_user(self, obj):
         return {
             'id': obj.user.id,
@@ -208,6 +204,5 @@ class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
             'verification_status', 'verification_status_display', 'created_at', 'updated_at',
             'bank_account_number', 'bank_account_type', 'bank_account_type_display', 
             'bank_account_owner', 'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name',
-            'suggested_price'
         )
         read_only_fields = ('id', 'user', 'verification_status', 'verification_status_display', 'created_at', 'updated_at')

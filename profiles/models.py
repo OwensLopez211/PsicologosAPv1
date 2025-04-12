@@ -137,17 +137,6 @@ class PsychologistProfile(BaseProfile):
     target_populations = models.JSONField(default=list, blank=True)
     intervention_areas = models.JSONField(default=list, blank=True)
     
-    # Suggested price field
-    suggested_price = models.PositiveIntegerField(
-        validators=[
-            MinValueValidator(0),
-            MaxValueValidator(15000)  # Maximum 15000 CLP as per client requirement
-        ],
-        null=True,
-        blank=True,
-        help_text="Precio sugerido por el psicólogo (máximo 15000 CLP)"
-    )
-    
     # Información bancaria
     bank_account_number = models.CharField(max_length=50, blank=True)
     bank_account_type = models.CharField(

@@ -686,6 +686,20 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         serializer = ProfessionalDocumentSerializer(document)
         return Response(serializer.data)
 
+    # In the PsychologistProfileViewSet class
+    def get_by_user_id(self, request, user_id=None):
+        """
+        Get a psychologist profile by user ID
+        """
+        try:
+            profile = PsychologistProfile.objects.get(user_id=user_id)
+            serializer = self.get_serializer(profile)
+            return Response(serializer.data)
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": f"Psychologist with user ID {user_id} does not exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class PublicPsychologistListView(generics.ListAPIView):

@@ -1,141 +1,428 @@
-from rest_framework import viewsets, permissions, status, filters
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import PriceConfiguration, PsychologistPrice, PriceChangeRequest, PromotionalDiscount
+from profiles.models import PsychologistProfile
+from profiles.permissions import IsAdminUser
+from .models import PriceConfiguration, PsychologistPrice, SuggestedPrice, PriceChangeRequest
 from .serializers import (
     PriceConfigurationSerializer, 
     PsychologistPriceSerializer, 
-    PriceChangeRequestSerializer,
-    PromotionalDiscountSerializer
+    SuggestedPriceSerializer,
+    PriceChangeRequestSerializer
 )
-from profiles.models import PsychologistProfile
-from authentication.permissions import IsAdminUser, IsPsychologist
 
 class PriceConfigurationViewSet(viewsets.ModelViewSet):
-    """API endpoint for price configuration"""
-    queryset = PriceConfiguration.objects.all().order_by('-updated_at')
+    """API endpoint for price configurations"""
+    queryset = PriceConfiguration.objects.all()
     serializer_class = PriceConfigurationSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminUser]
     
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=['get'])
     def current(self, request):
-        """Get the current price configuration"""
-        try:
-            config = PriceConfiguration.objects.latest('updated_at')
-            serializer = self.get_serializer(config)
-            return Response(serializer.data)
-        except PriceConfiguration.DoesNotExist:
-            return Response(
-                {"detail": "No hay configuración de precios disponible."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        """Get the current active price configuration"""
+        config = PriceConfiguration.objects.filter(is_active=True).first()
+        if not config:
+            config = PriceConfiguration.objects.create()  # Create default if none exists
+        
+        serializer = self.get_serializer(config)
+        return Response(serializer.data)
+
 
 class PsychologistPriceViewSet(viewsets.ModelViewSet):
     """API endpoint for psychologist prices"""
+    queryset = PsychologistPrice.objects.all()
     serializer_class = PsychologistPriceSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['psychologist__user__first_name', 'psychologist__user__last_name', 'psychologist__user__email']
-    ordering_fields = ['price', 'created_at', 'updated_at']
     
     def get_queryset(self):
         user = self.request.user
-        
         if user.user_type == 'admin':
             return PsychologistPrice.objects.all()
         elif user.user_type == 'psychologist':
             try:
-                psychologist = PsychologistProfile.objects.get(user=user)
-                return PsychologistPrice.objects.filter(psychologist=psychologist)
+                profile = PsychologistProfile.objects.get(user=user)
+                return PsychologistPrice.objects.filter(psychologist=profile)
             except PsychologistProfile.DoesNotExist:
                 return PsychologistPrice.objects.none()
         return PsychologistPrice.objects.none()
     
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            self.permission_classes = [permissions.IsAuthenticated, IsAdminUser]
-        return super().get_permissions()
-    
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsPsychologist])
+    @action(detail=False, methods=['get'])
     def my_price(self, request):
-        """Get the price for the authenticated psychologist"""
+        """Get the approved price for the authenticated psychologist"""
         user = request.user
+        if user.user_type != 'psychologist':
+            return Response(
+                {"detail": "Solo los psicólogos pueden acceder a este endpoint."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
         try:
-            psychologist = PsychologistProfile.objects.get(user=user)
-            price = PsychologistPrice.objects.filter(psychologist=psychologist).first()
-            
-            if price:
-                serializer = self.get_serializer(price)
-                return Response(serializer.data)
-            else:
-                return Response(
-                    {"detail": "No tiene un precio asignado aún."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+            profile = PsychologistProfile.objects.get(user=user)
         except PsychologistProfile.DoesNotExist:
             return Response(
-                {"detail": "No se encontró el perfil de psicólogo."},
+                {"detail": "Perfil de psicólogo no encontrado."},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+        # Get the current approved price
+        approved_price = PsychologistPrice.objects.filter(
+            psychologist=profile, 
+            is_approved=True
+        ).first()
+        
+        if not approved_price:
+            return Response(
+                {"detail": "No price has been set for this psychologist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = self.get_serializer(approved_price)
+        return Response(serializer.data)
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAuthenticated(), IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+    
+    @action(detail=False, methods=['get'])
+    def my_price(self, request):
+        """Get the price for the current psychologist"""
+        if request.user.user_type != 'psychologist':
+            return Response(
+                {"detail": "Only psychologists can access this endpoint."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            profile = PsychologistProfile.objects.get(user=request.user)
+            price = PsychologistPrice.objects.get(psychologist=profile)
+            serializer = self.get_serializer(price)
+            return Response(serializer.data)
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": "Psychologist profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except PsychologistPrice.DoesNotExist:
+            return Response(
+                {"detail": "No price has been set for this psychologist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    @action(detail=False, methods=['get'], url_path='psychologist/(?P<psychologist_id>[^/.]+)')
+    def get_psychologist_price(self, request, psychologist_id=None):
+        """Get the price for a specific psychologist by ID"""
+        try:
+            # Convert to integer
+            psychologist_id = int(psychologist_id)
+            
+            # First try to find by profile ID
+            try:
+                psychologist = PsychologistProfile.objects.get(id=psychologist_id)
+            except PsychologistProfile.DoesNotExist:
+                # If not found, try to find by user ID
+                psychologist = PsychologistProfile.objects.get(user_id=psychologist_id)
+            
+            # Get the latest approved price
+            price = PsychologistPrice.objects.filter(
+                psychologist=psychologist,
+                is_approved=True
+            ).order_by('-created_at').first()
+            
+            if not price:
+                return Response({"price": None}, status=status.HTTP_200_OK)
+            
+            return Response({"price": price.price}, status=status.HTTP_200_OK)
+            
+        except ValueError:
+            return Response(
+                {"detail": "Invalid psychologist ID format."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": f"No PsychologistProfile found with ID {psychologist_id}."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    # In PsychologistPriceViewSet class
+    
+    # Change this action to make it more explicit
+    @action(detail=False, methods=['post'], url_path='set_psychologist_price/(?P<psychologist_id>[^/.]+)')
+    def set_psychologist_price(self, request, psychologist_id=None):
+        """Set the price for a specific psychologist by ID"""
+        # Only admin can set prices
+        if request.user.user_type != 'admin':
+            return Response(
+                {"detail": "Only admins can set psychologist prices."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            # Convert to integer
+            psychologist_id = int(psychologist_id)
+            
+            # First try to find by profile ID
+            try:
+                psychologist = PsychologistProfile.objects.get(id=psychologist_id)
+            except PsychologistProfile.DoesNotExist:
+                # If not found, try to find by user ID
+                psychologist = PsychologistProfile.objects.get(user_id=psychologist_id)
+            
+            # Get price from request
+            price_data = request.data.get('price')
+            if price_data is None:
+                return Response(
+                    {"detail": "Price is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            try:
+                price_value = int(price_data)
+            except (ValueError, TypeError):
+                return Response(
+                    {"detail": "Price must be a valid integer."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create or update the price
+            price, created = PsychologistPrice.objects.update_or_create(
+                psychologist=psychologist,
+                is_approved=True,
+                defaults={'price': price_value}
+            )
+            
+            # Set all other prices for this psychologist to not approved
+            PsychologistPrice.objects.filter(
+                psychologist=psychologist
+            ).exclude(id=price.id).update(is_approved=False)
+            
+            return Response({"price": price.price}, status=status.HTTP_200_OK)
+            
+        except ValueError:
+            return Response(
+                {"detail": "Invalid psychologist ID format."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": f"No PsychologistProfile found with ID {psychologist_id}."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-class PriceChangeRequestViewSet(viewsets.ModelViewSet):
-    """API endpoint for price change requests"""
-    serializer_class = PriceChangeRequestSerializer
+
+class SuggestedPriceViewSet(viewsets.ModelViewSet):
+    """API endpoint for suggested prices"""
+    queryset = SuggestedPrice.objects.all()
+    serializer_class = SuggestedPriceSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['psychologist__user__first_name', 'psychologist__user__last_name', 'psychologist__user__email']
-    ordering_fields = ['current_price', 'requested_price', 'status', 'created_at']
     
     def get_queryset(self):
         user = self.request.user
-        
         if user.user_type == 'admin':
-            return PriceChangeRequest.objects.all()
+            return SuggestedPrice.objects.all()
         elif user.user_type == 'psychologist':
             try:
-                psychologist = PsychologistProfile.objects.get(user=user)
-                return PriceChangeRequest.objects.filter(psychologist=psychologist)
+                profile = PsychologistProfile.objects.get(user=user)
+                return SuggestedPrice.objects.filter(psychologist=profile)
+            except PsychologistProfile.DoesNotExist:
+                return SuggestedPrice.objects.none()
+        return SuggestedPrice.objects.none()
+    
+    @action(detail=False, methods=['get', 'post'])
+    def my_suggestion(self, request):
+        """Get or create the suggested price for the authenticated psychologist"""
+        user = request.user
+        if user.user_type != 'psychologist':
+            return Response(
+                {"detail": "Solo los psicólogos pueden acceder a este endpoint."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Obtener el user_id del request o usar el del usuario autenticado
+        user_id = request.data.get('user_id', user.id)
+        
+        try:
+            # Buscar el perfil usando el user_id
+            profile = PsychologistProfile.objects.get(user_id=user_id)
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": f"Perfil de psicólogo no encontrado para el usuario {user_id}."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        if request.method == 'GET':
+            # Get the current suggested price
+            suggested_price = SuggestedPrice.objects.filter(psychologist=profile).first()
+            if not suggested_price:
+                return Response(
+                    {"detail": "No se ha establecido un precio sugerido."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            serializer = self.get_serializer(suggested_price)
+            return Response(serializer.data)
+        
+        elif request.method == 'POST':
+            # Create or update the suggested price
+            price = request.data.get('price')
+            if not price:
+                return Response(
+                    {"detail": "El precio es requerido."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if a suggested price already exists
+            suggested_price, created = SuggestedPrice.objects.update_or_create(
+                psychologist=profile,
+                defaults={
+                    'price': price,
+                    'user_id': user_id  # Guardar también el user_id
+                }
+            )
+            
+            serializer = self.get_serializer(suggested_price)
+            status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+            return Response(serializer.data, status=status_code)
+    
+    @action(detail=False, methods=['get'], url_path='psychologist/(?P<psychologist_id>[^/.]+)')
+    def get_psychologist_suggested_price(self, request, psychologist_id=None):
+        """Get the suggested price for a specific psychologist by ID"""
+        try:
+            # Convert to integer
+            psychologist_id = int(psychologist_id)
+            
+            # Primero intentar buscar por user_id
+            try:
+                profile = PsychologistProfile.objects.get(user_id=psychologist_id)
+            except PsychologistProfile.DoesNotExist:
+                # Si no se encuentra, intentar buscar por profile_id
+                profile = PsychologistProfile.objects.get(id=psychologist_id)
+            
+            # Get the suggested price
+            suggested_price = SuggestedPrice.objects.filter(
+                psychologist=profile
+            ).first()
+            
+            if not suggested_price:
+                return Response({"price": None}, status=status.HTTP_200_OK)
+            
+            return Response({"price": suggested_price.price}, status=status.HTTP_200_OK)
+            
+        except ValueError:
+            return Response(
+                {"detail": "Invalid psychologist ID format."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": f"No PsychologistProfile found with ID {psychologist_id}."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class PriceChangeRequestViewSet(viewsets.ModelViewSet):
+    """API endpoint for price change requests"""
+    queryset = PriceChangeRequest.objects.all()
+    serializer_class = PriceChangeRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Admin can see all, psychologists can only see their own
+        if self.request.user.user_type == 'admin':
+            return PriceChangeRequest.objects.all().order_by('-created_at')
+        
+        if self.request.user.user_type == 'psychologist':
+            try:
+                profile = PsychologistProfile.objects.get(user=self.request.user)
+                return PriceChangeRequest.objects.filter(psychologist=profile).order_by('-created_at')
             except PsychologistProfile.DoesNotExist:
                 return PriceChangeRequest.objects.none()
+        
         return PriceChangeRequest.objects.none()
     
-    def perform_create(self, serializer):
-        user = self.request.user
+    def create(self, request, *args, **kwargs):
+        if request.user.user_type != 'psychologist':
+            return Response(
+                {"detail": "Only psychologists can create price change requests."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
-        if user.user_type == 'psychologist':
-            try:
-                psychologist = PsychologistProfile.objects.get(user=user)
-                
-                # Get current price
-                current_price = PsychologistPrice.objects.filter(psychologist=psychologist).first()
-                
-                if current_price:
-                    serializer.save(
-                        psychologist=psychologist,
-                        current_price=current_price.price
-                    )
-                else:
-                    # If no price is assigned yet, use the suggested price or 0
-                    current_price_value = psychologist.suggested_price or 0
-                    serializer.save(
-                        psychologist=psychologist,
-                        current_price=current_price_value
-                    )
-            except PsychologistProfile.DoesNotExist:
-                raise serializers.ValidationError("No se encontró el perfil de psicólogo.")
-        else:
-            serializer.save()
+        try:
+            profile = PsychologistProfile.objects.get(user=request.user)
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": "Psychologist profile not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check if there's already a pending request
+        if PriceChangeRequest.objects.filter(psychologist=profile, status='pending').exists():
+            return Response(
+                {"detail": "You already have a pending price change request."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Add the psychologist to the request data
+        request.data['psychologist'] = profile.id
+        
+        # Validate the price
+        price_config = PriceConfiguration.objects.filter(is_active=True).first()
+        if not price_config:
+            price_config = PriceConfiguration.objects.create()
+        
+        requested_price = request.data.get('requested_price')
+        if requested_price is None:
+            return Response(
+                {"detail": "Requested price is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            requested_price = int(requested_price)
+        except (ValueError, TypeError):
+            return Response(
+                {"detail": "Requested price must be a valid integer."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if requested_price < price_config.min_price or requested_price > price_config.max_price:
+            return Response(
+                {"detail": f"Price must be between {price_config.min_price} and {price_config.max_price}."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return super().create(request, *args, **kwargs)
     
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsAdminUser])
+    @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         """Approve a price change request"""
-        price_request = self.get_object()
+        if request.user.user_type != 'admin':
+            return Response(
+                {"detail": "Only administrators can approve price change requests."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
+        price_request = self.get_object()
         if price_request.status != 'pending':
             return Response(
-                {"detail": "Esta solicitud ya ha sido procesada."},
+                {"detail": "Only pending requests can be approved."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -145,7 +432,7 @@ class PriceChangeRequestViewSet(viewsets.ModelViewSet):
         price_request.save()
         
         # Update or create the psychologist price
-        price, created = PsychologistPrice.objects.update_or_create(
+        PsychologistPrice.objects.update_or_create(
             psychologist=price_request.psychologist,
             defaults={
                 'price': price_request.requested_price,
@@ -157,14 +444,19 @@ class PriceChangeRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(price_request)
         return Response(serializer.data)
     
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsAdminUser])
+    @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         """Reject a price change request"""
-        price_request = self.get_object()
+        if request.user.user_type != 'admin':
+            return Response(
+                {"detail": "Only administrators can reject price change requests."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         
+        price_request = self.get_object()
         if price_request.status != 'pending':
             return Response(
-                {"detail": "Esta solicitud ya ha sido procesada."},
+                {"detail": "Only pending requests can be rejected."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -175,55 +467,3 @@ class PriceChangeRequestViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(price_request)
         return Response(serializer.data)
-
-class PromotionalDiscountViewSet(viewsets.ModelViewSet):
-    """API endpoint for promotional discounts"""
-    queryset = PromotionalDiscount.objects.all()
-    serializer_class = PromotionalDiscountSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdminUser]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name', 'code']
-    ordering_fields = ['name', 'discount_percentage', 'start_date', 'end_date', 'is_active']
-    
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
-    def active(self, request):
-        """Get all active promotional discounts"""
-        from django.utils import timezone
-        now = timezone.now()
-        
-        discounts = PromotionalDiscount.objects.filter(
-            is_active=True,
-            start_date__lte=now,
-            end_date__gte=now
-        )
-        
-        serializer = self.get_serializer(discounts, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    def validate_code(self, request, pk=None):
-        """Validate a promotional discount code"""
-        code = request.data.get('code')
-        
-        if not code:
-            return Response(
-                {"detail": "Se requiere un código promocional."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        try:
-            discount = PromotionalDiscount.objects.get(code=code, is_active=True)
-            
-            if discount.is_valid():
-                serializer = self.get_serializer(discount)
-                return Response(serializer.data)
-            else:
-                return Response(
-                    {"detail": "El código promocional ha expirado o alcanzado su límite de usos."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        except PromotionalDiscount.DoesNotExist:
-            return Response(
-                {"detail": "Código promocional inválido."},
-                status=status.HTTP_404_NOT_FOUND
-            )

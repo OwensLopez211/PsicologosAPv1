@@ -3,21 +3,18 @@ import {
   AcademicCapIcon,
   CalendarIcon,
   DocumentTextIcon,
-  CurrencyDollarIcon
 } from '@heroicons/react/24/solid';
 
 interface ProfessionalInfoProps {
   university: string | null;
   graduation_year: number | null;
   health_register_number: string | null;
-  suggested_price: number | null;
 }
 
 const ProfessionalInfo: React.FC<ProfessionalInfoProps> = ({
   university,
   graduation_year,
   health_register_number,
-  suggested_price
 }) => {
   return (
     <div>
@@ -37,15 +34,6 @@ const ProfessionalInfo: React.FC<ProfessionalInfoProps> = ({
           <DocumentTextIcon className="w-5 h-5 mr-3 text-[#2A6877]" />
           <span className="font-medium mr-2">Registro profesional:</span>
           <span>{health_register_number || 'No especificado'}</span>
-        </div>
-        <div className="flex items-center">
-          <CurrencyDollarIcon className="w-5 h-5 mr-3 text-[#2A6877]" />
-          <span className="font-medium mr-2">Precio sugerido:</span>
-          <span>
-            {suggested_price !== null 
-              ? `$${suggested_price.toLocaleString('es-CL')} CLP` 
-              : 'No especificado'}
-          </span>
         </div>
       </div>
     </div>

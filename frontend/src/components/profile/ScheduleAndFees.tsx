@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { updateSchedule, getCurrentUserSchedule } from '../../services/scheduleService';
-import { updateSuggestedPrice, getSuggestedPrice } from '../../services/pricingService';
 import toast from 'react-hot-toast';
-import SuggestedPriceField from './SuggestedPriceField';
+import PricingSection from './PricingSection';
 
 interface TimeBlock {
   startTime: string;
@@ -43,9 +42,6 @@ const ScheduleAndFees = ({ profile, onSave, isLoading, onLoadingChange }: Schedu
   const [schedule, setSchedule] = useState<ScheduleData>(defaultSchedule);
   const [showScheduleSummary, setShowScheduleSummary] = useState(true);
   const [localSchedule, setLocalSchedule] = useState<ScheduleData | null>(null);
-  const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
-  const [isEditingPrice, setIsEditingPrice] = useState(false);
-  const [priceLoading, setPriceLoading] = useState(false);
 
   const daysOfWeek = [
     { id: 'monday', label: 'Lunes' },
@@ -107,24 +103,7 @@ const ScheduleAndFees = ({ profile, onSave, isLoading, onLoadingChange }: Schedu
     return processedSchedule;
   };
 
-  // Add a new useEffect to fetch the suggested price when the component mounts
-  useEffect(() => {
-    const fetchSuggestedPrice = async () => {
-      try {
-        setPriceLoading(true);
-        const priceData = await getSuggestedPrice();
-        if (priceData && priceData.suggested_price !== undefined) {
-          setSuggestedPrice(priceData.suggested_price);
-        }
-      } catch (error) {
-        console.error("Error fetching suggested price:", error);
-      } finally {
-        setPriceLoading(false);
-      }
-    };
-    
-    fetchSuggestedPrice();
-  }, []);
+
 
   // Modify the existing useEffect to handle profile updates for price
   useEffect(() => {
@@ -140,11 +119,6 @@ const ScheduleAndFees = ({ profile, onSave, isLoading, onLoadingChange }: Schedu
         } catch (error) {
           console.error('Error parsing schedule data from profile:', error);
         }
-      }
-      
-      // Handle suggested price
-      if (profile.suggested_price !== undefined) {
-        setSuggestedPrice(profile.suggested_price);
       }
     }
   }, [profile]);
@@ -461,18 +435,11 @@ const ScheduleAndFees = ({ profile, onSave, isLoading, onLoadingChange }: Schedu
         )}
       </div>
 
-      {/* Pricing Section - Always visible regardless of schedule editing state */}
-      <div className="mt-8">
-        <SuggestedPriceField 
-          initialPrice={profile?.suggested_price} 
-          onPriceUpdate={(price) => {
-            if (onSave) {
-              onSave({ suggested_price: price });
-            }
-          }}
-        />
-      </div>
-
+      {/* Add PricingSection component */}
+      <PricingSection 
+        isLoading={isLoading} 
+        onLoadingChange={onLoadingChange} 
+      />
     </div>
   );
 };

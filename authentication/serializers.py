@@ -5,6 +5,8 @@ from django.contrib.auth.password_validation import validate_password
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
+    profile_id = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
         fields = (
@@ -17,9 +19,18 @@ class UserSerializer(serializers.ModelSerializer):
             'phone_number', 
             'is_email_verified', 
             'last_login', 
-            'created_at'
+            'created_at',
+            'profile_id'
         )
-        read_only_fields = ('is_email_verified', 'last_login', 'created_at')
+        read_only_fields = ('is_email_verified', 'last_login', 'created_at', 'profile_id')
+    
+    def get_profile_id(self, obj):
+        # Obtener el ID del perfil según el tipo de usuario
+        if obj.user_type.lower() == 'psychologist' and hasattr(obj, 'psychologistprofile_profile'):
+            return obj.psychologistprofile_profile.id
+        elif obj.user_type.lower() == 'client' and hasattr(obj, 'clientprofile_profile'):
+            return obj.clientprofile_profile.id
+        return None
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])

@@ -12,12 +12,15 @@ import PersonalInfo from './components/psychologist-detail/PersonalInfo';
 import ProfessionalInfo from './components/psychologist-detail/ProfessionalInfo';
 import SpecialtiesAndPopulations from './components/psychologist-detail/SpecialtiesAndPopulations';
 import DocumentsSection from './components/psychologist-detail/DocumentsSection';
-import PriceManagement from './components/psychologist-detail/PriceManagement';
+import PricingManagement from './components/psychologist-detail/PricingManagement';
 
 const PsychologistDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [psychologist, setPsychologist] = useState<Psychologist | null>(null);
   const [loading, setLoading] = useState(true);
+  // Add these two state variables
+  const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
+  const [approvedPrice, setApprovedPrice] = useState<number | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -27,16 +30,70 @@ const PsychologistDetailPage = () => {
     }
   }, [id]);
 
+  // Add this function to fetch pricing data
   const fetchPsychologistData = async (psychologistId: number) => {
     try {
       setLoading(true);
       const data = await PsychologistService.getPsychologistById(psychologistId);
       setPsychologist(data);
+      
+      // Fetch pricing data
+      await fetchPricingData(psychologistId);
     } catch (error) {
       console.error('Error fetching psychologist details:', error);
       toast.error('Error al cargar los detalles del psicólogo');
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Add this new function to fetch pricing data separately
+  const fetchPricingData = async (psychologistId: number) => {
+    try {
+      // Log the operation
+      console.log(`Fetching pricing data for psychologist ID: ${psychologistId}`);
+      
+      // Fetch suggested price
+      const suggestedPriceData = await PsychologistService.getPsychologistSuggestedPrice(psychologistId);
+      setSuggestedPrice(suggestedPriceData.price);
+      console.log(`Suggested price: ${suggestedPriceData.price}`);
+      
+      // Fetch approved price
+      const approvedPriceData = await PsychologistService.getPsychologistApprovedPrice(psychologistId);
+      setApprovedPrice(approvedPriceData.price);
+      console.log(`Approved price: ${approvedPriceData.price}`);
+    } catch (error) {
+      console.error('Error fetching pricing data:', error);
+      // Don't show error toast for pricing data - just set to null
+      setSuggestedPrice(null);
+      setApprovedPrice(null);
+    }
+  };
+  
+  // Add this handler for updating the approved price
+  const handleUpdateApprovedPrice = async (price: number) => {
+    if (!id) return;
+    
+    try {
+      const response = await PsychologistService.updatePsychologistApprovedPrice(parseInt(id), price);
+      setApprovedPrice(response.price);
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error updating approved price:', error);
+      return Promise.reject(error);
+    }
+  };
+  
+  // Add this handler for refreshing prices
+  const handleRefreshPrices = async () => {
+    if (!id) return Promise.reject(new Error('No psychologist ID'));
+    
+    try {
+      await fetchPricingData(parseInt(id));
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error refreshing prices:', error);
+      return Promise.reject(error);
     }
   };
 
@@ -204,20 +261,17 @@ const PsychologistDetailPage = () => {
                 university={psychologist.university}
                 graduation_year={psychologist.graduation_year}
                 health_register_number={psychologist.health_register_number}
-                suggested_price={psychologist.suggested_price}
               />
             </div>
 
-            {/* Price Management Section */}
-            <div className="mt-8">
-              {psychologist && psychologist.id && (
-                <PriceManagement 
-                  psychologistId={psychologist.user.id} 
-                  suggestedPrice={psychologist.suggested_price}
-                  onPriceUpdated={() => fetchPsychologistData(parseInt(id as string))}
-                />
-              )}
-            </div>
+            {/* Pricing Management - Make sure this is included */}
+            <PricingManagement
+              psychologistId={parseInt(id)}
+              suggestedPrice={suggestedPrice}
+              approvedPrice={approvedPrice}
+              onUpdateApprovedPrice={handleUpdateApprovedPrice}
+              onRefreshPrices={handleRefreshPrices}
+            />
 
             {/* Specialties and Target Populations */}
             <div className="mt-8">

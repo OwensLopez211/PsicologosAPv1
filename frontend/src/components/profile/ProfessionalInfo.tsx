@@ -46,12 +46,18 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
       // Set professional title based on gender
       const professionalTitle = getProfessionalTitleByGender(profile.gender || '');
       
+      // Ensure graduation_year is properly handled
+      let graduationYearValue = '';
+      if (profile.graduation_year !== null && profile.graduation_year !== undefined) {
+        graduationYearValue = profile.graduation_year.toString();
+      }
+      
       setFormData({
         professional_title: professionalTitle,
         specialties: Array.isArray(profile.specialties) ? profile.specialties : [],
         health_register_number: profile.health_register_number || '',
         university: profile.university || '',
-        graduation_year: profile.graduation_year?.toString() || '',
+        graduation_year: graduationYearValue,
         experience_description: profile.experience_description || '',
         target_populations: Array.isArray(profile.target_populations) ? profile.target_populations : [],
         intervention_areas: Array.isArray(profile.intervention_areas) ? profile.intervention_areas : []
@@ -88,6 +94,20 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
       ...formData,
       professional_title: getProfessionalTitleByGender(profile?.gender || '')
     };
+    
+    // Convert graduation_year to number if it's a valid string
+    if (dataToSave.graduation_year && dataToSave.graduation_year.trim() !== '') {
+      const yearValue = parseInt(dataToSave.graduation_year, 10);
+      if (!isNaN(yearValue)) {
+        dataToSave.graduation_year = yearValue.toString();
+      } else {
+        // If it's not a valid number, set it to null
+        dataToSave.graduation_year = undefined;
+      }
+    } else {
+      // If it's empty, set it to null
+      dataToSave.graduation_year = undefined;
+    }
     
     await onSave(dataToSave);
     setIsEditing(false);

@@ -1,50 +1,55 @@
 from rest_framework import serializers
-from .models import PriceConfiguration, PsychologistPrice, PriceChangeRequest, PromotionalDiscount
-from profiles.serializers import PsychologistProfileSerializer
+from .models import PriceConfiguration, PsychologistPrice, SuggestedPrice, PriceChangeRequest
 
 class PriceConfigurationSerializer(serializers.ModelSerializer):
     class Meta:
         model = PriceConfiguration
-        fields = ['id', 'min_price', 'max_price', 'platform_fee_percentage', 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
+        fields = '__all__'
+
 
 class PsychologistPriceSerializer(serializers.ModelSerializer):
-    psychologist_details = PsychologistProfileSerializer(source='psychologist', read_only=True)
-    
     class Meta:
         model = PsychologistPrice
-        fields = ['id', 'psychologist', 'price', 'is_approved', 'admin_notes', 'created_at', 'updated_at', 'psychologist_details']
+        fields = '__all__'
         read_only_fields = ['created_at', 'updated_at']
 
+
+class SuggestedPriceSerializer(serializers.ModelSerializer):
+    user_id = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = SuggestedPrice
+        fields = ['id', 'price', 'created_at', 'updated_at', 'psychologist', 'user_id']
+    
+    def get_user_id(self, obj):
+        return obj.psychologist.user.id
+        
+        class Meta:
+            model = SuggestedPrice
+            fields = '__all__'
+            read_only_fields = ['created_at', 'updated_at']
+
+
 class PriceChangeRequestSerializer(serializers.ModelSerializer):
-    psychologist_details = PsychologistProfileSerializer(source='psychologist', read_only=True)
+    psychologist_name = serializers.SerializerMethodField()
     
     class Meta:
         model = PriceChangeRequest
-        fields = ['id', 'psychologist', 'current_price', 'requested_price', 'justification', 'status', 'admin_notes', 'created_at', 'updated_at', 'psychologist_details']
-        read_only_fields = ['created_at', 'updated_at']
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at', 'current_price', 'psychologist_name']
     
-    def validate_requested_price(self, value):
-        # Get the current price configuration
+    def get_psychologist_name(self, obj):
+        return obj.psychologist.user.get_full_name()
+    
+    def create(self, validated_data):
+        # Get the current price for the psychologist
+        psychologist = validated_data.get('psychologist')
         try:
-            config = PriceConfiguration.objects.latest('updated_at')
-            if value > config.max_price:
-                raise serializers.ValidationError(f"El precio solicitado no puede ser mayor a {config.max_price} CLP")
-            if value < config.min_price:
-                raise serializers.ValidationError(f"El precio solicitado no puede ser menor a {config.min_price} CLP")
-        except PriceConfiguration.DoesNotExist:
-            # If no configuration exists, use the default max value from the model
-            if value > 15000:
-                raise serializers.ValidationError("El precio solicitado no puede ser mayor a 15000 CLP")
-        return value
-
-class PromotionalDiscountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PromotionalDiscount
-        fields = ['id', 'name', 'code', 'discount_percentage', 'start_date', 'end_date', 'max_uses', 'current_uses', 'is_active', 'created_at']
-        read_only_fields = ['current_uses', 'created_at']
-    
-    def validate(self, data):
-        if data['start_date'] >= data['end_date']:
-            raise serializers.ValidationError("La fecha de inicio debe ser anterior a la fecha de fin")
-        return data
+            current_price = PsychologistPrice.objects.get(psychologist=psychologist).price
+        except PsychologistPrice.DoesNotExist:
+            current_price = 0
+        
+        # Set the current price in the request
+        validated_data['current_price'] = current_price
+        
+        return super().create(validated_data)
