@@ -18,7 +18,7 @@ interface PricingManagementProps {
 }
 
 const PricingManagement: React.FC<PricingManagementProps> = ({
-  psychologistId,
+// Removed unused psychologistId parameter
   suggestedPrice,
   approvedPrice,
   onUpdateApprovedPrice,

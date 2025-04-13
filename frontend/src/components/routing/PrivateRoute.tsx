@@ -22,7 +22,7 @@ const PrivateRoute = ({ children, allowedRoles = [] }: PrivateRouteProps) => {
       // Si no está autenticado, pero hay un token de refresco, intentar renovar
       if (!isAuthenticated && localStorage.getItem('refresh_token')) {
         try {
-          const success = await refreshUserSession();
+          await refreshUserSession();
           setIsChecking(false);
           return;
         } catch (error) {

@@ -3,14 +3,11 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import {
   HomeIcon, UserIcon, CalendarIcon, UsersIcon, 
-  UserGroupIcon, MagnifyingGlassIcon, ArrowRightOnRectangleIcon
+  UserGroupIcon, MagnifyingGlassIcon, ArrowRightOnRectangleIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 
-interface TopBarProps {
-  onMenuClick?: () => void;
-}
-
-const TopBar = ({ onMenuClick }: TopBarProps) => {
+const TopBar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,7 +45,7 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
       ],
     };
 
-    return [...(roleSpecificItems[normalizedUserType] || roleSpecificItems.CLIENT)];
+    return [...(roleSpecificItems[normalizedUserType as keyof typeof roleSpecificItems] || roleSpecificItems.CLIENT)];
   };
 
   // Close menus when clicking outside
@@ -73,8 +70,24 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <img src="/logo.jpeg" alt="Bienestar" className="h-8 w-8 rounded-full" />
-            <span className="ml-2 text-xl font-semibold text-gray-900">Bienestar</span>
+            <Link 
+              to="/" 
+              className="flex items-center group mr-6"
+              title="Volver a la página principal"
+            >
+              <img src="/logo.jpeg" alt="Bienestar" className="h-8 w-8 rounded-full" />
+              <span className="ml-2 text-xl font-semibold text-gray-900">Bienestar</span>
+              <ArrowLeftIcon className="h-4 w-4 ml-2 text-gray-400 group-hover:text-[#2A6877] transition-colors" />
+            </Link>
+            
+            {/* Back to main site - Mobile version */}
+            <Link 
+              to="/" 
+              className="hidden xs:flex md:hidden items-center justify-center h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+              title="Volver a la página principal"
+            >
+              <ArrowLeftIcon className="h-4 w-4 text-gray-600" />
+            </Link>
           </div>
           
           {/* Desktop Navigation */}
@@ -115,6 +128,16 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
               {/* Mobile menu dropdown */}
               {isMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  {/* Back to main site - Mobile menu option */}
+                  <Link
+                    to="/"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 border-b"
+                  >
+                    <ArrowLeftIcon className="h-5 w-5 mr-2 text-gray-400" />
+                    Página principal
+                  </Link>
+                  
                   {getMenuItems().map((item) => {
                     const Icon = item.icon;
                     const isActive = location.pathname === item.path;
@@ -156,6 +179,15 @@ const TopBar = ({ onMenuClick }: TopBarProps) => {
                   <div className="px-4 py-2 text-xs text-gray-500 border-b">
                     Conectado como {user?.email}
                   </div>
+                  {/* Back to main site - Profile dropdown option */}
+                  <Link
+                    to="/"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 border-b"
+                  >
+                    <ArrowLeftIcon className="h-5 w-5 mr-2 text-gray-400" />
+                    Página principal
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
