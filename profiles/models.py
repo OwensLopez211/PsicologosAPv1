@@ -166,6 +166,25 @@ class PsychologistProfile(BaseProfile):
         default='PENDING'
     )
 
+    def get_session_price(self):
+        """
+        Returns the approved session price for this psychologist.
+        If no approved price exists, returns None.
+        """
+        try:
+            # Get the most recent approved price
+            from pricing.models import PsychologistPrice
+            approved_price = PsychologistPrice.objects.filter(
+                psychologist=self,
+                is_approved=True
+            ).order_by('-updated_at').first()
+            
+            if approved_price:
+                return approved_price.price
+            return None
+        except:
+            return None
+
 class ProfessionalDocument(models.Model):
     """
     Documentos profesionales para verificación de psicólogos.
@@ -198,3 +217,6 @@ class ProfessionalDocument(models.Model):
         
     def __str__(self):
         return f"{self.get_document_type_display()} - {self.psychologist.user.email}"
+
+
+

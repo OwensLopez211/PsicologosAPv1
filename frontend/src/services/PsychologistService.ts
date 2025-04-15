@@ -244,6 +244,43 @@ class PsychologistService {
   }
 
   /**
+   * Download document directly by document ID
+   * @param documentId Document ID
+   * @returns Promise with blob data
+   */
+  async downloadDocumentById(documentId: number): Promise<Blob> {
+    try {
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      // For all files, use the fetch API with proper authentication
+      const url = `${api.defaults.baseURL}/profiles/admin/psychologists/documents/${documentId}/download/`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Get the blob directly from the response
+      const blob = await response.blob();
+      return blob;
+    } catch (error) {
+      console.error(`Error downloading document ${documentId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get psychologist initials from first and last name
    * @param psychologist Psychologist object
    * @returns String with psychologist initials

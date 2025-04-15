@@ -7,6 +7,8 @@ import {
 interface SpecialtiesAndPopulationsProps {
   specialties: string[] | null;
   target_populations: string[] | null;
+  intervention_areas: string[] | null;
+  experience_description: string;
 }
 
 const SpecialtiesAndPopulations: React.FC<SpecialtiesAndPopulationsProps> = ({

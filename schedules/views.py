@@ -75,6 +75,9 @@ class ScheduleViewSet(viewsets.ModelViewSet):
             psychologist = PsychologistProfile.objects.get(user=user)
             schedule_config = request.data.get('schedule_config', {})
             
+            # Get user_id from request data if provided
+            user_id = request.data.get('user_id')
+            
             # Delete existing schedules
             Schedule.objects.filter(psychologist=psychologist).delete()
             
@@ -114,12 +117,13 @@ class ScheduleViewSet(viewsets.ModelViewSet):
                                     'end_time': end_time
                                 })
                                 
-                                # Create the schedule
+                                # Create the schedule with user_id
                                 Schedule.objects.create(
                                     psychologist=psychologist,
                                     day_of_week=day_upper,
                                     start_time=start_time,
-                                    end_time=end_time
+                                    end_time=end_time,
+                                    user_id=user_id or user.id  # Use provided user_id or fallback to authenticated user id
                                 )
                         except IntegrityError as e:
                             # Handle duplicate entries
@@ -175,3 +179,4 @@ class ScheduleViewSet(viewsets.ModelViewSet):
                 {"detail": "No se encontró el perfil de psicólogo."},
                 status=status.HTTP_404_NOT_FOUND
             )
+    

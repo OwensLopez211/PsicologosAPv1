@@ -11,8 +11,6 @@ router.register(r'client-profiles', ClientProfileViewSet, basename='client-profi
 router.register(r'psychologist-profiles', PsychologistProfileViewSet, basename='psychologist-profile')
 router.register(r'admin-profiles', AdminProfileViewSet, basename='admin-profile')
 
-# Eliminamos la importación de get_psychologist_schedule
-
 urlpatterns = [
     path('', include(router.urls)),
     
@@ -56,6 +54,12 @@ urlpatterns = [
     path('admin/psychologists/<int:pk>/toggle-status/', 
          PsychologistProfileViewSet.as_view({'patch': 'toggle_verification_status'}), 
          name='admin-toggle-psychologist-status'),
+    
+    # Add this new endpoint for profile verification
+    path('admin/psychologists/<int:pk>/verify/', 
+         PsychologistProfileViewSet.as_view({'patch': 'update_verification_status'}), 
+         name='admin-verify-psychologist'),
+         
     path('admin/psychologists/<int:pk>/verification-documents/', 
          PsychologistProfileViewSet.as_view({'get': 'admin_verification_documents'}), 
          name='admin-psychologist-documents'),
@@ -85,10 +89,6 @@ urlpatterns = [
     path('psychologist-profiles/me/professional-info/', 
          PsychologistProfileViewSet.as_view({'patch': 'update_professional_info'}), 
          name='psychologist-professional-info'),
-    # Eliminamos los endpoints relacionados con schedule
-    # path('psychologist-profiles/me/update-schedule/', ...)
-    # path('psychologist-profiles/me/schedule/', ...)
-    # path('psychologist-profiles/<int:pk>/schedule/', ...)
     
     # Add verification document endpoints (both naming conventions)
     # Original naming
@@ -115,9 +115,6 @@ urlpatterns = [
     
     path('public/psychologists/', PublicPsychologistListView.as_view(), name='public-psychologists'),
     path('public/psychologists/<int:pk>/', PsychologistDetailView.as_view(), name='public-psychologist-detail'),
-    
-    # Eliminamos el endpoint público de schedule
-    # path('psychologist-profiles/<int:psychologist_id>/schedule/', ...)
     
     path('public/psychologists/<int:pk>/presentation-video/', 
          PsychologistProfileViewSet.as_view({'get': 'get_presentation_video'}), 

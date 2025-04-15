@@ -1,5 +1,21 @@
 import api from './api';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
+import { ScheduleConfig, DaySlot, generateAvailableDays } from '../components/specialist-profile/scheduleUtils';
+
+// Interface for existing appointments
+export interface ExistingAppointment {
+  id: number;
+  date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+}
+
+// Interface for schedule response
+interface ScheduleResponse {
+  schedule_config: ScheduleConfig;
+}
 
 export interface TimeSlot {
   start_time: string;
@@ -259,3 +275,170 @@ export const completeAppointment = async (appointmentId: number): Promise<Appoin
     throw error;
   }
 };
+
+class AppointmentService {
+  /**
+   * Fetches available time slots for a psychologist
+   * @param psychologistId The ID of the psychologist
+   * @returns Promise with available days and time slots
+   */
+  async getAvailableTimeSlots(psychologistId: number): Promise<DaySlot[]> {
+    try {
+      // Get the authentication token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Debe iniciar sesión para ver los horarios disponibles.');
+      }
+
+      // Fetch existing appointments first
+      const existingAppointments = await this.fetchExistingAppointments(psychologistId, token);
+      
+      // Then fetch the psychologist's schedule
+      const scheduleConfig = await this.fetchPsychologistSchedule(psychologistId, token);
+      
+      // Generate available days based on the schedule
+      let availableDays = generateAvailableDays(scheduleConfig);
+      
+      // Filter out booked slots and past time slots
+      availableDays = this.filterAvailableDays(availableDays, existingAppointments);
+      
+      return availableDays;
+    } catch (error) {
+      console.error('Error fetching available time slots:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetches existing appointments for a psychologist
+   * @param psychologistId The ID of the psychologist
+   * @param token Authentication token
+   * @returns Promise with existing appointments
+   */
+  private async fetchExistingAppointments(psychologistId: number, token: string): Promise<ExistingAppointment[]> {
+    try {
+      const response = await axios.get<ExistingAppointment[]>(
+        `/api/appointments/psychologist/${psychologistId}/`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching existing appointments:', error);
+      return []; // Return empty array in case of error
+    }
+  }
+
+  /**
+   * Fetches a psychologist's schedule
+   * @param psychologistId The ID of the psychologist
+   * @param token Authentication token
+   * @returns Promise with schedule configuration
+   */
+  private async fetchPsychologistSchedule(psychologistId: number, token: string): Promise<ScheduleConfig> {
+    try {
+      const url = `/api/schedules/psychologist/${psychologistId}/`;
+      
+      const response = await axios.get<ScheduleResponse>(
+        url,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      return response.data.schedule_config;
+    } catch (error) {
+      console.error('Error fetching psychologist schedule:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Filters available days to remove booked slots and past time slots
+   * @param days Available days with time slots
+   * @param existingAppointments Existing appointments
+   * @returns Filtered days with available time slots
+   */
+  private filterAvailableDays(days: DaySlot[], existingAppointments: ExistingAppointment[]): DaySlot[] {
+    const now = new Date();
+    const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    const filteredDays = days.map(day => {
+      // Filter out slots that are already booked
+      let availableSlots = day.slots.filter(
+        slot => !this.isTimeSlotBooked(day.date, slot.start_time, slot.end_time, existingAppointments)
+      );
+      
+      // Filter out past time slots
+      if (day.date === currentDate) {
+        availableSlots = availableSlots.filter(slot => {
+          const [hours, minutes] = slot.start_time.split(':').map(Number);
+          return hours > currentHour || (hours === currentHour && minutes > currentMinute);
+        });
+      } else if (day.date < currentDate) {
+        // Remove all slots for past days
+        availableSlots = [];
+      }
+      
+      return {
+        ...day,
+        slots: availableSlots
+      };
+    }).filter(day => day.slots.length > 0); // Only keep days that have available slots
+    
+    return filteredDays;
+  }
+
+  /**
+   * Checks if a time slot is already booked
+   * @param date Date to check
+   * @param startTime Start time to check
+   * @param endTime End time to check
+   * @param existingAppointments Existing appointments
+   * @returns True if the slot is booked, false otherwise
+   */
+  private isTimeSlotBooked(
+    date: string, 
+    startTime: string, 
+    endTime: string, 
+    existingAppointments: ExistingAppointment[]
+  ): boolean {
+    return existingAppointments.some(appointment => {
+      // Check if the appointment is on the same date
+      if (appointment.date !== date) return false;
+      
+      // Convert times to comparable format (minutes since midnight)
+      const appointmentStart = this.timeToMinutes(appointment.start_time);
+      const appointmentEnd = this.timeToMinutes(appointment.end_time);
+      const slotStart = this.timeToMinutes(startTime);
+      const slotEnd = this.timeToMinutes(endTime);
+      
+      // Check for overlap
+      return (
+        (slotStart >= appointmentStart && slotStart < appointmentEnd) || // Slot starts during appointment
+        (slotEnd > appointmentStart && slotEnd <= appointmentEnd) || // Slot ends during appointment
+        (slotStart <= appointmentStart && slotEnd >= appointmentEnd) // Slot completely contains appointment
+      );
+    });
+  }
+
+  /**
+   * Converts time string to minutes since midnight
+   * @param timeStr Time string in format HH:MM:SS
+   * @returns Minutes since midnight
+   */
+  private timeToMinutes(timeStr: string): number {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  }
+}
+
+export default new AppointmentService();

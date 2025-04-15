@@ -58,35 +58,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         );
     }
   };
-
-  // Helper function to map document status to profile status
-  const mapDocumentStatusToProfileStatus = (documentStatus: string): string => {
-    switch (documentStatus) {
-      case 'verified':
-        return 'VERIFIED';
-      case 'rejected':
-        return 'REJECTED';
-      case 'pending':
-        return 'VERIFICATION_IN_PROGRESS';
-      default:
-        return 'VERIFICATION_IN_PROGRESS';
-    }
-  };
-
-  // Helper function to map profile status to document status
-  const mapProfileStatusToDocumentStatus = (profileStatus: string): string => {
-    switch (profileStatus) {
-      case 'VERIFIED':
-        return 'verified';
-      case 'REJECTED':
-        return 'rejected';
-      case 'VERIFICATION_IN_PROGRESS':
-        return 'pending';
-      default:
-        return 'pending';
-    }
-  };
-
+  
   // Handle status change with proper mapping
   const handleStatusChange = (newProfileStatus: string) => {
     onStatusChange(newProfileStatus);
@@ -119,25 +91,34 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <div className="flex flex-col space-y-2">
           {getStatusBadge(verification_status)}
           
-          {/* Only show verification buttons if not already verified */}
-          {verification_status !== 'VERIFIED' && (
-            <div className="flex space-x-2">
+          <div className="flex space-x-2">
+            {/* Show verify button if not verified */}
+            {verification_status !== 'VERIFIED' && (
               <button 
                 onClick={() => handleStatusChange('VERIFIED')}
                 className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
               >
                 Verificar
               </button>
-              {verification_status !== 'REJECTED' && (
-                <button 
-                  onClick={() => handleStatusChange('REJECTED')}
-                  className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
-                >
-                  Rechazar
-                </button>
-              )}
-            </div>
-          )}
+            )}
+            
+            {/* Show different buttons based on verification status */}
+            {verification_status === 'VERIFIED' ? (
+              <button 
+                onClick={() => handleStatusChange('VERIFICATION_IN_PROGRESS')}
+                className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
+              >
+                Reactivar verificación
+              </button>
+            ) : verification_status !== 'REJECTED' && (
+              <button 
+                onClick={() => handleStatusChange('REJECTED')}
+                className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+              >
+                Rechazar
+              </button>
+            )}
+          </div>
           
           {/* Show reactivate button if rejected */}
           {verification_status === 'REJECTED' && (

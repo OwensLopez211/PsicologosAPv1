@@ -14,6 +14,7 @@ interface Specialist {
   profile_image?: string;
   verification_status: string;
   professional_title?: string;
+  gender?: string; // Add gender field to the interface
 }
 
 const SpecialistPage = () => {
@@ -148,6 +149,7 @@ const SpecialistPage = () => {
                   experience={specialist.experience || ''}
                   imageUrl={specialist.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(specialist.name)}&background=2A6877&color=fff&size=300`}
                   verification_status={specialist.verification_status}
+                  gender={specialist.gender} // Pass the gender property to the component
                 />
               ))}
             </div>

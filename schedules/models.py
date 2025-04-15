@@ -1,5 +1,6 @@
 from django.db import models
 from profiles.models import PsychologistProfile
+from authentication.models import User
 
 class Schedule(models.Model):
     """
@@ -10,6 +11,13 @@ class Schedule(models.Model):
         PsychologistProfile, 
         on_delete=models.CASCADE, 
         related_name='schedules'
+    )
+    
+    # Campo para almacenar el ID del usuario autenticado
+    user_id = models.IntegerField(
+        null=True, 
+        blank=True,
+        help_text="ID del usuario autenticado que creó o actualizó este horario"
     )
     
     # Días de la semana

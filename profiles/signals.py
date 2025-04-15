@@ -2,6 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, AdminProfile
+from django.db import transaction
 
 User = get_user_model()
 
@@ -16,8 +17,10 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     
     if instance.user_type == 'client':
         if created:
-            # Crear nuevo perfil de cliente
-            ClientProfile.objects.create(user=instance, **profile_data)
+            # Crear nuevo perfil de cliente con el mismo ID que el usuario
+            with transaction.atomic():
+                profile = ClientProfile(user=instance, id=instance.id, **profile_data)
+                profile.save()
         else:
             # Actualizar perfil existente si hay datos
             if profile_data and hasattr(instance, 'clientprofile_profile'):
@@ -27,8 +30,10 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
                 
     elif instance.user_type == 'psychologist':
         if created:
-            # Crear nuevo perfil de psicólogo
-            PsychologistProfile.objects.create(user=instance, **profile_data)
+            # Crear nuevo perfil de psicólogo con el mismo ID que el usuario
+            with transaction.atomic():
+                profile = PsychologistProfile(user=instance, id=instance.id, **profile_data)
+                profile.save()
         else:
             # Actualizar perfil existente si hay datos
             if profile_data and hasattr(instance, 'psychologistprofile_profile'):
@@ -38,8 +43,10 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     
     elif instance.user_type == 'admin':
         if created:
-            # Crear nuevo perfil de administrador
-            AdminProfile.objects.create(user=instance, **profile_data)
+            # Crear nuevo perfil de administrador con el mismo ID que el usuario
+            with transaction.atomic():
+                profile = AdminProfile(user=instance, id=instance.id, **profile_data)
+                profile.save()
         else:
             # Actualizar perfil existente si hay datos
             if profile_data and hasattr(instance, 'adminprofile_profile'):
@@ -47,24 +54,3 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
                     setattr(instance.adminprofile_profile, key, value)
                 instance.adminprofile_profile.save()
 
-@receiver(post_save, sender=ProfessionalDocument)
-def update_verification_status(sender, instance, **kwargs):
-    """
-    Actualiza el estado de verificación si todos los documentos están verificados.
-    Solo si el documento fue verificado manualmente desde el panel de administración
-    y no desde la API con el flag update_profile_status=False.
-    """
-    # Check if this is an automatic update from the API with update_profile_status=False
-    update_profile_status = getattr(instance, 'update_profile_status', True)
-    
-    # Only update profile status if the flag is True and document is verified
-    if update_profile_status and instance.is_verified:
-        # Obtener todos los documentos del psicólogo
-        all_documents = ProfessionalDocument.objects.filter(psychologist=instance.psychologist)
-        
-        # Si todos están verificados y hay al menos uno
-        if all_documents.exists() and all_documents.filter(is_verified=True).count() == all_documents.count():
-            # Actualizar estado de verificación del psicólogo
-            instance.psychologist.verification_status = 'VERIFIED'
-            instance.psychologist.is_verified = True
-            instance.psychologist.save()

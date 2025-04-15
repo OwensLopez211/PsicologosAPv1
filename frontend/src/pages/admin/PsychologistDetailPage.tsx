@@ -21,7 +21,7 @@ const PsychologistDetailPage = () => {
   // Add these two state variables
   const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
   const [approvedPrice, setApprovedPrice] = useState<number | null>(null);
-  const { user } = useAuth();
+const { } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -148,18 +148,6 @@ const PsychologistDetailPage = () => {
     }
   };
 
-  const handleViewDocument = (documentUrl: string) => {
-    // Make sure the URL is absolute and properly formatted
-    if (!documentUrl.startsWith('http')) {
-      // If it's a relative URL, convert it to absolute
-      const baseUrl = window.location.origin;
-      documentUrl = `${baseUrl}${documentUrl.startsWith('/') ? '' : '/'}${documentUrl}`;
-    }
-    
-    // Open in a new tab
-    window.open(documentUrl, '_blank');
-  };
-
   // Add the async keyword here to fix the error
   // Rename the function to match what DocumentsSection expects
   const handleDocumentDownload = async (documentId: number, fileName: string) => {
@@ -266,7 +254,7 @@ const PsychologistDetailPage = () => {
 
             {/* Pricing Management - Make sure this is included */}
             <PricingManagement
-              psychologistId={parseInt(id)}
+              psychologistId={id ? parseInt(id) : 0}
               suggestedPrice={suggestedPrice}
               approvedPrice={approvedPrice}
               onUpdateApprovedPrice={handleUpdateApprovedPrice}
@@ -287,9 +275,9 @@ const PsychologistDetailPage = () => {
             <div className="mt-8">
               <DocumentsSection 
                 documents={psychologist.verification_documents}
-                onVerify={handleDocumentVerification}
-                onReject={handleDocumentRejection}
-                onDownload={handleDocumentDownload}
+                onVerifyDocument={handleDocumentVerification}
+                onRejectDocument={handleDocumentRejection}
+                onDownloadDocument={handleDocumentDownload}
               />
             </div>
           </div>

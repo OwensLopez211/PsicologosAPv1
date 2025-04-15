@@ -1,15 +1,14 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import PageTransition from '../../components/animations/PageTransition';
-import ScheduleModal from '../../components/scheduling/ScheduleModal';
 import ProfileHeader from '../../components/specialist-profile/ProfileHeader';
 import PresentationVideo from '../../components/specialist-profile/PresentationVideo';
 import Specialties from '../../components/specialist-profile/Specialties';
 import Education from '../../components/specialist-profile/Education';
-import ScheduleSection from '../../components/specialist-profile/ScheduleSection';
 import ProfessionalExperience from '../../components/specialist-profile/ProfessionalExperience';
-import { useAuth } from '../../context/AuthContext';
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 interface Document {
   id: number;
@@ -19,27 +18,7 @@ interface Document {
   uploaded_at: string;
 }
 
-// Actualizar la interfaz para que coincida con la estructura real de los datos
-interface TimeBlock {
-  endTime: string;
-  startTime: string;
-  length?: number;
-}
-
-interface DaySchedule {
-  enabled: boolean;
-  timeBlocks: TimeBlock[];
-}
-
-interface ScheduleConfig {
-  sunday?: DaySchedule;
-  monday?: DaySchedule;
-  tuesday?: DaySchedule;
-  wednesday?: DaySchedule;
-  thursday?: DaySchedule;
-  friday?: DaySchedule;
-  saturday?: DaySchedule;
-}
+// Removed TimeBlock, DaySchedule, and ScheduleConfig interfaces
 
 interface User {
   id: number;
@@ -61,7 +40,6 @@ interface Specialist {
   graduation_year: number;
   experience_description: string;
   verification_status: string;
-  schedule_config: ScheduleConfig;
   verification_documents?: Document[];
   presentation_video_url?: string;
   rut: string;
@@ -75,22 +53,23 @@ interface Specialist {
   bank_account_owner_rut?: string;
   bank_account_owner_email?: string;
   bank_name?: string;
+  // Removed schedule_config
 }
 
 const SpecialistProfilePage = () => {
   const { id } = useParams<{ id: string }>();
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const navigate = useNavigate();
+
   const [specialist, setSpecialist] = useState<Specialist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [presentationVideoUrl, setPresentationVideoUrl] = useState('');
-  const { user } = useAuth();
+// Remove unused user declaration since it's not being used
   
   useEffect(() => {
     const fetchSpecialist = async () => {
       try {
         setLoading(true);
-        // Corregir la URL para evitar el doble /api/
         const response = await axios.get(`/api/profiles/public/psychologists/${id}/`, {
           headers: {
             'Accept': 'application/json',
@@ -103,24 +82,12 @@ const SpecialistProfilePage = () => {
         // Procesar los datos de respuesta
         const specialistData = response.data;
         
-        // Asegurarse de que schedule_config tenga el formato correcto
-        const formattedScheduleConfig: ScheduleConfig = {};
-        
-        // Procesar cada día de la semana si existe en los datos
-        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-        days.forEach(day => {
-          if (specialistData.schedule_config && specialistData.schedule_config[day]) {
-            formattedScheduleConfig[day] = {
-              enabled: specialistData.schedule_config[day].enabled || false,
-              timeBlocks: specialistData.schedule_config[day].timeBlocks || []
-            };
-          }
-        });
+        // Removed schedule_config formatting
         
         // Crear un objeto especialista con formato adecuado
         const formattedSpecialist: Specialist = {
-          ...specialistData,
-          schedule_config: formattedScheduleConfig
+          ...specialistData
+          // Removed schedule_config
         };
         
         // Manejar la URL del video de presentación
@@ -162,29 +129,51 @@ const SpecialistProfilePage = () => {
   if (loading) {
     return (
       <PageTransition>
-        <div className="container mx-auto px-6 py-12 flex justify-center">
+        <div className="container mx-auto px-6 py-16 flex flex-col items-center justify-center min-h-[60vh]">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#2A6877]"></div>
+          <p className="mt-4 text-gray-600">Cargando perfil del especialista...</p>
         </div>
       </PageTransition>
     );
   }
 
+  // Error state with improved UI
   if (error || !specialist) {
     return (
       <PageTransition>
-        <div className="container mx-auto px-6 py-12 text-center">
-          <p className="text-red-500">{error || 'No se encontró el especialista solicitado.'}</p>
+        <div className="container mx-auto px-6 py-16 flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="bg-red-50 p-6 rounded-xl text-center max-w-md">
+            <ExclamationCircleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-medium text-red-800 mb-2">No se pudo cargar el perfil</h2>
+            <p className="text-red-600 mb-4">{error || 'No se encontró el especialista solicitado.'}</p>
+            <button 
+              onClick={() => navigate('/specialists')}
+              className="px-4 py-2 bg-[#2A6877] text-white rounded-md hover:bg-[#1d4e5a] transition-colors"
+            >
+              Ver otros especialistas
+            </button>
+          </div>
         </div>
       </PageTransition>
     );
   }
 
-  // Solo mostrar especialistas verificados
+  // Verification status check with improved UI
   if (specialist.verification_status !== 'VERIFIED') {
     return (
       <PageTransition>
-        <div className="container mx-auto px-6 py-12 text-center">
-          <p className="text-red-500">Este especialista no está disponible actualmente.</p>
+        <div className="container mx-auto px-6 py-16 flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="bg-yellow-50 p-6 rounded-xl text-center max-w-md">
+            <ExclamationCircleIcon className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-xl font-medium text-yellow-800 mb-2">Especialista no disponible</h2>
+            <p className="text-yellow-700 mb-4">Este especialista no está disponible actualmente.</p>
+            <button 
+              onClick={() => navigate('/specialists')}
+              className="px-4 py-2 bg-[#2A6877] text-white rounded-md hover:bg-[#1d4e5a] transition-colors"
+            >
+              Ver otros especialistas
+            </button>
+          </div>
         </div>
       </PageTransition>
     );
@@ -200,20 +189,28 @@ const SpecialistProfilePage = () => {
     `${specialist.user.first_name} ${specialist.user.last_name}`.trim() : 
     'Especialista';
 
+  // Removed handleScheduleClick function
+
   return (
     <PageTransition>
-      <div className="container mx-auto px-6 py-12">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="bg-white rounded-xl shadow-sm overflow-hidden"
+        >
           <ProfileHeader 
             name={specialistName}
             title={specialist.professional_title || 'Psicólogo'}
             registrationNumber={specialist.health_register_number || 'No disponible'}
             profileImage={specialist.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(specialistName)}&background=2A6877&color=fff&size=400`}
-            onSchedule={() => setIsScheduleModalOpen(true)}
+            psychologistId={specialist.id} // Pass the specialist ID here
+            verificationStatus={specialist.verification_status}
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
-            <div className="md:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 gap-6 p-4 sm:p-6">
+            <div className="space-y-6">
               <PresentationVideo videoUrl={presentationVideoUrl} />
               <ProfessionalExperience experienceDescription={specialist.experience_description || ''} />
               
@@ -229,35 +226,11 @@ const SpecialistProfilePage = () => {
                 professionalTitle={specialist.professional_title || ''}
               />
             </div>
-            
-            <div className="md:col-span-1">
-              <ScheduleSection 
-                schedule={{ schedule_config: specialist.schedule_config }}
-                onSchedule={() => {
-                  if (user && user.user_type === 'client') {
-                    setIsScheduleModalOpen(true);
-                  } else if (!user) {
-                    // Redirigir a login o mostrar mensaje
-                    alert('Debes iniciar sesión como cliente para agendar una cita');
-                  } else {
-                    alert('Solo los clientes pueden agendar citas');
-                  }
-                }}
-              />
-            </div>
           </div>
-        </div>
+        </motion.div>
       </div>
       
-      {isScheduleModalOpen && (
-        <ScheduleModal 
-          // Asegúrate de que estás pasando el ID del perfil, no el ID del usuario
-          specialistId={specialist.id} // Debería ser el ID del perfil (9)
-          specialistName={specialistName}
-          schedule={{ schedule_config: specialist.schedule_config }}
-          onClose={() => setIsScheduleModalOpen(false)}
-        />
-      )}
+      {/* Removed ScheduleModal */}
     </PageTransition>
   );
 };

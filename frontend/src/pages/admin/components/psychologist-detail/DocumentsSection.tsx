@@ -14,7 +14,6 @@ interface Document {
 
 interface DocumentsSectionProps {
   documents: Document[] | null;
-  onViewDocument: (documentUrl: string) => void;
   onDownloadDocument: (documentId: number, fileName: string) => void;
   onVerifyDocument: (documentId: number, status: string) => void;
   onRejectDocument: (documentId: number, rejectionReason: string) => void;
@@ -22,7 +21,6 @@ interface DocumentsSectionProps {
 
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   documents,
-  onViewDocument,
   onDownloadDocument,
   onVerifyDocument,
   onRejectDocument
@@ -61,9 +59,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {documents.map((document, index) => (
             <DocumentCard
+              onView={() => {}} // Add missing required onView prop
               key={index}
               document={document}
-              onView={onViewDocument}
               onDownload={onDownloadDocument}
               onVerify={onVerifyDocument}
               onReject={handleOpenRejectModal}

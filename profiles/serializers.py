@@ -28,8 +28,7 @@ class ProfessionalDocumentSerializer(serializers.ModelSerializer):
             'rejection_reason', 'uploaded_at', 'verified_at'
         )
 
-# Remove ScheduleSerializer completely
-
+# Rest of the serializers remain unchanged
 class BaseProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -160,12 +159,13 @@ class PsychologistProfileBasicSerializer(BaseProfileSerializer):
     university = serializers.CharField(required=False)
     specialties = serializers.ListField(child=serializers.CharField(), required=False)
     experience = serializers.SerializerMethodField()
+    gender = serializers.CharField(read_only=True)  # Add gender field
     
     class Meta(BaseProfileSerializer.Meta):
         model = PsychologistProfile
         fields = BaseProfileSerializer.Meta.fields + (
             'id', 'name', 'university', 'specialties', 'experience', 
-            'professional_title', 'verification_status'
+            'professional_title', 'verification_status', 'gender'  # Include gender in fields
         )
     
     def get_name(self, obj):

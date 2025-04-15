@@ -20,17 +20,43 @@ interface DocumentCardProps {
 
 const DocumentCard: React.FC<DocumentCardProps> = ({
   document,
-  onView,
+
   onDownload,
   onVerify,
   onReject
 }) => {
-  // Helper function to detect video files
-  const isVideoFile = (filename: string) => {
-    const videoExtensions = ['mp4', 'mov', 'avi', 'webm', 'mkv', '3gp'];
-    const extension = filename.split('.').pop()?.toLowerCase() || '';
-    return videoExtensions.includes(extension);
+
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof onDownload === 'function') {
+      const fileName = document.file.split('/').pop() || `documento_${document.id}`;
+      onDownload(document.id, fileName);
+    } else {
+      console.error('onDownload is not a function');
+    }
   };
+
+  const handleVerify = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof onVerify === 'function') {
+      onVerify(document.id, 'verified');
+    } else {
+      console.error('onVerify is not a function');
+    }
+  };
+
+  const handleReject = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (typeof onReject === 'function') {
+      onReject(document.id);
+    } else {
+      console.error('onReject is not a function');
+    }
+  };
+
+  // Get filename from URL
+  const fileName = document.file.split('/').pop() || `documento_${document.id}`;
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm">
@@ -62,7 +88,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
         {/* Document filename display */}
         <div className="mb-3 bg-gray-50 p-2 rounded border">
           <p className="text-sm font-medium text-gray-700 mb-1">Archivo:</p>
-          <p className="text-sm break-all">{document.file.split('/').pop() || `documento_${document.id}`}</p>
+          <p className="text-sm break-all">{fileName}</p>
         </div>
         
         <div className="mb-3">
@@ -78,68 +104,53 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
                   {document.document_type === 'registration_certificate' && 'Certificado de inscripción profesional'}
                   {document.document_type === 'professional_id' && 'Cédula de identidad profesional'}
                   {document.document_type === 'specialty_document' && 'Documento de especialidad o certificación adicional'}
-                  {document.document_type === 'cv' && 'Currículum Vitae del profesional'}
-                  {document.document_type === 'certification' && 'Certificación o diploma de especialización'}
-                  {document.document_type === 'other' && (
-                    isVideoFile(document.file) 
-                      ? 'Video de presentación del psicólogo' 
-                      : 'Documento adicional de verificación'
-                  )}
+                  {document.document_type === 'other' && 'Documento adicional'}
                 </span>
-                <span className="text-gray-500 italic"> - Subido el {new Date(document.uploaded_at).toLocaleDateString()}</span>
               </>
             )}
           </p>
         </div>
         
         {document.rejection_reason && (
-          <div className="mb-3">
-            <p className="text-sm text-red-500 mb-1">Motivo de rechazo:</p>
-            <p className="text-sm">{document.rejection_reason}</p>
+          <div className="mb-3 bg-red-50 p-2 rounded border border-red-200">
+            <p className="text-sm font-medium text-red-700 mb-1">Motivo de rechazo:</p>
+            <p className="text-sm text-red-600">{document.rejection_reason}</p>
           </div>
         )}
         
-        <div className="flex justify-between items-center mt-4">
-          <div className="flex space-x-2">
-            <button 
-              onClick={() => onView(document.file)}
-              className="px-3 py-1 bg-[#2A6877] text-white text-sm rounded hover:bg-[#1d4e5f] inline-flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              Ver
-            </button>
-            <button 
-              onClick={() => onDownload(document.id, document.file.split('/').pop() || `documento_${document.id}`)}
-              className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 inline-flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Descargar
-            </button>
-          </div>
+        <div className="flex flex-wrap gap-2 mt-4">
+          {/* 
+          <button 
+            onClick={handleView}
+            className="px-3 py-1 bg-blue-50 text-blue-600 rounded border border-blue-200 text-sm hover:bg-blue-100 transition-colors"
+          >
+            {isVideoFile(document.file) ? 'Ver Video' : 'Ver Documento'}
+          </button> */}
           
-          {/* Modified: Show appropriate action buttons based on document status */}
-          <div className="flex space-x-2">
-            {document.verification_status !== 'verified' && (
-              <button 
-                onClick={() => onVerify(document.id, 'verified')}
-                className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
-              >
-                Aprobar
-              </button>
-            )}
-            {/* Always show the reject button, regardless of verification status */}
+          <button 
+            onClick={handleDownload}
+            className="px-3 py-1 bg-gray-50 text-gray-600 rounded border border-gray-200 text-sm hover:bg-gray-100 transition-colors"
+          >
+            Descargar
+          </button>
+          
+          {document.verification_status !== 'verified' && (
             <button 
-              onClick={() => onReject(document.id)}
-              className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+              onClick={handleVerify}
+              className="px-3 py-1 bg-green-50 text-green-600 rounded border border-green-200 text-sm hover:bg-green-100 transition-colors"
+            >
+              Aprobar
+            </button>
+          )}
+          
+          {document.verification_status !== 'rejected' && (
+            <button 
+              onClick={handleReject}
+              className="px-3 py-1 bg-red-50 text-red-600 rounded border border-red-200 text-sm hover:bg-red-100 transition-colors"
             >
               Rechazar
             </button>
-          </div>
+          )}
         </div>
       </div>
     </div>

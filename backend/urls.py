@@ -10,7 +10,7 @@ urlpatterns = [
     path('api/appointments/', include('appointments.urls')),
     path('api/schedules/', include('schedules.urls')), 
     path('api/pricing/', include('pricing.urls')),
-    # path('api/', include('payments.urls')),
+    path('api/payments/', include('payments.urls')),  # Added trailing slash
     # path('api/', include('settlements.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

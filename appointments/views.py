@@ -1,326 +1,379 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, timedelta
 from .models import Appointment
 from .serializers import AppointmentSerializer, AppointmentCreateSerializer
-from .services import get_available_slots
-from profiles.models import PsychologistProfile
-from authentication.models import User
-from profiles.permissions import IsClient, IsPsychologist, IsAdminUser
+from payments.models import PaymentDetail  # Import from payments app
+from payments.serializers import PaymentDetailSerializer  # Import from payments app
+from profiles.models import PsychologistProfile, ClientProfile
+from pricing.models import PsychologistPrice  # Add this import
+from schedules.models import Schedule
+from authentication.permissions import IsClient, IsPsychologist, IsAdminUser
+from rest_framework import serializers
 
 class AppointmentViewSet(viewsets.ModelViewSet):
+    """API endpoint para gestión de citas"""
     serializer_class = AppointmentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
         user = self.request.user
-        if user.user_type == 'client':
-            return Appointment.objects.filter(client=user)
+        
+        if user.user_type == 'admin':
+            return Appointment.objects.all()
         elif user.user_type == 'psychologist':
             try:
-                profile = PsychologistProfile.objects.get(user=user)
-                return Appointment.objects.filter(psychologist=profile)
+                psychologist = PsychologistProfile.objects.get(user=user)
+                return Appointment.objects.filter(psychologist=psychologist)
             except PsychologistProfile.DoesNotExist:
                 return Appointment.objects.none()
-        elif user.user_type == 'admin':
-            return Appointment.objects.all()
+        elif user.user_type == 'client':
+            try:
+                client = ClientProfile.objects.get(user=user)
+                return Appointment.objects.filter(client=client)
+            except ClientProfile.DoesNotExist:
+                return Appointment.objects.none()
+        
         return Appointment.objects.none()
     
     def get_serializer_class(self):
-        if self.action == 'create' or self.action == 'create_appointment':
+        if self.action == 'create':
             return AppointmentCreateSerializer
         return AppointmentSerializer
-
-    @action(detail=False, methods=['GET'], permission_classes=[AllowAny])
-    def available_slots(self, request):
-        """Get available time slots for a specific psychologist on a given date"""
-        profile_id = request.query_params.get('profile_id')
-        date_str = request.query_params.get('date')
+    
+    # In the AppointmentViewSet class
+    
+    def perform_create(self, serializer):
+        """
+        Override perform_create to set the client and payment amount.
+        """
+        user = self.request.user
+        try:
+            client = ClientProfile.objects.get(user=user)
+        except ClientProfile.DoesNotExist:
+            raise serializers.ValidationError("No se encontró el perfil de cliente para este usuario.")
         
-        if not profile_id or not date_str:
+        # Get the psychologist
+        psychologist = serializer.validated_data['psychologist']
+        
+        # Get the price using the method
+        try:
+            # Try to get the approved price for the psychologist
+            price_obj = PsychologistPrice.objects.filter(
+                psychologist=psychologist, 
+                is_approved=True
+            ).first()
+            
+            if price_obj:
+                price = price_obj.price
+            else:
+                # Fallback to default price if no approved price exists
+                price = 0
+        except Exception as e:
+            print(f"Error getting price: {str(e)}")
+            price = 0
+        
+        # Extract payment_method if it exists in the validated data
+        payment_method = None
+        if 'payment_method' in serializer.validated_data:
+            payment_method = serializer.validated_data.pop('payment_method')
+        
+        # Save the appointment with the client and price
+        appointment = serializer.save(
+            client=client,
+            payment_amount=price,
+            status='PENDING_PAYMENT'
+        )
+        
+        # If payment_method was provided, create a PaymentDetail
+        if payment_method:
+            try:
+                PaymentDetail.objects.create(
+                    appointment=appointment,
+                    payment_method=payment_method
+                )
+            except Exception as e:
+                print(f"Error creating payment detail: {str(e)}")
+                # Don't fail the appointment creation if payment detail creation fails
+        
+        return appointment
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsClient])
+    def available_slots(self, request):
+        """Endpoint para obtener los horarios disponibles de un psicólogo"""
+        psychologist_id = request.query_params.get('psychologist_id')
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        
+        if not psychologist_id:
             return Response(
-                {"detail": "Se requieren los parámetros profile_id y date"},
+                {"detail": "Se requiere el ID del psicólogo."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         try:
-            # Intenta convertir el ID a entero
-            profile_id = int(profile_id)
+            psychologist = PsychologistProfile.objects.get(id=psychologist_id)
             
-            # Intenta obtener el perfil directamente por ID
+            # Parse dates or use defaults (current week)
+            today = timezone.now().date()
             try:
-                psychologist = PsychologistProfile.objects.get(id=profile_id)
-                print(f"Found psychologist profile with ID {profile_id}: {psychologist}")
-            except PsychologistProfile.DoesNotExist:
-                # Si no existe, intenta obtenerlo por el ID de usuario
-                try:
-                    user = User.objects.get(id=profile_id)
-                    if user.user_type != 'psychologist':
-                        return Response(
-                            {"detail": "El usuario no es un psicólogo"},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-                    psychologist = PsychologistProfile.objects.get(user=user)
-                    print(f"Found psychologist profile through user ID {profile_id}: {psychologist}")
-                except (User.DoesNotExist, PsychologistProfile.DoesNotExist):
-                    return Response(
-                        {"detail": "Psicólogo no encontrado"},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
-            
-            # Convertir la fecha de string a objeto date
-            try:
-                date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date() if start_date_str else today
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else (today + timedelta(days=14))
             except ValueError:
                 return Response(
-                    {"detail": "Formato de fecha inválido. Use YYYY-MM-DD"},
+                    {"detail": "Formato de fecha inválido. Use YYYY-MM-DD."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Obtener los slots disponibles
-            available_slots = get_available_slots(psychologist.id, date_obj)
+            # Get the psychologist's schedule
+            schedules = Schedule.objects.filter(psychologist=psychologist)
             
-            return Response(available_slots)
-            
-        except Exception as e:
-            return Response(
-                {"detail": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+            # Get existing appointments
+            existing_appointments = Appointment.objects.filter(
+                psychologist=psychologist,
+                date__gte=start_date,
+                date__lte=end_date,
+                status__in=['PAYMENT_VERIFIED', 'CONFIRMED', 'PAYMENT_UPLOADED']
             )
-    
-    @action(detail=False, methods=['GET'])
-    def monthly_availability(self, request):
-        """Get availability for a month for a specific psychologist"""
-        profile_id = request.query_params.get('profile_id')
-        year_month = request.query_params.get('year_month')  # Format: YYYY-MM
-        
-        if not profile_id or not year_month:
-            return Response(
-                {"detail": "Se requieren los parámetros profile_id y year_month"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        try:
-            # Intenta convertir el ID a entero
-            profile_id = int(profile_id)
             
-            # Intenta obtener el perfil directamente por ID
-            try:
-                psychologist = PsychologistProfile.objects.get(id=profile_id)
-            except PsychologistProfile.DoesNotExist:
-                # Si no existe, intenta obtenerlo por el ID de usuario
-                try:
-                    user = User.objects.get(id=profile_id)
-                    if user.user_type != 'psychologist':
-                        return Response(
-                            {"detail": "El usuario no es un psicólogo"},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-                    psychologist = PsychologistProfile.objects.get(user=user)
-                except (User.DoesNotExist, PsychologistProfile.DoesNotExist):
-                    return Response(
-                        {"detail": "Psicólogo no encontrado"},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
+            # Generate available slots
+            available_slots = []
+            current_date = start_date
             
-            # Parse year and month
-            try:
-                year, month = map(int, year_month.split('-'))
-                # Get the number of days in the month
-                if month == 12:
-                    next_month = datetime(year + 1, 1, 1)
-                else:
-                    next_month = datetime(year, month + 1, 1)
-                last_day = (next_month - timedelta(days=1)).day
+            while current_date <= end_date:
+                day_name = current_date.strftime('%A').upper()
+                day_schedules = schedules.filter(day_of_week=day_name)
                 
-                # Get availability for each day in the month
-                availability = []
-                for day in range(1, last_day + 1):
-                    date_obj = datetime(year, month, day).date()
-                    # Skip past dates
-                    if date_obj < timezone.now().date():
-                        continue
-                    
-                    slots = get_available_slots(psychologist.id, date_obj)
-                    availability.append({
-                        'date': date_obj.strftime('%Y-%m-%d'),
-                        'slots': slots,
-                        'hasAvailableSlots': len(slots) > 0
+                day_slots = []
+                for schedule in day_schedules:
+                    # Generate hourly slots within this schedule
+                    slot_start = schedule.start_time
+                    while slot_start < schedule.end_time:
+                        slot_end = (
+                            datetime.combine(today, slot_start) + timedelta(hours=1)
+                        ).time()
+                        
+                        # Check if this slot overlaps with any existing appointment
+                        is_available = True
+                        for appointment in existing_appointments:
+                            if (
+                                appointment.date == current_date and
+                                appointment.start_time < slot_end and
+                                appointment.end_time > slot_start
+                            ):
+                                is_available = False
+                                break
+                        
+                        if is_available:
+                            day_slots.append({
+                                "start_time": slot_start.strftime('%H:%M'),
+                                "end_time": slot_end.strftime('%H:%M')
+                            })
+                        
+                        # Move to next slot
+                        slot_start = slot_end
+                
+                if day_slots:
+                    available_slots.append({
+                        "date": current_date.strftime('%Y-%m-%d'),
+                        "day_name": current_date.strftime('%A'),
+                        "slots": day_slots
                     })
                 
-                return Response(availability)
-                
-            except ValueError:
+                current_date += timedelta(days=1)
+            
+            return Response({
+                "psychologist_id": psychologist.id,
+                "psychologist_name": psychologist.user.get_full_name(),
+                "available_slots": available_slots
+            })
+            
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró el perfil del psicólogo."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsClient])
+    def upload_payment(self, request, pk=None):
+        """Endpoint para que el cliente suba el comprobante de pago"""
+        try:
+            appointment = self.get_object()
+            
+            # Verify the appointment belongs to the requesting client
+            user = request.user
+            try:
+                client = ClientProfile.objects.get(user=user)
+                if appointment.client != client:
+                    return Response(
+                        {"detail": "No tiene permiso para modificar esta cita."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            except ClientProfile.DoesNotExist:
                 return Response(
-                    {"detail": "Formato de year_month inválido. Use YYYY-MM"},
+                    {"detail": "No se encontró el perfil de cliente."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Check if the appointment is in the correct state
+            if appointment.status != 'PENDING_PAYMENT':
+                return Response(
+                    {"detail": f"No se puede subir el comprobante. Estado actual: {appointment.get_status_display()}"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-        except Exception as e:
+            # Get payment details
+            payment_proof = request.FILES.get('payment_proof')
+            transaction_id = request.data.get('transaction_id')
+            payment_date = request.data.get('payment_date')
+            payment_method = request.data.get('payment_method')
+            
+            if not payment_proof:
+                return Response(
+                    {"detail": "Se requiere el comprobante de pago."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Update appointment
+            appointment.payment_proof = payment_proof
+            appointment.status = 'PAYMENT_UPLOADED'
+            appointment.save()
+            
+            # Update payment details
+            payment_detail, created = PaymentDetail.objects.get_or_create(appointment=appointment)
+            payment_detail.transaction_id = transaction_id
+            payment_detail.payment_method = payment_method
+            
+            if payment_date:
+                try:
+                    payment_detail.payment_date = datetime.strptime(payment_date, '%Y-%m-%d %H:%M')
+                except ValueError:
+                    pass
+            
+            payment_detail.save()
+            
+            return Response({
+                "detail": "Comprobante de pago subido correctamente. Un administrador verificará el pago pronto."
+            })
+            
+        except Appointment.DoesNotExist:
             return Response(
-                {"detail": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                {"detail": "No se encontró la cita."},
+                status=status.HTTP_404_NOT_FOUND
             )
     
-    @action(detail=False, methods=['POST'], permission_classes=[IsClient])
-    def create_appointment(self, request):
-        """Create a new appointment"""
-        serializer = AppointmentCreateSerializer(data=request.data, context={'request': request})
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsAdminUser])
+    def verify_payment(self, request, pk=None):
+        """Endpoint para que el administrador verifique el pago"""
+        try:
+            appointment = self.get_object()
+            
+            # Check if the appointment is in the correct state
+            if appointment.status != 'PAYMENT_UPLOADED':
+                return Response(
+                    {"detail": f"No se puede verificar el pago. Estado actual: {appointment.get_status_display()}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Update appointment status
+            appointment.status = 'PAYMENT_VERIFIED'
+            appointment.payment_verified_by = request.user
+            appointment.save()
+            
+            # Add admin notes if provided
+            admin_notes = request.data.get('admin_notes')
+            if admin_notes:
+                appointment.admin_notes = admin_notes
+                appointment.save()
+            
+            return Response({
+                "detail": "Pago verificado correctamente. La cita ha sido confirmada."
+            })
+            
+        except Appointment.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró la cita."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsClient])
+    def create_with_payment(self, request):
+        """Endpoint para crear una cita con método de pago"""
+        serializer = AppointmentCreateSerializer(data=request.data)
+        
         if serializer.is_valid():
-            serializer.save(client=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            user = request.user
+            
+            if user.user_type != 'client':
+                return Response(
+                    {"detail": "Solo los clientes pueden agendar citas."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            try:
+                client = ClientProfile.objects.get(user=user)
+                
+                # Get the psychologist's price
+                psychologist = serializer.validated_data['psychologist']
+                price = psychologist.session_price or 0
+                
+                # Get payment method
+                payment_method = serializer.validated_data.pop('payment_method', None)
+                
+                # Save the appointment with the client and price
+                appointment = serializer.save(
+                    client=client,
+                    payment_amount=price,
+                    status='PENDING_PAYMENT'
+                )
+                
+                # Create payment detail with payment method
+                payment_detail = PaymentDetail.objects.create(
+                    appointment=appointment,
+                    payment_method=payment_method
+                )
+                
+                # Return the created appointment
+                return Response(
+                    AppointmentSerializer(appointment).data,
+                    status=status.HTTP_201_CREATED
+                )
+                
+            except ClientProfile.DoesNotExist:
+                return Response(
+                    {"detail": "No se encontró el perfil de cliente."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=True, methods=['PATCH'], permission_classes=[IsClient])
-    def cancel_appointment(self, request, pk=None):
-        """Cancel an appointment"""
-        appointment = self.get_object()
-        
-        # Solo el cliente que creó la cita puede cancelarla
-        if appointment.client != request.user:
-            return Response(
-                {"detail": "No tienes permiso para cancelar esta cita"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Solo se pueden cancelar citas pendientes o confirmadas
-        if appointment.status not in ['PENDING', 'CONFIRMED', 'PAYMENT_PENDING']:
-            return Response(
-                {"detail": "No se puede cancelar una cita que ya ha sido cancelada o completada"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        appointment.status = 'CANCELLED'
-        appointment.save()
-        
-        serializer = self.get_serializer(appointment)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['PATCH'], permission_classes=[IsPsychologist])
-    def confirm_appointment(self, request, pk=None):
-        """Confirm an appointment"""
-        appointment = self.get_object()
-        
-        # Verificar que el psicólogo es el dueño de la cita
+    @action(detail=False, methods=['get'], url_path='psychologist/(?P<psychologist_id>[^/.]+)')
+    def psychologist_appointments(self, request, psychologist_id=None):
+        """Endpoint para obtener las citas de un psicólogo específico"""
         try:
-            psychologist_profile = PsychologistProfile.objects.get(user=request.user)
-            if appointment.psychologist != psychologist_profile:
-                return Response(
-                    {"detail": "No tienes permiso para confirmar esta cita"},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-        except PsychologistProfile.DoesNotExist:
-            return Response(
-                {"detail": "No se encontró el perfil de psicólogo"},
-                status=status.HTTP_404_NOT_FOUND
+            # Verify the psychologist exists
+            psychologist = PsychologistProfile.objects.get(id=psychologist_id)
+            
+            # Get appointments for this psychologist
+            appointments = Appointment.objects.filter(
+                psychologist=psychologist,
+                # Filter by status to only include active appointments
+                status__in=['PENDING_PAYMENT', 'PAYMENT_UPLOADED', 'PAYMENT_VERIFIED', 'CONFIRMED']
             )
-        
-        # Solo se pueden confirmar citas pendientes
-        if appointment.status != 'PENDING':
-            return Response(
-                {"detail": "Solo se pueden confirmar citas pendientes"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        appointment.status = 'CONFIRMED'
-        appointment.save()
-        
-        serializer = self.get_serializer(appointment)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['PATCH'], permission_classes=[IsPsychologist])
-    def complete_appointment(self, request, pk=None):
-        """Mark an appointment as completed"""
-        appointment = self.get_object()
-        
-        # Verificar que el psicólogo es el dueño de la cita
-        try:
-            psychologist_profile = PsychologistProfile.objects.get(user=request.user)
-            if appointment.psychologist != psychologist_profile:
-                return Response(
-                    {"detail": "No tienes permiso para completar esta cita"},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-        except PsychologistProfile.DoesNotExist:
-            return Response(
-                {"detail": "No se encontró el perfil de psicólogo"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Solo se pueden completar citas confirmadas
-        if appointment.status != 'CONFIRMED':
-            return Response(
-                {"detail": "Solo se pueden completar citas confirmadas"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        appointment.status = 'COMPLETED'
-        appointment.save()
-        
-        serializer = self.get_serializer(appointment)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['PATCH'], permission_classes=[IsClient])
-    def update_notes(self, request, pk=None):
-        """Update client notes for an appointment"""
-        appointment = self.get_object()
-        
-        # Solo el cliente que creó la cita puede actualizar las notas
-        if appointment.client != request.user:
-            return Response(
-                {"detail": "No tienes permiso para actualizar las notas de esta cita"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        notes = request.data.get('notes')
-        if notes is not None:
-            appointment.notes = notes
-            appointment.save()
-        
-        serializer = self.get_serializer(appointment)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['GET'], permission_classes=[IsClient])
-    def my_appointments(self, request):
-        """Get all appointments for the authenticated client"""
-        appointments = Appointment.objects.filter(client=request.user)
-        serializer = self.get_serializer(appointments, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['GET'], permission_classes=[IsPsychologist])
-    def psychologist_appointments(self, request):
-        """Get all appointments for the authenticated psychologist"""
-        try:
-            psychologist_profile = PsychologistProfile.objects.get(user=request.user)
-            appointments = Appointment.objects.filter(psychologist=psychologist_profile)
+            
             serializer = self.get_serializer(appointments, many=True)
             return Response(serializer.data)
+            
         except PsychologistProfile.DoesNotExist:
             return Response(
-                {"detail": "No se encontró el perfil de psicólogo"},
+                {"detail": "No se encontró el perfil del psicólogo."},
                 status=status.HTTP_404_NOT_FOUND
             )
-
-
-# Añadir esta función en la clase AppointmentViewSet
-
-def get_psychologist_profile(self, psychologist_id):
-    """
-    Obtiene el perfil del psicólogo a partir del ID proporcionado.
-    Puede ser un ID de perfil o un ID de usuario.
-    """
-    try:
-        # Primero intentamos obtener directamente el perfil por ID
-        return PsychologistProfile.objects.get(id=psychologist_id)
-    except PsychologistProfile.DoesNotExist:
-        # Si no existe, intentamos obtenerlo por el ID de usuario
-        try:
-            user = User.objects.get(id=psychologist_id)
-            if user.user_type != 'psychologist':
-                raise ValueError("El usuario no es un psicólogo")
-            return PsychologistProfile.objects.get(user=user)
-        except (User.DoesNotExist, PsychologistProfile.DoesNotExist):
-            raise ValueError(f"No se encontró el perfil de psicólogo para el ID {psychologist_id}")
+        except Exception as e:
+            return Response(
+                {"detail": f"Error al obtener las citas: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
