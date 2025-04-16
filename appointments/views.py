@@ -237,6 +237,16 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
+            # Create a custom upload path for the payment proof
+            # Format: client_payment_proofs/client_id/appointment_id/filename
+            original_filename = payment_proof.name
+            file_extension = original_filename.split('.')[-1] if '.' in original_filename else ''
+            new_filename = f"comprobante_{appointment.id}.{file_extension}" if file_extension else f"comprobante_{appointment.id}"
+            
+            # Set the new path and filename
+            upload_path = f"client_payment_proofs/{client.id}/{appointment.id}/{new_filename}"
+            payment_proof.name = upload_path
+            
             # Update appointment
             appointment.payment_proof = payment_proof
             appointment.status = 'PAYMENT_UPLOADED'

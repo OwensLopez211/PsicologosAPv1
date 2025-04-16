@@ -39,12 +39,27 @@ const Navbar = () => {
   const renderAuthButtons = () => {
     if (isAuthenticated) {
       return (
-        <Link 
-          to={getDashboardLink()} 
-          className="px-4 py-1.5 text-white bg-[#2A6877] rounded-md hover:bg-[#235A67] transition-colors font-sans text-sm"
-        >
-          Mi Panel
-        </Link>
+        <div className="relative group">
+          <Link 
+            to={getDashboardLink()} 
+            className="flex items-center gap-2 px-4 py-1.5 text-white bg-gradient-to-r from-[#2A6877] to-[#1d4b56] rounded-md hover:shadow-md transition-all duration-300 font-sans text-sm group-hover:shadow-[#2A6877]/20"
+          >
+            <span>Mi Panel</span>
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" 
+              viewBox="0 0 20 20" 
+              fill="currentColor"
+            >
+              <path 
+                fillRule="evenodd" 
+                d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" 
+                clipRule="evenodd" 
+              />
+            </svg>
+          </Link>
+          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
       );
     }
 
@@ -71,9 +86,21 @@ const Navbar = () => {
       return (
         <a
           onClick={() => handleNavigation(getDashboardLink())}
-          className="block w-full px-4 py-2 text-center text-white bg-[#2A6877] rounded-md hover:bg-[#235A67] transition-colors font-sans text-sm cursor-pointer"
+          className="flex items-center justify-center gap-2 w-full px-4 py-2 text-white bg-gradient-to-r from-[#2A6877] to-[#1d4b56] rounded-md hover:shadow-md transition-all duration-300 font-sans text-sm cursor-pointer"
         >
-          Mi Panel
+          <span>Mi Panel</span>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-4 w-4" 
+            viewBox="0 0 20 20" 
+            fill="currentColor"
+          >
+            <path 
+              fillRule="evenodd" 
+              d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" 
+              clipRule="evenodd" 
+            />
+          </svg>
         </a>
       );
     }

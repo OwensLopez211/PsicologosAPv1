@@ -28,7 +28,6 @@ class ProfessionalDocumentSerializer(serializers.ModelSerializer):
             'rejection_reason', 'uploaded_at', 'verified_at'
         )
 
-# Rest of the serializers remain unchanged
 class BaseProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -103,12 +102,63 @@ class AdminProfileSerializer(BaseProfileSerializer):
 
 class PsychologistProfileSerializer(BaseProfileSerializer):
     """Serializer para perfiles de psicólogo"""
-    phone = serializers.CharField(source='phone_number', required=False, allow_blank=True, allow_null=True)
+    # Ensure gender is explicitly defined as a field
     gender = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    phone = serializers.CharField(source='phone', required=False, allow_blank=True, allow_null=True)
     rut = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     region = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     city = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    user = serializers.SerializerMethodField()
+    
+    # Professional fields
+    professional_title = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    specialties = serializers.JSONField(required=False)
+    health_register_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    university = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    graduation_year = serializers.IntegerField(required=False, allow_null=True)
+    experience_description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    target_populations = serializers.JSONField(required=False)
+    intervention_areas = serializers.JSONField(required=False)
+    
+    # Bank info fields
+    bank_account_number = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_type = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_owner = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_owner_rut = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bank_account_owner_email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    bank_name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
+    # Verification status
+    verification_status = serializers.CharField(read_only=True)
+    verification_status_display = serializers.SerializerMethodField()
+    
+    def get_verification_status_display(self, obj):
+        status_choices = dict(PsychologistProfile._meta.get_field('verification_status').choices)
+        return status_choices.get(obj.verification_status, obj.verification_status)
+    
+    class Meta(BaseProfileSerializer.Meta):
+        model = PsychologistProfile
+        fields = BaseProfileSerializer.Meta.fields + (
+            'id', 'phone', 'gender', 'rut', 'region', 'city',
+            'professional_title', 'specialties', 'health_register_number',
+            'university', 'graduation_year', 'experience_description',
+            'target_populations', 'intervention_areas',
+            'bank_account_number', 'bank_account_type', 'bank_account_owner',
+            'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name',
+            'verification_status', 'verification_status_display'
+        )
+        read_only_fields = ('id', 'verification_status', 'verification_status_display')
+    
+    def update(self, instance, validated_data):
+        """
+        Custom update method to ensure gender field is properly handled
+        """
+        # Explicitly handle gender field
+        if 'gender' in validated_data:
+            instance.gender = validated_data.pop('gender')
+        
+        # Handle the rest of the fields normally
+        return super().update(instance, validated_data)
+
     presentation_video_url = serializers.SerializerMethodField(read_only=True)
     
     def get_user(self, obj):

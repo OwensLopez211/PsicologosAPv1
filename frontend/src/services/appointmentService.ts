@@ -95,7 +95,7 @@ export const getMonthlyAvailability = async (
       : 1;
     
     for (let day = startDay; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${monthStr}-${day.toString().padStart(2, '0')}`;
+      const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
       try {
         const slots = await getAvailableTimeSlots(psychologistId, dateStr);
         availability.push({
@@ -158,7 +158,7 @@ export const createAppointment = async (appointmentData: {
     console.log('Creating appointment with data:', appointmentData);
     
     // Primero obtenemos los slots disponibles para ese día para verificar el ID de perfil
-    const availableSlotsResponse = await api.get('/appointments/available_slots/', {
+    await api.get('/appointments/available_slots/', {
       params: {
         profile_id: appointmentData.psychologist,
         date: appointmentData.date
@@ -182,7 +182,7 @@ export const createAppointment = async (appointmentData: {
       
       try {
         // Intentamos obtener los slots disponibles para ese día
-        const availableSlotsResponse = await api.get('/appointments/available_slots/', {
+        await api.get('/appointments/available_slots/', {
           params: {
             profile_id: appointmentData.psychologist,
             date: appointmentData.date

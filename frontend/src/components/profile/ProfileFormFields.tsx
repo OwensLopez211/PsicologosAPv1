@@ -90,6 +90,7 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
   const handleGenderChange = (value: string) => {
     // Only update gender if it's not in the disabled fields
     if (!disabledFields.includes('gender')) {
+      console.log('Updating gender to:', value); // Add logging
       onChange({
         ...formData,
         gender: value

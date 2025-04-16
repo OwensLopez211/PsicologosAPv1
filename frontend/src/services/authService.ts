@@ -29,7 +29,7 @@ export interface RegisterData {
   // Puedes añadir más campos según necesites
 }
 
-export const login = async (email: string, password: string): Promise<AuthResponse> => {
+export const login = async (email: string, password: string): Promise<AuthResponse | undefined> => {
   try {
     const response = await api.post<AuthResponse>('/auth/login/', {
       email: email.toLowerCase().trim(),
