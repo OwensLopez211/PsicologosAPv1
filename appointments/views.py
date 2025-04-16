@@ -377,3 +377,202 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 {"detail": f"Error al obtener las citas: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @action(detail=False, methods=['get'], url_path='my-appointments', permission_classes=[permissions.IsAuthenticated, IsPsychologist])
+    def my_appointments(self, request):
+        """Endpoint para que el psicólogo vea sus citas"""
+        user = request.user
+        try:
+            psychologist = PsychologistProfile.objects.get(user=user)
+            
+            # Filtrar por fecha si se proporciona
+            start_date_str = request.query_params.get('start_date')
+            end_date_str = request.query_params.get('end_date')
+            status_filter = request.query_params.get('status')
+            
+            # Iniciar con todas las citas del psicólogo
+            queryset = Appointment.objects.filter(psychologist=psychologist)
+            
+            # Aplicar filtros si se proporcionan
+            if start_date_str:
+                try:
+                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                    queryset = queryset.filter(date__gte=start_date)
+                except ValueError:
+                    return Response(
+                        {"detail": "Formato de fecha de inicio inválido. Use YYYY-MM-DD."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            if end_date_str:
+                try:
+                    end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                    queryset = queryset.filter(date__lte=end_date)
+                except ValueError:
+                    return Response(
+                        {"detail": "Formato de fecha de fin inválido. Use YYYY-MM-DD."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            if status_filter:
+                queryset = queryset.filter(status=status_filter)
+            
+            # Ordenar por fecha y hora
+            queryset = queryset.order_by('date', 'start_time')
+            
+            # Paginar resultados
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+            
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró el perfil de psicólogo para este usuario."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated, IsPsychologist])
+    def update_status(self, request, pk=None):
+        """Endpoint para que el psicólogo actualice el estado de una cita"""
+        try:
+            appointment = self.get_object()
+            
+            # Verificar que la cita pertenece al psicólogo que hace la solicitud
+            user = request.user
+            try:
+                psychologist = PsychologistProfile.objects.get(user=user)
+                if appointment.psychologist != psychologist:
+                    return Response(
+                        {"detail": "No tiene permiso para modificar esta cita."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            except PsychologistProfile.DoesNotExist:
+                return Response(
+                    {"detail": "No se encontró el perfil de psicólogo."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Obtener el nuevo estado
+            new_status = request.data.get('status')
+            
+            # Validar que el estado es válido
+            valid_statuses = ['CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW']
+            if not new_status or new_status not in valid_statuses:
+                return Response(
+                    {"detail": f"Estado no válido. Opciones permitidas: {', '.join(valid_statuses)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validar transiciones de estado permitidas
+            if appointment.status not in ['PAYMENT_VERIFIED', 'CONFIRMED']:
+                return Response(
+                    {"detail": f"No se puede actualizar el estado desde '{appointment.get_status_display()}'."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Actualizar el estado
+            appointment.status = new_status
+            appointment.save()
+            
+            return Response({
+                "detail": f"Estado actualizado a '{appointment.get_status_display()}'."
+            })
+            
+        except Appointment.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró la cita."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated, IsPsychologist])
+    def add_notes(self, request, pk=None):
+        """Endpoint para que el psicólogo añada notas a una cita"""
+        try:
+            appointment = self.get_object()
+            
+            # Verificar que la cita pertenece al psicólogo que hace la solicitud
+            user = request.user
+            try:
+                psychologist = PsychologistProfile.objects.get(user=user)
+                if appointment.psychologist != psychologist:
+                    return Response(
+                        {"detail": "No tiene permiso para modificar esta cita."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            except PsychologistProfile.DoesNotExist:
+                return Response(
+                    {"detail": "No se encontró el perfil de psicólogo."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Obtener las notas
+            notes = request.data.get('psychologist_notes')
+            
+            if not notes:
+                return Response(
+                    {"detail": "Se requieren notas para actualizar."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Actualizar las notas
+            appointment.psychologist_notes = notes
+            appointment.save()
+            
+            return Response({
+                "detail": "Notas actualizadas correctamente."
+            })
+            
+        except Appointment.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró la cita."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsClient])
+    def client_appointments(self, request):
+        """Endpoint para obtener las citas del cliente clasificadas como próximas, pasadas y todas"""
+        user = request.user
+        try:
+            client = ClientProfile.objects.get(user=user)
+        except ClientProfile.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró el perfil de cliente para este usuario."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Obtener todas las citas del cliente
+        appointments = Appointment.objects.filter(client=client)
+        
+        # Fecha actual para comparar
+        today = timezone.now().date()
+        current_time = timezone.now().time()
+        
+        # Clasificar las citas
+        upcoming_appointments = appointments.filter(
+            Q(date__gt=today) | 
+            (Q(date=today) & Q(start_time__gt=current_time))
+        ).exclude(
+            status__in=['COMPLETED', 'CANCELLED', 'NO_SHOW']
+        ).order_by('date', 'start_time')
+        
+        past_appointments = appointments.filter(
+            Q(date__lt=today) | 
+            (Q(date=today) & Q(end_time__lt=current_time)) |
+            Q(status__in=['COMPLETED', 'CANCELLED', 'NO_SHOW'])
+        ).order_by('-date', '-start_time')
+        
+        # Serializar los resultados
+        upcoming_serializer = self.get_serializer(upcoming_appointments, many=True)
+        past_serializer = self.get_serializer(past_appointments, many=True)
+        all_serializer = self.get_serializer(appointments.order_by('-date', 'start_time'), many=True)
+        
+        return Response({
+            "upcoming": upcoming_serializer.data,
+            "past": past_serializer.data,
+            "all": all_serializer.data
+        })

@@ -16,7 +16,8 @@ import SpecialistProfilePage from './pages/public-pages/SpecialistProfilePage';
 import TermsPage from './pages/public-pages/TermsPage';
 // import DashboardHome from './pages/dashboard/DashboardHome';
 import ProfilePage from './pages/dashboard/ProfilePage';
-// import SchedulePage from './pages/dashboard/SchedulePage';
+import SchedulePage from './pages/dashboard/psychologist/SchedulePage';
+import ClientAppointments from './pages/dashboard/client/ClientAppointments';
 // import PatientsPage from './pages/dashboard/PatientsPage';
 // import DocumentsPage from './pages/dashboard/DocumentsPage';
 // import UsersPage from './pages/dashboard/UsersPage';
@@ -24,6 +25,7 @@ import ProfilePage from './pages/dashboard/ProfilePage';
 import PatientsManagement from './pages/dashboard/admin/PatientsManagement';
 import PsychologistListPage from './pages/admin/PsychologistListPage';
 import PsychologistDetailPage from './pages/admin/PsychologistDetailPage';
+import PaymentVerificationPage from './pages/dashboard/admin/PaymentVerificationPage';
 import { Toaster } from 'react-hot-toast';
 
 function App() {
@@ -61,6 +63,7 @@ function App() {
               </PrivateRoute>
             }>
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="appointments" element={<ClientAppointments />} />
             </Route>
 
             {/* Psychologist Dashboard routes */}
@@ -70,6 +73,7 @@ function App() {
               </PrivateRoute>
             }>
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="schedule" element={<SchedulePage />} />
             </Route>
 
             {/* Admin Dashboard routes */}
@@ -82,6 +86,7 @@ function App() {
               <Route path="pacients" element={<PatientsManagement />} />
               <Route path="psychologists" element={<PsychologistListPage />} />
               <Route path="psychologists/:id" element={<PsychologistDetailPage />} />
+              <Route path="payments" element={<PaymentVerificationPage />} />
             </Route>
 
             {/* Catch all route */}

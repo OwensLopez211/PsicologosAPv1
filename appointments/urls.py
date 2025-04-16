@@ -20,6 +20,23 @@ urlpatterns = [
     path('<int:pk>/verify-payment/', AppointmentViewSet.as_view({
         'post': 'verify_payment',
     }), name='verify-payment'),
+    # Nuevos endpoints para psicólogos
+    path('my-appointments/', AppointmentViewSet.as_view({
+        'get': 'my_appointments',
+    }), name='my-appointments'),
+    path('<int:pk>/update-status/', AppointmentViewSet.as_view({
+        'patch': 'update_status',
+    }), name='update-status'),
+    path('<int:pk>/add-notes/', AppointmentViewSet.as_view({
+        'patch': 'add_notes',
+    }), name='add-notes'),
+    # Nuevo endpoint para clientes - both with and without trailing slash
+    path('client-appointments/', AppointmentViewSet.as_view({
+        'get': 'client_appointments',
+    }), name='client-appointments'),
+    path('client-appointments', AppointmentViewSet.as_view({
+        'get': 'client_appointments',
+    }), name='client-appointments-no-slash'),
     # The psychologist appointments endpoint will be handled by the router
     # It will be available at: /api/appointments/psychologist/{id}/
 ]

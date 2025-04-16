@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import {
   HomeIcon, UserIcon, CalendarIcon, UsersIcon, 
   UserGroupIcon, MagnifyingGlassIcon, ArrowRightOnRectangleIcon,
-  ArrowLeftIcon
+  ArrowLeftIcon, CreditCardIcon
 } from '@heroicons/react/24/outline';
 
 const TopBar = () => {
@@ -40,6 +40,7 @@ const TopBar = () => {
       ADMIN: [
         { path: '/admin/dashboard', label: 'Inicio', icon: HomeIcon },
         { path: '/admin/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
+        { path: '/admin/dashboard/payments', label: 'Verificar Pagos', icon: CreditCardIcon },
         { path: '/admin/dashboard/pacients', label: 'Pacientes', icon: UsersIcon },
         { path: '/admin/dashboard/psychologists', label: 'Psicólogos', icon: UserGroupIcon },
       ],
