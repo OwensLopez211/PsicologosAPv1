@@ -26,12 +26,12 @@ import PatientsManagement from './pages/dashboard/admin/PatientsManagement';
 import PsychologistListPage from './pages/admin/PsychologistListPage';
 import PsychologistDetailPage from './pages/admin/PsychologistDetailPage';
 import PaymentVerificationPage from './pages/dashboard/admin/PaymentVerificationPage';
-import { Toaster } from 'react-hot-toast';
+import ToastProvider from './components/toast/ToastProvider';
 
 function App() {
   return (
     <>
-      <Toaster />
+      <ToastProvider />
       <Router>
         <AuthProvider>
           <TokenRefreshManager />

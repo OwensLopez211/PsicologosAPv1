@@ -78,7 +78,7 @@ export const updateProfile = async (userType: string, profileData: any) => {
     // For psychologist profiles, we need to handle the nested user structure differently
     if (userType.toLowerCase() === 'psychologist') {
       // Extract first_name and last_name to send them directly
-      const { first_name, last_name, email, ...otherData } = profileData;
+      const { first_name, last_name, email, gender, ...otherData } = profileData;
       
       // Create a new object with the correct structure
       // Make sure gender is included at the top level
@@ -86,8 +86,7 @@ export const updateProfile = async (userType: string, profileData: any) => {
         ...otherData,
         first_name, // Include these at the top level for the backend
         last_name,
-        // Explicitly include gender to ensure it's sent correctly
-        gender: profileData.gender
+        gender, // Extraer explícitamente el género y asegurarse de que se incluya
       };
       
       console.log('Formatted data for psychologist update:', formattedData);

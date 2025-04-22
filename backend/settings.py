@@ -81,11 +81,13 @@ STATICFILES_DIRS = [
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Timezone and language settings
-LANGUAGE_CODE = 'es-pe'
-TIME_ZONE = 'America/Lima'
+LANGUAGE_CODE = 'es-cl'
+TIME_ZONE = 'America/Santiago'
 USE_I18N = True
 USE_L10N = True
-USE_TZ = True
+# Cambiamos USE_TZ a False para evitar conversiones automáticas de zona horaria
+# Esto hará que Django use la hora local (America/Santiago) sin conversiones
+USE_TZ = False
 
 # CORS settings
 # Update CORS settings for Vite's default port

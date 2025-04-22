@@ -15,6 +15,16 @@ class BaseProfile(models.Model):
     profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    gender = models.CharField(
+        max_length=20, 
+        choices=[
+            ('MALE', 'Masculino'),
+            ('FEMALE', 'Femenino'),
+            ('OTHER', 'Otro'),
+            ('PREFER_NOT_TO_SAY', 'Prefiero no decirlo')
+        ],
+        blank=True
+    )
     
     class Meta:
         abstract = True
@@ -26,16 +36,7 @@ class ClientProfile(BaseProfile):
     phone_number = models.CharField(max_length=20, blank=True)
     birth_date = models.DateField(null=True, blank=True)
     emergency_contact = models.CharField(max_length=100, blank=True)
-    gender = models.CharField(
-        max_length=20, 
-        choices=[
-            ('MALE', 'Masculino'),
-            ('FEMALE', 'Femenino'),
-            ('OTHER', 'Otro'),
-            ('PREFER_NOT_TO_SAY', 'Prefiero no decirlo')
-        ],
-        blank=True
-    )
+    
     # Añadir los campos faltantes
     rut = models.CharField(max_length=20, blank=True)
     region = models.CharField(max_length=100, blank=True)
@@ -65,16 +66,6 @@ class AdminProfile(BaseProfile):
     Perfil para usuarios tipo administrador.
     """
     phone_number = models.CharField(max_length=20, blank=True)
-    gender = models.CharField(
-        max_length=20, 
-        choices=[
-            ('MALE', 'Masculino'),
-            ('FEMALE', 'Femenino'),
-            ('OTHER', 'Otro'),
-            ('PREFER_NOT_TO_SAY', 'Prefiero no decirlo')
-        ],
-        blank=True
-    )
     rut = models.CharField(max_length=20, blank=True)
     region = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -107,16 +98,6 @@ class PsychologistProfile(BaseProfile):
     # Datos personales
     rut = models.CharField(max_length=20, blank=True)
     phone = models.CharField(max_length=20, blank=True)
-    gender = models.CharField(
-        max_length=20, 
-        choices=[
-            ('MALE', 'Masculino'),
-            ('FEMALE', 'Femenino'),
-            ('OTHER', 'Otro'),
-            ('PREFER_NOT_TO_SAY', 'Prefiero no decirlo')
-        ],
-        blank=True
-    )
     region = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=100, blank=True)
     

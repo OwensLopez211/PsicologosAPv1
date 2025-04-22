@@ -36,13 +36,15 @@ export interface AppointmentData {
   date: string;
   start_time: string;
   end_time: string;
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'PAYMENT_PENDING';
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'PAYMENT_PENDING' | 'PENDING_PAYMENT' | 'PAYMENT_UPLOADED' | 'PAYMENT_VERIFIED' | 'NO_SHOW';
   notes?: string;
   client_notes?: string;
   created_at: string;
   updated_at: string;
   client_details?: any;
   psychologist_details?: any;
+  payment_proof?: string;
+  meeting_link?: string;
 }
 
 // Helper function to determine if an ID is likely a profile ID or user ID
@@ -144,29 +146,39 @@ export const getAvailableTimeSlots = async (psychologistId: number, date: string
 };
 
 // Function to create a new appointment
-// Añade esta función al archivo appointmentService.ts
-
-// Modificar la función createAppointment para usar el ID correcto
 export const createAppointment = async (appointmentData: {
   psychologist: number;
   date: string;
   start_time: string;
   end_time: string;
   notes?: string;
+  payment_method?: string;
+  client_notes?: string;
 }): Promise<AppointmentData> => {
   try {
     console.log('Creating appointment with data:', appointmentData);
+    
+    // Asegurarnos de que la fecha se envía en el formato correcto (YYYY-MM-DD)
+    // y que no se ve afectada por la zona horaria
+    const originalDate = appointmentData.date;
     
     // Primero obtenemos los slots disponibles para ese día para verificar el ID de perfil
     await api.get('/appointments/available_slots/', {
       params: {
         profile_id: appointmentData.psychologist,
-        date: appointmentData.date
+        date: originalDate
       }
     });
     
     // Si llegamos aquí, el ID funciona para obtener slots, así que lo usamos directamente
-    const response = await api.post('/appointments/create_appointment/', appointmentData);
+    // Asegurarnos de que la fecha no se modifica por la zona horaria
+    const formattedDate = originalDate;
+    console.log('Sending appointment with formatted date:', formattedDate);
+    
+    const response = await api.post('/appointments/create_appointment/', {
+      ...appointmentData,
+      date: formattedDate // Usar la fecha formateada correctamente
+    });
     
     console.log('Appointment created:', response.data);
     toast.success('Cita agendada correctamente');
@@ -272,6 +284,63 @@ export const completeAppointment = async (appointmentId: number): Promise<Appoin
   } catch (error) {
     console.error('Error completing appointment:', error);
     toast.error('Error al completar la cita');
+    throw error;
+  }
+};
+
+// Function to upload payment proof for an appointment
+export const uploadPaymentProof = async (appointmentId: number, file: File): Promise<AppointmentData> => {
+  try {
+    const formData = new FormData();
+    formData.append('payment_proof', file);
+    
+    const response = await api.post(`/appointments/${appointmentId}/upload-payment/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    console.log('Payment proof uploaded:', response.data);
+    toast.success('Comprobante de pago subido correctamente');
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading payment proof:', error);
+    toast.error('Error al subir el comprobante de pago');
+    throw error;
+  }
+};
+
+// Function for admins to verify payment
+export const verifyPayment = async (appointmentId: number, verified: boolean, adminNotes?: string): Promise<AppointmentData> => {
+  try {
+    const response = await api.post(`/appointments/${appointmentId}/verify-payment/`, {
+      verified,
+      admin_notes: adminNotes || ''
+    });
+    
+    console.log('Payment verification:', response.data);
+    toast.success(verified ? 'Pago verificado correctamente' : 'Pago rechazado');
+    return response.data;
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    toast.error('Error al verificar el pago');
+    throw error;
+  }
+};
+
+// Function to get client appointments
+export const getClientAppointments = async (): Promise<{
+  upcoming: AppointmentData[];
+  past: AppointmentData[];
+  all: AppointmentData[];
+}> => {
+  try {
+    const response = await api.get('/appointments/client-appointments');
+    console.log('Client appointments:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching client appointments:', error);
+    toast.error('Error al obtener tus citas');
     throw error;
   }
 };

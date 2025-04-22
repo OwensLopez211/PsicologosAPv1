@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import DaySelector from './appointmentModal/DaySelector';
 import PaymentSelector from './appointmentModal/PaymentSelector';
+import PaymentConfirmationModal from './appointmentModal/PaymentConfirmationModal';
 import { 
   DaySlot, 
   formatTime, 
   formatDate 
 } from './scheduleUtils';
-import AppointmentService, { ExistingAppointment } from '../../services/AppointmentService';
+import AppointmentService from '../../services/appointmentService';
 
 interface AppointmentModalProps {
   psychologistId: number;
@@ -82,20 +83,23 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
     setError(null);
     
     try {
+      // Usar el servicio actualizado para obtener los horarios disponibles
       const availableDaysData = await AppointmentService.getAvailableTimeSlots(psychologistId);
       
-      console.log('Available days after filtering:', availableDaysData);
+      console.log('Días disponibles después del filtrado:', availableDaysData);
       
       setAvailableDays(availableDaysData);
       
-      // If we have available days, select the first one by default
+      // Si tenemos días disponibles, seleccionar el primero por defecto
       if (availableDaysData.length > 0) {
         setSelectedDate(availableDaysData[0].date);
+      } else {
+        setError('No hay horarios disponibles para este psicólogo en los próximos días.');
       }
     } catch (err: any) {
-      console.error('Error fetching available time slots:', err);
+      console.error('Error al obtener los horarios disponibles:', err);
       
-      // Handle different error types
+      // Manejar diferentes tipos de errores
       if (err.response) {
         if (err.response.status === 401) {
           setError('Sesión expirada. Por favor, inicie sesión nuevamente.');
@@ -132,6 +136,13 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
     }
   };
   
+  // Estados para el modal de confirmación de pago
+  const [showPaymentConfirmation, setShowPaymentConfirmation] = useState(false);
+  const [createdAppointment, setCreatedAppointment] = useState<any>(null);
+  const [bankInfo, setBankInfo] = useState<any>(null);
+  const [adminBankInfo, setAdminBankInfo] = useState<any>(null);
+  const [isFirstAppointment, setIsFirstAppointment] = useState(false);
+  
   // Function to process the appointment
   const handleProcessAppointment = async () => {
     if (!selectedSlot || !selectedPaymentMethod) {
@@ -149,18 +160,23 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
         return;
       }
       
+      // Asegurarnos de que la fecha se envía correctamente sin modificaciones por zona horaria
+      console.log('Selected date before sending:', selectedSlot.date);
+      
       // Create appointment data
       const appointmentData = {
         psychologist: psychologistId,
-        date: selectedSlot.date,
+        date: selectedSlot.date, // Usar la fecha exactamente como viene del selector
         start_time: selectedSlot.startTime,
         end_time: selectedSlot.endTime,
         payment_method: selectedPaymentMethod,
         client_notes: '' // Add empty client notes if needed
       };
       
+      console.log('Sending appointment data:', appointmentData);
+      
       // Send appointment request to the API
-      await axios.post(
+      const response = await axios.post(
         '/api/appointments/',
         appointmentData,
         {
@@ -171,11 +187,85 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
         }
       );
       
-      // Close the modal and show success message
-      onClose();
+      // Guardar la cita creada
+      setCreatedAppointment(response.data);
       
-      // Show a success notification
-      alert('¡Cita agendada con éxito! Recibirás un correo con los detalles.');
+      // Verificar si es la primera cita entre este psicólogo y cliente
+      setIsFirstAppointment(response.data.is_first_appointment || false);
+      
+      // Obtener información bancaria del psicólogo
+      try {
+        const psychologistResponse = await axios.get(
+          `/api/profiles/psychologist-profiles/${psychologistId}/`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        // Extraer información bancaria
+        const psychData = psychologistResponse.data;
+        setBankInfo({
+          bankName: psychData.bank_name || 'No especificado',
+          accountNumber: psychData.bank_account_number || 'No especificado',
+          accountType: psychData.bank_account_type_display || 'No especificado',
+          accountOwner: psychData.bank_account_owner || psychData.first_name + ' ' + psychData.last_name,
+          ownerRut: psychData.bank_account_owner_rut || psychData.rut || 'No especificado',
+          ownerEmail: psychData.bank_account_owner_email || psychData.email || 'No especificado'
+        });
+        
+        // Si es la primera cita, obtener información bancaria del administrador
+        if (response.data.is_first_appointment) {
+          try {
+            const adminResponse = await axios.get(
+              '/api/profiles/admin-profiles/me/bank-info/',
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              }
+            );
+            
+            const adminData = adminResponse.data;
+            setAdminBankInfo({
+              bankName: adminData.bank_name || 'No especificado',
+              accountNumber: adminData.bank_account_number || 'No especificado',
+              accountType: adminData.bank_account_type_display || 'No especificado',
+              accountOwner: adminData.bank_account_owner || 'Administración',
+              ownerRut: adminData.bank_account_owner_rut || 'No especificado',
+              ownerEmail: adminData.bank_account_owner_email || 'No especificado'
+            });
+          } catch (err) {
+            console.error('Error obteniendo información bancaria del administrador:', err);
+            // Si falla, usamos información predeterminada
+            setAdminBankInfo({
+              bankName: 'Banco Estado',
+              accountNumber: '00000000000',
+              accountType: 'Cuenta Corriente',
+              accountOwner: 'Administración PsicologosAPP',
+              ownerRut: '00.000.000-0',
+              ownerEmail: 'admin@psicologosapp.cl'
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error obteniendo información bancaria:', err);
+        // Si falla, continuamos con información bancaria vacía
+        setBankInfo({
+          bankName: 'No disponible',
+          accountNumber: 'No disponible',
+          accountType: 'No disponible',
+          accountOwner: 'No disponible',
+          ownerRut: 'No disponible',
+          ownerEmail: 'No disponible'
+        });
+      }
+      
+      // Mostrar el modal de confirmación de pago
+      setShowPaymentConfirmation(true);
       
     } catch (err: any) {
       console.error('Error creating appointment:', err);
@@ -201,6 +291,12 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
     }
   };
   
+  // Función para cerrar el modal de confirmación de pago
+  const handleClosePaymentConfirmation = () => {
+    setShowPaymentConfirmation(false);
+    onClose(); // Cerrar el modal principal
+  };
+  
   // Function to go back to slot selection
   const handleBackToSlots = () => {
     setShowPaymentOptions(false);
@@ -209,6 +305,7 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
 
   return (
     <AnimatePresence>
+      {/* Modal principal */}
       <motion.div
         className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
         initial={{ opacity: 0 }}
@@ -301,6 +398,20 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
           </div>
         </motion.div>
       </motion.div>
+      
+      {/* Modal de confirmación de pago */}
+      {showPaymentConfirmation && createdAppointment && (
+        <PaymentConfirmationModal
+          appointment={createdAppointment}
+          bankInfo={bankInfo}
+          adminBankInfo={adminBankInfo}
+          psychologistName={psychologistName}
+          onClose={handleClosePaymentConfirmation}
+          formatDate={formatDate}
+          formatTime={formatTime}
+          isFirstAppointment={isFirstAppointment}
+        />
+      )}
     </AnimatePresence>
   );
 };

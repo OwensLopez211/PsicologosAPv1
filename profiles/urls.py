@@ -5,6 +5,7 @@ from .views import (
     PublicPsychologistListView, PsychologistDetailView,
     AdminProfileViewSet
 )
+from .views.public_views import PublicBankInfoView
 
 router = DefaultRouter()
 router.register(r'client-profiles', ClientProfileViewSet, basename='client-profile')
@@ -13,6 +14,9 @@ router.register(r'admin-profiles', AdminProfileViewSet, basename='admin-profile'
 
 urlpatterns = [
     path('', include(router.urls)),
+    
+    # Añadir el nuevo endpoint público para información bancaria
+    path('bank-info/', PublicBankInfoView.as_view(), name='public-bank-info'),
     
     # Client profile endpoints
     path('client-profiles/me/upload_image/', 
@@ -84,6 +88,9 @@ urlpatterns = [
     path('admin-profiles/me/delete_image/', 
          AdminProfileViewSet.as_view({'delete': 'delete_image'}), 
          name='admin-delete-image'),
+    path('admin-profiles/me/bank-info/', 
+         AdminProfileViewSet.as_view({'get': 'bank_info'}), 
+         name='admin-bank-info'),
     
     # Add professional info update endpoint
     path('psychologist-profiles/me/professional-info/', 
@@ -133,4 +140,7 @@ urlpatterns = [
     path('admin-profiles/me/update_bank_info/',
          AdminProfileViewSet.as_view({'patch': 'update_bank_info'}),
          name='admin-update-bank-info'),
+         
+
 ]
+

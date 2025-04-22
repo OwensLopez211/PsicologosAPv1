@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from ..models import AdminProfile
 from ..serializers import AdminProfileSerializer, UserBasicSerializer
-from ..permissions import IsAdminUser
+from ..permissions import IsAdminUser, IsAdminOrClient
 
 class AdminProfileViewSet(viewsets.ModelViewSet):
     """API endpoint para perfil de administrador"""
@@ -65,6 +65,33 @@ class AdminProfileViewSet(viewsets.ModelViewSet):
             updated_serializer = self.get_serializer(profile)
             return Response(updated_serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def public_bank_info(self, request):
+        """Endpoint público para obtener los datos bancarios del administrador (accesible para cualquier usuario autenticado)
+        
+        Nota: Este endpoint está obsoleto. Usar /api/profiles/bank-info/ en su lugar.
+        """
+        # Obtener el perfil del administrador (tomamos el primero)
+        admin_profile = AdminProfile.objects.first()
+        
+        if not admin_profile:
+            return Response(
+                {"detail": "No se encontró ningún perfil de administrador."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Devolver solo la información bancaria
+        bank_data = {
+            'bank_account_number': admin_profile.bank_account_number,
+            'bank_account_type': admin_profile.bank_account_type,
+            'bank_account_owner': admin_profile.bank_account_owner,
+            'bank_account_owner_rut': admin_profile.bank_account_owner_rut,
+            'bank_account_owner_email': admin_profile.bank_account_owner_email,
+            'bank_name': admin_profile.bank_name
+        }
+        
+        return Response(bank_data)
 
     @action(detail=False, methods=['post'])
     def upload_image(self, request):

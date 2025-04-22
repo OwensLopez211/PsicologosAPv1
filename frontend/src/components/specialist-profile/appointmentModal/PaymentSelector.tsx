@@ -28,6 +28,20 @@ const PaymentSelector: FC<PaymentSelectorProps> = ({
   formatDate,
   formatTime
 }) => {
+  // Función personalizada para formatear la fecha correctamente
+  const correctFormatDate = (dateStr: string) => {
+    // Crear una fecha a partir del string pero sin conversión de zona horaria
+    const date = new Date(dateStr + 'T12:00:00');
+    
+    // Obtener el día correcto
+    const day = date.getDate();
+    const month = date.toLocaleString('es-CL', { month: 'long' });
+    const year = date.getFullYear();
+    
+    // Formatear la fecha correctamente
+    return `${day} de ${month} de ${year}`;
+  };
+  
   return (
     <div className="p-6">
       <h3 className="text-lg font-medium text-gray-900 mb-4">Seleccione un método de pago</h3>
@@ -83,7 +97,7 @@ const PaymentSelector: FC<PaymentSelectorProps> = ({
         <div className="mt-6 bg-blue-50 p-4 rounded-lg">
           <h4 className="font-medium text-gray-900 mb-2">Resumen de la cita</h4>
           <p className="text-sm text-gray-700">
-            <span className="font-medium">Fecha:</span> {formatDate(selectedSlot.date)}
+            <span className="font-medium">Fecha:</span> {correctFormatDate(selectedSlot.date)}
           </p>
           <p className="text-sm text-gray-700">
             <span className="font-medium">Hora:</span> {formatTime(selectedSlot.startTime)} - {formatTime(selectedSlot.endTime)}

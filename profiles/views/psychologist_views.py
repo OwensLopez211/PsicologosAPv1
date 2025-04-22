@@ -281,10 +281,18 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         user_data = {}
         profile_data = request.data.copy()
         
+        # Remove profile_image from regular update if it's present but not a file
+        if 'profile_image' in profile_data and not hasattr(profile_data['profile_image'], 'read'):
+            profile_data.pop('profile_image')
+        
         # Move user-related fields to user_data
         for field in ['first_name', 'last_name']:
             if field in profile_data:
                 user_data[field] = profile_data.pop(field)
+        
+        # Log the data being processed
+        print("User data to update:", user_data)
+        print("Profile data to update:", profile_data)
         
         # Update user if needed
         if user_data:
@@ -299,7 +307,7 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             
-            # Return updated profile with user data
+            # Return the complete updated profile
             updated_serializer = self.get_serializer(profile)
             return Response(updated_serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

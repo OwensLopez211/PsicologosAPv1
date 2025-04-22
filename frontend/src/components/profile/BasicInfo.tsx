@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import ProfileImageUploader from './ProfileImageUploader';
 import ProfileFormFields from './ProfileFormFields';
+import ProfileImageUploader from './ProfileImageUploader';
+import { UserIcon, CheckIcon } from '@heroicons/react/24/outline';
 
-// Update interface to be more generic
 interface BasicInfoProps {
-  profile?: any; // Make this more generic to accept any profile type
-  onSave: (data: any) => void; // Accept any data type for saving
+  profile?: any;
+  onSave: (data: any) => void;
   isLoading: boolean;
 }
 
@@ -29,13 +28,10 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-
-  // In the useEffect that sets form data
+  
+  // Cargar datos del perfil
   useEffect(() => {
     if (profile) {
-      console.log("Profile data received:", profile);
-      
-      // Check if we're dealing with a nested user structure or flat structure
       const isNestedUserStructure = profile.user && typeof profile.user === 'object';
       
       setFormData({
@@ -52,7 +48,7 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
     }
   }, [profile]);
 
-  // Reset success message after 3 seconds
+  // Resetear mensaje de éxito
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     if (saveSuccess) {
@@ -65,11 +61,12 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
     };
   }, [saveSuccess]);
 
+  // Manejadores de formulario
   const handleFormChange = (newFormData: typeof formData) => {
-    console.log("Form data changed:", newFormData);
     setFormData(newFormData);
   };
 
+  // Handler para cuando la imagen se ha subido desde el ProfileImageUploader
   const handleImageUploaded = (imageUrl: string) => {
     setFormData(prev => ({
       ...prev,
@@ -78,18 +75,17 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
     setIsUploadingImage(false);
   };
 
+  // Manejador para enviar formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveError(null);
     
     try {
-      console.log("Submitting form data:", formData);
+      console.log("Enviando datos al backend:", formData); // Añadir log para depuración
       
-      // Create a copy of the data to send
       const dataToSave = { ...formData };
       
-      // Remove profile_image from the data to save
-      // The profile image should be handled separately through the image uploader
+      // No enviamos la imagen de perfil en los datos a guardar
       delete dataToSave.profile_image;
       
       await onSave(dataToSave);
@@ -101,12 +97,12 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
     }
   };
 
+  // Resetear formulario
   const resetForm = () => {
     setIsEditing(false);
     
     if (!profile) return;
     
-    // Check if we're dealing with a nested user structure or flat structure
     const isNestedUserStructure = profile.user && typeof profile.user === 'object';
     
     setFormData({
@@ -122,34 +118,27 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
     });
   };
 
-  // Determine which fields should be disabled based on user type
+  // Obtener campos deshabilitados
   const getDisabledFields = () => {
-    // Common disabled fields for all user types
     const disabledFields: string[] = [];
-    
-    // For all user types, email is typically not editable after registration
     disabledFields.push('email');
-    
     return disabledFields;
   };
 
   return (
     <motion.div
-      layout
-      transition={{ duration: 0.3 }}
-      className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="bg-gradient-to-b from-white to-gray-50/90 backdrop-blur-sm rounded-2xl shadow-md overflow-hidden border border-gray-100"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex justify-between items-center p-6 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <motion.span 
-              className="text-2xl"
-              initial={{ rotate: -10 }}
-              animate={{ rotate: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              👤
-            </motion.span>
+        {/* Encabezado */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-white">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-[#2A6877] to-[#B4E4D3] text-white">
+              <UserIcon className="h-5 w-5" />
+            </div>
             <h2 className="text-xl font-semibold text-gray-900">Información Personal</h2>
           </div>
           
@@ -160,27 +149,26 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="text-sm text-green-600 flex items-center gap-1"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-sm"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Guardado
+                  <CheckIcon className="h-4 w-4" />
+                  <span>Guardado</span>
                 </motion.div>
               )}
             </AnimatePresence>
             
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {!isEditing ? (
                 <motion.button
                   key="edit-button"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center px-4 py-2 border border-[#2A6877] text-sm font-medium rounded-md text-[#2A6877] hover:bg-gray-50 hover:shadow-sm transition-all"
+                  className="inline-flex items-center px-4 py-2 border border-[#2A6877] text-sm font-medium rounded-full text-[#2A6877] bg-white hover:bg-[#2A6877] hover:text-white hover:shadow-md transition-all"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -192,6 +180,7 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
           </div>
         </div>
 
+        {/* Imagen de perfil - Usando ProfileImageUploader */}
         <div className="px-6">
           <ProfileImageUploader 
             profileImage={formData.profile_image}
@@ -201,6 +190,7 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
           />
         </div>
 
+        {/* Campos del formulario */}
         <div className="px-6 pb-6">
           <ProfileFormFields 
             formData={formData}
@@ -210,14 +200,26 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
           />
         </div>
 
-        {saveError && (
-          <div className="px-6">
-            <div className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-md">
-              {saveError}
-            </div>
-          </div>
-        )}
+        {/* Mensaje de error */}
+        <AnimatePresence>
+          {saveError && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="px-6"
+            >
+              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-4 py-3 rounded-md border border-red-100">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                {saveError}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
+        {/* Botones de acción */}
         <AnimatePresence>
           {isEditing && (
             <motion.div 
@@ -237,7 +239,7 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
               <button
                 type="submit"
                 disabled={isLoading || isUploadingImage}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#2A6877] hover:bg-[#235A67] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] disabled:opacity-50 transition-all duration-200"
+                className="inline-flex justify-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-[#2A6877] to-[#235A67] hover:from-[#235A67] hover:to-[#1A4652] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] disabled:opacity-50 transition-all duration-200"
               >
                 {isLoading || isUploadingImage ? (
                   <span className="flex items-center">
@@ -247,7 +249,12 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
                     </svg>
                     Guardando...
                   </span>
-                ) : 'Guardar cambios'}
+                ) : (
+                  <span className="flex items-center">
+                    Guardar cambios
+                    <CheckIcon className="h-4 w-4 ml-2" />
+                  </span>
+                )}
               </button>
             </motion.div>
           )}

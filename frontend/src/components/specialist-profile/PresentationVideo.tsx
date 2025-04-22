@@ -1,4 +1,5 @@
 import { FC, useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import axios from 'axios';
 
 interface PresentationVideoProps {
@@ -78,20 +79,54 @@ const PresentationVideo: FC<PresentationVideoProps> = ({ videoUrl }) => {
   };
 
   return (
-    <section className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold mb-4">Video de Presentación</h2>
+    <motion.section 
+      className="bg-white rounded-lg shadow-md p-6 overflow-hidden border border-gray-100"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
+    >
+      <div className="flex items-center mb-5">
+        <motion.svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="h-6 w-6 text-[#2A6877] mr-2" 
+          viewBox="0 0 20 20" 
+          fill="currentColor"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1, rotate: 360 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
+        >
+          <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+        </motion.svg>
+        <h2 className="text-xl font-bold text-gray-800">Video de Presentación</h2>
+      </div>
       
       {!videoUrl ? (
-        <div className="aspect-video bg-gray-100 flex items-center justify-center">
-          <p className="text-gray-500">No hay video de presentación disponible</p>
-        </div>
+        <motion.div 
+          className="aspect-video bg-gray-50 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-200"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="text-center p-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-300 mx-auto mb-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4V5h12v10z" clipRule="evenodd" />
+              <path d="M8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" />
+            </svg>
+            <p className="text-gray-500 font-medium">No hay video de presentación disponible</p>
+          </div>
+        </motion.div>
       ) : (
-        <div className="aspect-video bg-black rounded-lg relative overflow-hidden">
+        <motion.div 
+          className="aspect-video bg-black rounded-lg relative overflow-hidden shadow-lg"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
           {videoBlob && (
             <video 
               ref={videoRef}
               src={videoBlob}
-              className="w-full h-full"
+              className="w-full h-full object-cover"
               controls={isPlaying}
               controlsList="nodownload"
               onLoadedData={() => setIsLoading(false)}
@@ -105,11 +140,17 @@ const PresentationVideo: FC<PresentationVideoProps> = ({ videoUrl }) => {
           
           {/* Blur overlay with play button */}
           {!isPlaying && !isLoading && !error && videoBlob && (
-            <div 
-              className="absolute inset-0 backdrop-blur-md bg-black/30 flex items-center justify-center cursor-pointer"
+            <motion.div 
+              className="absolute inset-0 backdrop-blur-sm bg-gradient-to-b from-black/40 to-black/60 flex flex-col items-center justify-center cursor-pointer"
               onClick={handlePlayClick}
+              whileHover={{ backgroundColor: "rgba(0,0,0,0.5)" }}
             >
-              <div className="w-20 h-20 rounded-full bg-primary-600 bg-opacity-80 flex items-center justify-center transition-transform hover:scale-110">
+              <motion.div 
+                className="w-20 h-20 rounded-full bg-[#2A6877] flex items-center justify-center shadow-lg"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
                   className="h-10 w-10 text-white" 
@@ -122,27 +163,48 @@ const PresentationVideo: FC<PresentationVideoProps> = ({ videoUrl }) => {
                     clipRule="evenodd" 
                   />
                 </svg>
-              </div>
-              <span className="absolute bottom-4 text-white font-medium">
+              </motion.div>
+              <motion.span 
+                className="mt-4 px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-white font-medium text-sm"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+              >
                 Haz clic para reproducir
-              </span>
-            </div>
+              </motion.span>
+            </motion.div>
           )}
           
+          {/* Loading spinner */}
           {isLoading && !error && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70">
+              <div className="relative">
+                {/* Outer spinner */}
+                <div className="absolute inset-0 animate-spin rounded-full h-16 w-16 border-4 border-t-[#2A6877] border-b-[#2A6877] border-l-transparent border-r-transparent"></div>
+                {/* Inner spinner */}
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-white border-b-white border-l-transparent border-r-transparent"></div>
+              </div>
             </div>
           )}
           
+          {/* Error state */}
           {error && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70">
-              <p className="text-white text-center px-4">{error}</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-white text-center font-medium px-4">{error}</p>
+              <button 
+                className="mt-4 bg-white text-gray-800 rounded-full px-4 py-2 text-sm font-medium hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white"
+                onClick={() => window.location.reload()}
+              >
+                Reintentar
+              </button>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
-    </section>
+    </motion.section>
   );
 };
 

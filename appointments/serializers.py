@@ -39,6 +39,9 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
         start_time = data.get('start_time')
         end_time = data.get('end_time')
         
+        # Asegurarse de que estamos usando la fecha correcta para la validación
+        # sin conversión de zona horaria
+        
         # Check if the psychologist has this time slot in their schedule
         day_of_week = date.strftime('%A').upper()
         schedule_exists = psychologist.schedules.filter(
@@ -53,6 +56,7 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
             )
         
         # Check if the psychologist already has an appointment at this time
+        # Usamos la fecha exacta que viene del frontend
         appointment_exists = Appointment.objects.filter(
             psychologist=psychologist,
             date=date,

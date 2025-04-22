@@ -74,7 +74,7 @@ const ClientAppointments = () => {
         // Guardamos todas las citas
         setAppointments(response.data.all);
         
-        // Filtramos según el filtro activo
+        // Siempre mostramos las citas próximas por defecto, independientemente del filtro activo
         if (activeFilter === 'upcoming') {
           setFilteredAppointments(response.data.upcoming);
         } else if (activeFilter === 'past') {
@@ -85,6 +85,7 @@ const ClientAppointments = () => {
       } else {
         // Si la respuesta no tiene la estructura esperada, tratamos los datos como una lista simple
         setAppointments(response.data);
+        // Aplicamos el filtro activo a los datos
         filterAppointments(response.data, activeFilter);
       }
     } catch (err) {
@@ -244,10 +245,32 @@ const ClientAppointments = () => {
     }
   };
 
-  // Fetch appointments on component mount
+  // Fetch appointments on component mount and when activeFilter changes
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  // Añadimos un nuevo useEffect para asegurarnos de que las citas se filtran correctamente cuando cambia el filtro activo
+  useEffect(() => {
+    // Si ya tenemos citas cargadas, aplicamos el filtro activo
+    if (appointments.length > 0) {
+      if (appointments.length > 0 && 'upcoming' in appointments[0]) {
+        // Si tenemos la estructura del backend
+        const responseData = appointments[0] as any;
+        
+        if (activeFilter === 'upcoming' && responseData.upcoming) {
+          setFilteredAppointments(responseData.upcoming);
+        } else if (activeFilter === 'past' && responseData.past) {
+          setFilteredAppointments(responseData.past);
+        } else {
+          setFilteredAppointments(responseData.all || []);
+        }
+      } else {
+        // Filtrado local
+        filterAppointments(appointments, activeFilter);
+      }
+    }
+  }, [activeFilter, appointments]);
 
   return (
     <div className="max-w-4xl mx-auto">

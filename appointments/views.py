@@ -81,6 +81,10 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         if 'payment_method' in serializer.validated_data:
             payment_method = serializer.validated_data.pop('payment_method')
         
+        # Asegurarse de que la fecha se mantenga como está sin conversión de zona horaria
+        # Esto evita el problema de que la fecha se almacene un día después
+        date = serializer.validated_data.get('date')
+        
         # Save the appointment with the client and price
         appointment = serializer.save(
             client=client,
@@ -586,3 +590,143 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             "past": past_serializer.data,
             "all": all_serializer.data
         })
+
+        """Endpoint para verificar si el cliente tiene citas completadas con un psicólogo específico"""
+        user = request.user
+        
+        if user.user_type != 'client':
+            return Response(
+                {"detail": "Solo los clientes pueden verificar sus citas completadas."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            client = ClientProfile.objects.get(user=user)
+            psychologist = PsychologistProfile.objects.get(id=psychologist_id)
+            
+            # Verificar si existen citas completadas entre este cliente y psicólogo
+            has_completed = Appointment.objects.filter(
+                client=client,
+                psychologist=psychologist,
+                status='COMPLETED'
+            ).exists()
+            
+            return Response({
+                "has_completed_appointments": has_completed
+            })
+            
+        except ClientProfile.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró el perfil de cliente."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró el perfil del psicólogo."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=False, methods=['get'], url_path='has-completed-appointments/(?P<pk>[^/.]+)')
+    def has_completed_appointments(self, request, pk=None):
+        """Endpoint para verificar si un cliente tiene citas completadas con un psicólogo específico"""
+        user = self.request.user
+        if user.user_type != 'client':
+            return Response(
+                {"detail": "Este endpoint es solo para clientes."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        try:
+            client = ClientProfile.objects.get(user=user)
+            psychologist_id = pk  # Usar el parámetro pk como psychologist_id
+            
+            # Verificar si hay citas completadas entre este cliente y el psicólogo
+            completed_appointments = Appointment.objects.filter(
+                client=client,
+                psychologist_id=psychologist_id,
+                status='COMPLETED'
+            ).exists()
+            
+            return Response({
+                "has_completed_appointments": completed_appointments
+            })
+        except ClientProfile.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró el perfil de cliente."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    def cancel(self, request, pk=None):
+        """Endpoint para cancelar una cita"""
+        try:
+            appointment = self.get_object()
+            user = request.user
+            
+            # Verificar que el usuario tiene permiso para cancelar esta cita
+            if user.user_type == 'client':
+                try:
+                    client = ClientProfile.objects.get(user=user)
+                    if appointment.client != client:
+                        return Response(
+                            {"detail": "No tiene permiso para cancelar esta cita."},
+                            status=status.HTTP_403_FORBIDDEN
+                        )
+                except ClientProfile.DoesNotExist:
+                    return Response(
+                        {"detail": "No se encontró el perfil de cliente."},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            elif user.user_type == 'psychologist':
+                try:
+                    psychologist = PsychologistProfile.objects.get(user=user)
+                    if appointment.psychologist != psychologist:
+                        return Response(
+                            {"detail": "No tiene permiso para cancelar esta cita."},
+                            status=status.HTTP_403_FORBIDDEN
+                        )
+                except PsychologistProfile.DoesNotExist:
+                    return Response(
+                        {"detail": "No se encontró el perfil de psicólogo."},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            elif user.user_type != 'admin':
+                return Response(
+                    {"detail": "No tiene permiso para cancelar esta cita."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Verificar que la cita está en un estado que permite cancelación
+            allowed_states = ['PENDING_PAYMENT', 'PAYMENT_UPLOADED', 'PAYMENT_VERIFIED', 'CONFIRMED']
+            if appointment.status not in allowed_states:
+                return Response(
+                    {"detail": f"No se puede cancelar la cita. Estado actual: {appointment.get_status_display()}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Obtener motivo de cancelación
+            cancellation_reason = request.data.get('cancellation_reason', '')
+            
+            # Actualizar estado de la cita
+            appointment.status = 'CANCELLED'
+            appointment.cancellation_reason = cancellation_reason
+            appointment.cancelled_by = user
+            appointment.cancelled_at = timezone.now()
+            appointment.save()
+            
+            return Response({
+                "detail": "Cita cancelada correctamente.",
+                "appointment": AppointmentSerializer(appointment).data
+            })
+            
+        except Appointment.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró la cita."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+

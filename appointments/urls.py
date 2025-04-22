@@ -39,4 +39,7 @@ urlpatterns = [
     }), name='client-appointments-no-slash'),
     # The psychologist appointments endpoint will be handled by the router
     # It will be available at: /api/appointments/psychologist/{id}/
+    path('has-completed-appointments/<int:pk>/', AppointmentViewSet.as_view({
+        'get': 'has_completed_appointments',
+    }), name='has-completed-appointments'),
 ]
