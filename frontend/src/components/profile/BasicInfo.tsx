@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import ProfileFormFields from './ProfileFormFields';
-import ProfileImageUploader from './ProfileImageUploader';
+import ProfileFormFields from './basicinfo/ProfileFormFields';
+import ProfileImageUploader from './basicinfo/ProfileImageUploader';
 import { UserIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 interface BasicInfoProps {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { DocumentIcon, VideoCameraIcon, IdentificationIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
-import { uploadDocument, getDocuments, deleteDocument } from '../../services/documentService';
+import { uploadDocument, getDocuments } from '../../services/documentService';
 
 interface DocumentsUploadProps {
   profile?: any;
@@ -22,7 +22,7 @@ interface Document {
   uploaded_at?: string;
 }
 
-const DocumentsUpload = ({ profile, isLoading, onLoadingChange }: DocumentsUploadProps) => {
+const DocumentsUpload = ({ isLoading, onLoadingChange }: DocumentsUploadProps) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [localLoading, setLocalLoading] = useState(false);
@@ -57,8 +57,6 @@ const DocumentsUpload = ({ profile, isLoading, onLoadingChange }: DocumentsUploa
 
   // Modify the useEffect to add a loading flag to prevent multiple requests
   useEffect(() => {
-    // Use a ref to track if component is mounted
-    const isMounted = true;
     
     // Only load documents if not already loading
     if (!localLoading) {

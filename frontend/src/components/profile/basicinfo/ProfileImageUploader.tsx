@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { uploadProfileImage, deleteProfileImage } from '../../services/profileService';
+import { uploadProfileImage, deleteProfileImage } from '../../../services/profileService';
 
 interface ProfileImageUploaderProps {
   profileImage: string;

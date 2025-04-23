@@ -3,7 +3,7 @@ import { updateBankInfo } from '../../services/profileService';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
-import BankInfoForm from './BankInfoForm';
+import BankInfoForm from './bankinfo/BankInfoForm';
 
 interface BankInfoProps {
   profile: any;

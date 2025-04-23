@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import {
   HomeIcon, UserIcon, CalendarIcon, UsersIcon, 
   UserGroupIcon, MagnifyingGlassIcon, ArrowRightOnRectangleIcon,
-  ArrowLeftIcon, CreditCardIcon, BellIcon,
+  ArrowLeftIcon, CreditCardIcon,
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -164,11 +164,6 @@ const TopBar = () => {
           </div>
           
           <div className="flex items-center space-x-2">
-            {/* Notification Bell */}
-            <button className="relative p-1.5 rounded-full text-gray-500 hover:text-[#2A6877] hover:bg-[#2A6877]/5 transition-colors">
-              <BellIcon className="h-5 w-5" />
-              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500"></span>
-            </button>
             
             {/* Mobile menu button */}
             <div className="md:hidden relative" ref={menuRef}>

@@ -14,14 +14,10 @@ import AboutPage from './pages/public-pages/AboutPage';
 import SpecialistPage from './pages/public-pages/SpecialistPage';
 import SpecialistProfilePage from './pages/public-pages/SpecialistProfilePage';
 import TermsPage from './pages/public-pages/TermsPage';
-// import DashboardHome from './pages/dashboard/DashboardHome';
+import DashboardHome from './pages/dashboard/DashboardHome';
 import ProfilePage from './pages/dashboard/ProfilePage';
 import SchedulePage from './pages/dashboard/psychologist/SchedulePage';
 import ClientAppointments from './pages/dashboard/client/ClientAppointments';
-// import PatientsPage from './pages/dashboard/PatientsPage';
-// import DocumentsPage from './pages/dashboard/DocumentsPage';
-// import UsersPage from './pages/dashboard/UsersPage';
-// import VerificationsPage from './pages/dashboard/VerificationsPage';
 import PatientsManagement from './pages/dashboard/admin/PatientsManagement';
 import PsychologistListPage from './pages/admin/PsychologistListPage';
 import PsychologistDetailPage from './pages/admin/PsychologistDetailPage';
@@ -62,6 +58,7 @@ function App() {
                 <DashboardLayout />
               </PrivateRoute>
             }>
+              <Route path="" element={<DashboardHome />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="appointments" element={<ClientAppointments />} />
             </Route>
@@ -72,6 +69,7 @@ function App() {
                 <DashboardLayout />
               </PrivateRoute>
             }>
+              <Route path="" element={<DashboardHome />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="schedule" element={<SchedulePage />} />
             </Route>
@@ -82,6 +80,7 @@ function App() {
                 <DashboardLayout />
               </PrivateRoute>
             }>
+              <Route path="" element={<DashboardHome />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="pacients" element={<PatientsManagement />} />
               <Route path="psychologists" element={<PsychologistListPage />} />

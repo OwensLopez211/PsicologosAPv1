@@ -12,8 +12,6 @@ import {
   DocumentTextIcon,
   CreditCardIcon
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../../../context/AuthContext';
-
 
 // Define appointment status types to match backend
 type AppointmentStatus = 'PENDING_PAYMENT' | 'PAYMENT_UPLOADED' | 'PAYMENT_VERIFIED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
@@ -46,7 +44,7 @@ const ClientAppointments = () => {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   
-  const { user } = useAuth();
+// Remove unused import since user is not being used
 
   // Fetch appointments from API
   const fetchAppointments = async () => {

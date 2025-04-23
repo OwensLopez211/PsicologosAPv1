@@ -49,7 +49,8 @@ class ClientProfile(BaseProfile):
         choices=[
             ('CORRIENTE', 'Cuenta Corriente'),
             ('AHORRO', 'Cuenta de Ahorro'),
-            ('VISTA', 'Cuenta Vista')
+            ('VISTA', 'Cuenta Vista'),
+            ('RUT', 'Cuenta RUT')
         ],
         blank=True
     )

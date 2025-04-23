@@ -82,6 +82,7 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
       case 'CORRIENTE': return 'Cuenta Corriente';
       case 'AHORRO': return 'Cuenta de Ahorro';
       case 'VISTA': return 'Cuenta Vista';
+      case 'RUT': return 'Cuenta RUT';
       default: return 'No seleccionado';
     }
   };
@@ -133,6 +134,7 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                   <option value="CORRIENTE">Cuenta Corriente</option>
                   <option value="AHORRO">Cuenta de Ahorro</option>
                   <option value="VISTA">Cuenta Vista</option>
+                  <option value="RUT">Cuenta RUT</option>
                 </select>
               </div>
               

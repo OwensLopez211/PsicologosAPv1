@@ -69,7 +69,6 @@ const Footer = () => {
     { name: "Inicio", path: "/" },
     { name: "Especialistas", path: "/especialistas" },
     { name: "Quiénes Somos", path: "/quienes-somos" },
-    { name: "Blog", path: "/blog" },
     { name: "Contacto", path: "/contacto" },
     { name: "Términos y Condiciones", path: "/terminos-y-condiciones" }
   ];
@@ -199,15 +198,6 @@ const Footer = () => {
                       +56 9 1234 5678
                     </a>
                   </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="bg-white/10 p-2 rounded-full mt-1">
-                    <svg className="w-4 h-4 text-[#B4E4D3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                  </div>
-
                 </li>
               </ul>
             </motion.div>
