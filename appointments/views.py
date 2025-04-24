@@ -990,4 +990,36 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def is_first_appointment(self, request, pk=None):
+        """
+        Determina si la cita especificada es la primera entre el psicólogo y el cliente.
+        """
+        appointment = self.get_object()
+        
+        # Buscar citas anteriores entre este cliente y psicólogo, ordenadas por fecha
+        previous_appointments = Appointment.objects.filter(
+            client=appointment.client,
+            psychologist=appointment.psychologist,
+            date__lt=appointment.date
+        ).order_by('date', 'start_time')
+        
+        # También verificar citas el mismo día pero con hora anterior
+        same_day_earlier = Appointment.objects.filter(
+            client=appointment.client,
+            psychologist=appointment.psychologist,
+            date=appointment.date,
+            start_time__lt=appointment.start_time
+        )
+        
+        # Si no hay citas anteriores, entonces esta es la primera
+        is_first = not (previous_appointments.exists() or same_day_earlier.exists())
+        
+        return Response({
+            'is_first_appointment': is_first,
+            'appointment_id': appointment.id,
+            'client_id': appointment.client.id,
+            'psychologist_id': appointment.psychologist.id
+        })
+
    

@@ -7,7 +7,8 @@ import {
   AppointmentData, 
   getAdminPaymentVerifications,
   getPsychologistPendingPayments,
-  updateAppointmentPaymentStatus
+  updateAppointmentPaymentStatus,
+  isFirstAppointment
 } from '../../services/appointmentPaymentService';
 import  api  from '../../services/api';
 import toastService from '../../services/toastService';
@@ -121,9 +122,19 @@ const VerificationsPage = () => {
       toast.dismiss();
       setIsLoading(true);
       
+      // Verificar si es la primera cita entre psicólogo y cliente usando el backend
+      const isFirst = await isFirstAppointment(appointmentId);
+      
+      // Comprobar si el usuario es psicólogo y si es la primera cita
+      if (user?.user_type === 'psychologist' && isFirst) {
+        toastService.error('No tienes permisos para verificar la primera cita con un cliente. Solo un administrador puede hacerlo.');
+        setIsLoading(false);
+        return;
+      }
+      
       const result = await updateAppointmentPaymentStatus(appointmentId, {
         status: 'PAYMENT_VERIFIED',
-        notes: 'Pago verificado por el administrador'
+        notes: user?.user_type === 'admin' ? 'Pago verificado por el administrador' : 'Pago verificado por el psicólogo'
       });
       
       if (result) {
@@ -135,10 +146,8 @@ const VerificationsPage = () => {
               : app
           )
         );
+        toastService.success('Pago verificado correctamente');
       }
-      
-      // Evitamos hacer una nueva solicitud al servidor
-      // fetchAppointments();
     } catch (err) {
       toastService.error('Error al verificar el pago');
       console.error('Error al verificar el pago:', err);

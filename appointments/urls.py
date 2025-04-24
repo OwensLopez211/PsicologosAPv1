@@ -61,4 +61,7 @@ urlpatterns = [
     path('<int:pk>/download-payment-proof/', AppointmentViewSet.as_view({
         'get': 'download_payment_proof',
     }), name='download-payment-proof'),
+    path('<int:pk>/is-first-appointment/', AppointmentViewSet.as_view({
+        'get': 'is_first_appointment',
+    }), name='is-first-appointment'),
 ]

@@ -1,29 +1,63 @@
 import { useState, useEffect } from 'react';
-import { XMarkIcon, CheckCircleIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
-import { AppointmentData } from '../../services/appointmentPaymentService';
+import { XMarkIcon, CheckCircleIcon, ArrowDownTrayIcon, LockClosedIcon, InformationCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { AppointmentData, isFirstAppointment } from '../../services/appointmentPaymentService';
 import api from '../../services/api';
+import { toast } from 'react-hot-toast';
+import AvatarInitials from '../common/AvatarInitials';
+import { useAuth } from '../../context/AuthContext';
 
 interface PaymentDetailModalProps {
   appointment: AppointmentData;
   onClose: () => void;
   onVerifyPayment: () => void;
   onConfirmAppointment: () => void;
+  isFirstAppointment?: boolean;
 }
 
 const PaymentDetailModal = ({ 
   appointment, 
   onClose, 
   onVerifyPayment, 
-  onConfirmAppointment 
+  onConfirmAppointment,
+  isFirstAppointment: propIsFirst = false
 }: PaymentDetailModalProps) => {
   const [notes, setNotes] = useState<string>('');
   const [imageError, setImageError] = useState<boolean>(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showVerifyConfirmation, setShowVerifyConfirmation] = useState(false);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  const [isFirstApp, setIsFirstApp] = useState<boolean>(propIsFirst);
+  const { user } = useAuth();
+  const isPsychologist = user?.user_type === 'psychologist';
+  const canVerify = !(isPsychologist && isFirstApp);
 
   // Función para formatear fecha: 2023-12-15 -> 15 dic 2023
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    
+    // Para fechas con formato YYYY-MM-DD
+    if (dateString.includes('-') && dateString.length <= 10) {
+      const parts = dateString.split('-');
+      if (parts.length !== 3) return dateString;
+      
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const day = parseInt(parts[2]);
+      
+      const date = new Date(Date.UTC(year, month, day));
+      
+      return date.toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC'
+      });
+    }
+    
+    // Para fechas en otros formatos o con hora incluida
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       day: 'numeric',
@@ -43,6 +77,27 @@ const PaymentDetailModal = ({
       loadPreview();
     }
   }, [appointment.id, appointment.payment_proof_url]);
+
+  // Efecto para verificar si es primera cita cuando se monta el componente
+  useEffect(() => {
+    const checkIfFirstAppointment = async () => {
+      try {
+        if (appointment.id) {
+          const isFirst = await isFirstAppointment(appointment.id);
+          setIsFirstApp(isFirst);
+        }
+      } catch (error) {
+        console.error('Error al verificar si es primera cita:', error);
+        // Si hay error, asumimos que es primera cita para evitar que psicólogos verifiquen
+        setIsFirstApp(true);
+      }
+    };
+    
+    // Si no se proporcionó valor desde props, verificar con el backend
+    if (!propIsFirst) {
+      checkIfFirstAppointment();
+    }
+  }, [appointment.id, propIsFirst]);
 
   // Función para cargar la vista previa del comprobante
   const loadPreview = async () => {
@@ -194,6 +249,12 @@ const PaymentDetailModal = ({
   const handleVerifyPayment = async () => {
     if (!appointment.id) return;
     
+    // Si es un psicólogo y es la primera cita, no permitir verificar
+    if (user?.user_type === 'psychologist' && isFirstApp) {
+      toast.error('No puedes verificar la primera cita con un cliente. Solo un administrador puede hacerlo.', { id: 'verify-error' });
+      return;
+    }
+    
     setIsVerifying(true);
     
     try {
@@ -206,22 +267,16 @@ const PaymentDetailModal = ({
       
       localStorage.setItem(lockKey, 'true');
       
+      // Usar toast en lugar de toastService
+      toast.loading('Verificando pago...', { id: 'unique-notification' });
+      
       // Cambiar directamente a CONFIRMED
       const response = await api.patch(`/appointments/${appointment.id}/update-payment-status/`, {
         status: 'CONFIRMED',  // Cambiamos directamente a CONFIRMED en lugar de PAYMENT_VERIFIED
         notes: notes || undefined
       });
       
-      // Mostrar notificación de éxito
-      const toast = document.createElement('div');
-      toast.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-md shadow-lg z-50';
-      toast.textContent = 'Pago verificado y cita confirmada correctamente';
-      document.body.appendChild(toast);
-      
-      // Eliminar notificación después de un tiempo
-      setTimeout(() => {
-        document.body.removeChild(toast);
-      }, 3000);
+      toast.success('Pago verificado y cita confirmada correctamente', { id: 'unique-notification' });
       
       // Llamar al callback para actualizar la UI
       onVerifyPayment();
@@ -233,7 +288,7 @@ const PaymentDetailModal = ({
       localStorage.removeItem(lockKey);
     } catch (error) {
       console.error('Error al verificar el pago:', error);
-      alert('Error al verificar el pago. Por favor, inténtalo nuevamente.');
+      toast.error('Error al verificar el pago. Por favor, inténtalo nuevamente.', { id: 'unique-notification' });
       
       // Liberar el bloqueo en caso de error
       const lockKey = `verifying_appointment_${appointment.id}`;
@@ -241,6 +296,35 @@ const PaymentDetailModal = ({
     } finally {
       setIsVerifying(false);
     }
+  };
+
+  const handleVerifyConfirmationOpen = () => {
+    // Si es un psicólogo y es la primera cita, no permitir verificar
+    if (user?.user_type === 'psychologist' && isFirstApp) {
+      toast.error('No puedes verificar la primera cita con un cliente. Solo un administrador puede hacerlo.', { id: 'verify-error' });
+      return;
+    }
+    
+    setShowVerifyConfirmation(true);
+  };
+
+  const handleConfirmationOpen = () => {
+    setShowConfirmationDialog(true);
+  };
+
+  const handleVerifyConfirmed = () => {
+    setShowVerifyConfirmation(false);
+    onVerifyPayment();
+  };
+
+  const handleConfirmAppointmentConfirmed = () => {
+    setShowConfirmationDialog(false);
+    onConfirmAppointment();
+  };
+
+  const handleCancelDialog = () => {
+    setShowVerifyConfirmation(false);
+    setShowConfirmationDialog(false);
   };
 
   // Limpieza de recursos al desmontar el componente
@@ -291,11 +375,18 @@ const PaymentDetailModal = ({
               <h4 className="text-sm font-medium text-gray-700 mb-3">Información del cliente</h4>
               
               <div className="flex items-center mb-4">
-                <img
-                  className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
-                  src={appointment.client_data?.profile_image || 'https://via.placeholder.com/150'}
-                  alt={appointment.client_data?.name || 'Cliente'}
-                />
+                {appointment.client_data?.profile_image ? (
+                  <img
+                    className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
+                    src={appointment.client_data.profile_image}
+                    alt={appointment.client_data?.name || 'Cliente'}
+                  />
+                ) : (
+                  <AvatarInitials 
+                    name={appointment.client_data?.name || 'Cliente'} 
+                    className="border-2 border-gray-200" 
+                  />
+                )}
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-900">{appointment.client_data?.name}</p>
                   <p className="text-xs text-gray-500">{appointment.client_data?.email}</p>
@@ -409,11 +500,11 @@ const PaymentDetailModal = ({
 
           {/* Botones de acción */}
           <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
-            {appointment.status === 'PAYMENT_UPLOADED' && (
+            {appointment.status === 'PAYMENT_UPLOADED' && canVerify && (
               <button
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#2A6877] text-base font-medium text-white hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleVerifyPayment}
+                onClick={handleVerifyConfirmationOpen}
                 disabled={isVerifying}
               >
                 {isVerifying ? (
@@ -424,17 +515,26 @@ const PaymentDetailModal = ({
                 ) : (
                   <>
                     <CheckCircleIcon className="h-5 w-5 mr-2" />
-                    Verificar y Confirmar
+                    Verificar Pago
                   </>
                 )}
               </button>
+            )}
+            
+            {appointment.status === 'PAYMENT_UPLOADED' && isPsychologist && isFirstApp && (
+              <div className="w-full sm:w-auto bg-gray-100 rounded-md p-3 text-sm text-gray-700 flex items-start mb-3 sm:mb-0 sm:ml-3">
+                <InformationCircleIcon className="h-5 w-5 mr-2 text-blue-500 flex-shrink-0" />
+                <span>
+                  Esta es la primera cita con este cliente. Solo un administrador puede verificar el pago para la primera cita.
+                </span>
+              </div>
             )}
             
             {appointment.status === 'PAYMENT_VERIFIED' && (
               <button
                 type="button"
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
-                onClick={onConfirmAppointment}
+                onClick={handleConfirmationOpen}
               >
                 <CheckCircleIcon className="h-5 w-5 mr-2" />
                 Confirmar Cita
@@ -451,6 +551,92 @@ const PaymentDetailModal = ({
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmación para verificar pago */}
+      {showVerifyConfirmation && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div>
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+                  <ExclamationCircleIcon className="h-6 w-6 text-yellow-600" aria-hidden="true" />
+                </div>
+                <div className="mt-3 text-center sm:mt-5">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Confirmar verificación de pago</h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      ¿Estás seguro que deseas verificar este pago? Esta acción confirmará que has revisado y validado el comprobante de pago.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#2A6877] text-base font-medium text-white hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:col-start-2 sm:text-sm"
+                  onClick={handleVerifyConfirmed}
+                >
+                  Sí, verificar pago
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:mt-0 sm:col-start-1 sm:text-sm"
+                  onClick={handleCancelDialog}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para confirmar cita */}
+      {showConfirmationDialog && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div>
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                  <CheckCircleIcon className="h-6 w-6 text-green-600" aria-hidden="true" />
+                </div>
+                <div className="mt-3 text-center sm:mt-5">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Confirmar cita</h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      ¿Estás seguro que deseas confirmar esta cita? Se notificará al cliente y al psicólogo que la cita ha sido confirmada.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:col-start-2 sm:text-sm"
+                  onClick={handleConfirmAppointmentConfirmed}
+                >
+                  Sí, confirmar cita
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                  onClick={handleCancelDialog}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

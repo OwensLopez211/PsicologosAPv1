@@ -594,6 +594,9 @@ export const updateAppointmentPaymentStatus = async (
       return null;
     }
     
+    // Verificar si es la primera cita entre el psicólogo y el cliente
+    // Esta verificación ahora se realiza en el componente
+    
     // Establecer el bloqueo
     localStorage.setItem(lockKey, 'true');
     
@@ -641,10 +644,31 @@ export const getAdminPaymentVerifications = async (
   }
 ) => {
   try {
+    // Asegurarse de que las fechas se manejan correctamente
+    const adjustedParams = { ...params };
+    
+    // Si hay una fecha de inicio, asegurarse de que se envía en formato YYYY-MM-DD
+    if (adjustedParams.start_date) {
+      const dateParts = adjustedParams.start_date.split('-');
+      if (dateParts.length === 3) {
+        // Asegurarse de que la fecha está en formato correcto
+        adjustedParams.start_date = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
+      }
+    }
+    
+    // Lo mismo para la fecha de fin
+    if (adjustedParams.end_date) {
+      const dateParts = adjustedParams.end_date.split('-');
+      if (dateParts.length === 3) {
+        // Asegurarse de que la fecha está en formato correcto
+        adjustedParams.end_date = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
+      }
+    }
+    
     // Si no hay filtro de estado, incluir todos los estados relevantes por defecto
     const defaultParams = {
-      ...params,
-      status: params?.status || 'PAYMENT_UPLOADED,PAYMENT_VERIFIED,CONFIRMED'
+      ...adjustedParams,
+      status: adjustedParams.status || 'PAYMENT_UPLOADED,PAYMENT_VERIFIED,CONFIRMED'
     };
     
     let errorToThrow = null;
@@ -664,7 +688,15 @@ export const getAdminPaymentVerifications = async (
           params: defaultParams 
         });
         console.log(`Éxito con ruta: ${route}`);
-        return response.data;
+        
+        // Procesar las fechas para asegurar que se muestran correctamente
+        const processedData = response.data.map(appointment => ({
+          ...appointment,
+          // Asegurarse de que la fecha se mantiene igual
+          date: appointment.date
+        }));
+        
+        return processedData;
       } catch (error: any) {
         console.error(`Error con ruta ${route}:`, error.response?.status || error.message);
         errorToThrow = error;
@@ -733,6 +765,21 @@ export const getPsychologistPendingPayments = async (
       id: 'unique-notification'
     });
     throw error;
+  }
+};
+
+/**
+ * Verifica si la cita es la primera entre un cliente y un psicólogo
+ */
+export const isFirstAppointment = async (appointmentId: number): Promise<boolean> => {
+  try {
+    const response = await api.get(`/appointments/${appointmentId}/is-first-appointment/`);
+    return response.data.is_first_appointment;
+  } catch (error) {
+    console.error('Error al verificar si es la primera cita:', error);
+    // Por defecto asumimos que es primera cita para evitar que psicólogos verifiquen
+    // si hay algún problema en la verificación
+    return true;
   }
 };
 
