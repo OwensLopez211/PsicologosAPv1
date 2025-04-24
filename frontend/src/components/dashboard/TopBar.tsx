@@ -52,6 +52,7 @@ const TopBar = () => {
         { path: '/psicologo/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
         { path: '/psicologo/dashboard/schedule', label: 'Mi Agenda', icon: CalendarIcon },
         { path: '/psicologo/dashboard/patients', label: 'Mis Pacientes', icon: UsersIcon },
+        { path: '/psicologo/dashboard/payments', label: 'Verificar Pagos', icon: CreditCardIcon },
       ],
       ADMIN: [
         { path: '/admin/dashboard', label: 'Inicio', icon: HomeIcon },

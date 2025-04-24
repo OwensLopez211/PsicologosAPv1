@@ -35,7 +35,7 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
   isFirstAppointment
 }) => {
   const navigate = useNavigate();
-  const [hasCompletedAppointments, setHasCompletedAppointments] = useState(false);
+  const [hasConfirmedAppointments, setHasConfirmedAppointments] = useState(false);
   const [checkingAppointments, setCheckingAppointments] = useState(true);
   const [displayBankInfo, setDisplayBankInfo] = useState<BankInfo | null>(null);
   
@@ -55,7 +55,7 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
   
   // Verificar si existen citas completadas con este psicólogo
   useEffect(() => {
-    const checkCompletedAppointments = async () => {
+    const checkConfirmedAppointments = async () => {
       try {
         setCheckingAppointments(true);
         const token = localStorage.getItem('token');
@@ -69,7 +69,7 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
         // Consultar si hay citas completadas con este psicólogo
         // Nota: Ajustamos la URL para usar el endpoint correcto
         const response = await axios.get(
-          `/api/appointments/has-completed-appointments/${psychologistId}/`,
+          `/api/appointments/has-confirmed-appointments/${psychologistId}/`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -79,15 +79,15 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
         );
         
         // Actualizar el estado según la respuesta
-        const hasCompleted = response.data.has_completed_appointments || false;
-        setHasCompletedAppointments(hasCompleted);
+        const hasConfirmed = response.data.has_confirmed_appointments || false;
+        setHasConfirmedAppointments(hasConfirmed);
         
         // Actualizar la información bancaria a mostrar inmediatamente después de verificar las citas
-        updateBankInfoDisplay(hasCompleted);
+        updateBankInfoDisplay(hasConfirmed);
       } catch (err) {
         console.error('Error verificando citas completadas:', err);
         // Si hay un error, asumimos que no hay citas completadas
-        setHasCompletedAppointments(false);
+        setHasConfirmedAppointments(false);
         // Y mostramos los datos del administrador
         updateBankInfoDisplay(false);
       } finally {
@@ -96,9 +96,9 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
     };
     
     // Función para actualizar la información bancaria a mostrar
-    const updateBankInfoDisplay = (hasCompleted: boolean) => {
+    const updateBankInfoDisplay = (hasConfirmed: boolean) => {
       // Si no hay citas completadas o es la primera cita, mostrar datos del admin
-      if (!hasCompleted || isFirstAppointment) {
+      if (!hasConfirmed || isFirstAppointment) {
         if (adminBankInfo) {
           setDisplayBankInfo(adminBankInfo);
         } else {
@@ -149,7 +149,7 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
       }
     };
     
-    checkCompletedAppointments();
+    checkConfirmedAppointments();
   }, [appointment, adminBankInfo, bankInfo, isFirstAppointment]);
   
   // Efecto para establecer un valor predeterminado para displayBankInfo si no se ha establecido
@@ -157,13 +157,13 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
     if (!displayBankInfo && !checkingAppointments) {
       // Si no tenemos información bancaria para mostrar después de verificar,
       // usamos la información del administrador si está disponible, o la del psicólogo como fallback
-      if ((!hasCompletedAppointments || isFirstAppointment) && adminBankInfo) {
+      if ((!hasConfirmedAppointments || isFirstAppointment) && adminBankInfo) {
         setDisplayBankInfo(adminBankInfo);
       } else {
         setDisplayBankInfo(bankInfo);
       }
     }
-  }, [displayBankInfo, checkingAppointments, hasCompletedAppointments, isFirstAppointment, adminBankInfo, bankInfo]);
+  }, [displayBankInfo, checkingAppointments, hasConfirmedAppointments, isFirstAppointment, adminBankInfo, bankInfo]);
   
   // Función para redireccionar a la página de citas
   const handleGoToAppointments = () => {
@@ -172,7 +172,7 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
   };
   
   // Determinar qué información bancaria mostrar para el renderizado
-  const bankInfoToDisplay = displayBankInfo || ((!hasCompletedAppointments || isFirstAppointment) && adminBankInfo ? adminBankInfo : bankInfo);
+  const bankInfoToDisplay = displayBankInfo || ((!hasConfirmedAppointments || isFirstAppointment) && adminBankInfo ? adminBankInfo : bankInfo);
   
   return (
     <motion.div
@@ -214,7 +214,7 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
           </div>
           
           {/* Información sobre primera cita o sin citas completadas */}
-          {(!hasCompletedAppointments || isFirstAppointment) && (
+          {(!hasConfirmedAppointments || isFirstAppointment) && (
             <div className="mb-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
               <div className="flex items-start">
                 <div className="flex-shrink-0 mt-0.5">
@@ -243,7 +243,7 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
           <div className="mb-6">
             <h3 className="font-medium text-gray-900 mb-3">
               Datos para transferencia 
-              {(!hasCompletedAppointments || isFirstAppointment) ? ' (Administración)' : ' (Especialista)'}
+              {(!hasConfirmedAppointments || isFirstAppointment) ? ' (Administración)' : ' (Especialista)'}
             </h3>
             {checkingAppointments ? (
               <div className="flex justify-center items-center py-6">

@@ -1,5 +1,8 @@
 import toast from 'react-hot-toast';
 
+// ID único para todas las notificaciones
+const TOAST_ID = 'unique-notification';
+
 // Tipos de toast personalizados
 type ToastType = 'success' | 'error' | 'loading' | 'custom';
 
@@ -54,14 +57,33 @@ const dismissToast = (toastId?: string) => {
   }
 };
 
-// Exportar todas las funciones
 const toastService = {
-  success: showSuccess,
-  error: showError,
-  loading: showLoading,
-  custom: showCustom,
-  update: updateToast,
-  dismiss: dismissToast,
+  success: (message: string) => {
+    // Antes de mostrar un nuevo toast, eliminar cualquier toast existente
+    toast.dismiss();
+    return toast.success(message, { id: TOAST_ID });
+  },
+  
+  error: (message: string) => {
+    toast.dismiss();
+    return toast.error(message, { id: TOAST_ID });
+  },
+  
+  loading: (message: string) => {
+    toast.dismiss();
+    return toast.loading(message, { id: TOAST_ID });
+  },
+  
+  custom: (message: string) => {
+    toast.dismiss();
+    return toast.custom(message, { id: TOAST_ID });
+  },
+  
+  // Método para eliminar todas las notificaciones
+  dismissAll: () => {
+    toast.dismiss();
+  },
+  
   // También exportamos el toast original por si necesitamos acceder a otras funcionalidades
   toast
 };

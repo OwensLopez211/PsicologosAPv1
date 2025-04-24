@@ -13,6 +13,8 @@ from pricing.models import PsychologistPrice  # Add this import
 from schedules.models import Schedule
 from authentication.permissions import IsClient, IsPsychologist, IsAdminUser
 from rest_framework import serializers
+import os
+from django.http import HttpResponse
 
 class AppointmentViewSet(viewsets.ModelViewSet):
     """API endpoint para gestión de citas"""
@@ -591,44 +593,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             "all": all_serializer.data
         })
 
-        """Endpoint para verificar si el cliente tiene citas completadas con un psicólogo específico"""
-        user = request.user
-        
-        if user.user_type != 'client':
-            return Response(
-                {"detail": "Solo los clientes pueden verificar sus citas completadas."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        try:
-            client = ClientProfile.objects.get(user=user)
-            psychologist = PsychologistProfile.objects.get(id=psychologist_id)
-            
-            # Verificar si existen citas completadas entre este cliente y psicólogo
-            has_completed = Appointment.objects.filter(
-                client=client,
-                psychologist=psychologist,
-                status='COMPLETED'
-            ).exists()
-            
-            return Response({
-                "has_completed_appointments": has_completed
-            })
-            
-        except ClientProfile.DoesNotExist:
-            return Response(
-                {"detail": "No se encontró el perfil de cliente."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except PsychologistProfile.DoesNotExist:
-            return Response(
-                {"detail": "No se encontró el perfil del psicólogo."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-    @action(detail=False, methods=['get'], url_path='has-completed-appointments/(?P<pk>[^/.]+)')
-    def has_completed_appointments(self, request, pk=None):
-        """Endpoint para verificar si un cliente tiene citas completadas con un psicólogo específico"""
+    @action(detail=False, methods=['get'], url_path='has-confirmed-appointments/(?P<pk>[^/.]+)')
+    def has_confirmed_appointments(self, request, pk=None):
+        """Endpoint para verificar si un cliente tiene citas confirmadas con un psicólogo específico"""
         user = self.request.user
         if user.user_type != 'client':
             return Response(
@@ -641,14 +608,14 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             psychologist_id = pk  # Usar el parámetro pk como psychologist_id
             
             # Verificar si hay citas completadas entre este cliente y el psicólogo
-            completed_appointments = Appointment.objects.filter(
+            confirmed_appointments = Appointment.objects.filter(
                 client=client,
                 psychologist_id=psychologist_id,
-                status='COMPLETED'
+                status='CONFIRMED'
             ).exists()
             
             return Response({
-                "has_completed_appointments": completed_appointments
+                "has_confirmed_appointments": confirmed_appointments
             })
         except ClientProfile.DoesNotExist:
             return Response(
@@ -730,3 +697,297 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsAdminUser], url_path='admin-payment-verification')
+    def admin_payment_verification(self, request):
+        """Endpoint para que los administradores vean todas las citas con pagos pendientes de verificación y confirmación"""
+        # Filtrar citas con los mismos estados que ven los psicólogos
+        appointments = Appointment.objects.filter(
+            status__in=['PAYMENT_UPLOADED', 'PAYMENT_VERIFIED', 'CONFIRMED']
+        ).order_by('-created_at')
+        
+        # Opción de filtrado por psicólogo
+        psychologist_id = request.query_params.get('psychologist_id')
+        if psychologist_id:
+            appointments = appointments.filter(psychologist_id=psychologist_id)
+        
+        # Opción de filtrado por estado específico
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            if ',' in status_filter:
+                # Si hay múltiples estados separados por coma
+                status_list = status_filter.split(',')
+                appointments = appointments.filter(status__in=status_list)
+            else:
+                # Si es un solo estado
+                appointments = appointments.filter(status=status_filter)
+        
+        # Opción de filtrado por fecha
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        
+        if start_date:
+            try:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                appointments = appointments.filter(date__gte=start_date)
+            except ValueError:
+                return Response(
+                    {"detail": "Formato de fecha de inicio inválido. Use YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        if end_date:
+            try:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                appointments = appointments.filter(date__lte=end_date)
+            except ValueError:
+                return Response(
+                    {"detail": "Formato de fecha de fin inválido. Use YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        serializer = self.get_serializer(appointments, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsPsychologist])
+    def psychologist_pending_payments(self, request):
+        """Endpoint para que los psicólogos vean sus citas con pagos pendientes de verificación"""
+        user = request.user
+        try:
+            psychologist = PsychologistProfile.objects.get(user=user)
+            
+            # Filtrar citas del psicólogo con pagos subidos pero no verificados
+            appointments = Appointment.objects.filter(
+                psychologist=psychologist,
+                status__in=['PAYMENT_UPLOADED', 'PAYMENT_VERIFIED', 'CONFIRMED']
+            ).order_by('-created_at')
+            
+            # Opción de filtrado por estado
+            status_filter = request.query_params.get('status')
+            if status_filter:
+                appointments = appointments.filter(status=status_filter)
+            
+            # Opción de filtrado por fecha
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+            
+            if start_date:
+                try:
+                    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                    appointments = appointments.filter(date__gte=start_date)
+                except ValueError:
+                    return Response(
+                        {"detail": "Formato de fecha de inicio inválido. Use YYYY-MM-DD."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            if end_date:
+                try:
+                    end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                    appointments = appointments.filter(date__lte=end_date)
+                except ValueError:
+                    return Response(
+                        {"detail": "Formato de fecha de fin inválido. Use YYYY-MM-DD."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            # Paginar resultados
+            page = self.paginate_queryset(appointments)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            
+            serializer = self.get_serializer(appointments, many=True)
+            return Response(serializer.data)
+            
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró el perfil de psicólogo para este usuario."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    def update_payment_status(self, request, pk=None):
+        """Endpoint para que los administradores y psicólogos actualicen el estado de una cita después de verificar el pago"""
+        user = request.user
+        appointment = self.get_object()
+        
+        # Verificar permisos según el rol
+        if user.user_type == 'admin':
+            # Los administradores pueden actualizar cualquier cita
+            pass
+        elif user.user_type == 'psychologist':
+            # Los psicólogos solo pueden actualizar sus propias citas
+            try:
+                psychologist = PsychologistProfile.objects.get(user=user)
+                if appointment.psychologist != psychologist:
+                    return Response(
+                        {"detail": "No tiene permiso para modificar esta cita."},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+            except PsychologistProfile.DoesNotExist:
+                return Response(
+                    {"detail": "No se encontró el perfil de psicólogo."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            return Response(
+                {"detail": "No tiene permiso para modificar esta cita."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Verificar que la cita está en un estado adecuado
+        if appointment.status not in ['PAYMENT_UPLOADED', 'PAYMENT_VERIFIED']:
+            return Response(
+                {"detail": f"No se puede actualizar el estado de pago. Estado actual: {appointment.get_status_display()}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Obtener el nuevo estado
+        new_status = request.data.get('status')
+        
+        # Validar que el estado es válido
+        valid_statuses = ['PAYMENT_VERIFIED', 'CONFIRMED']
+        if not new_status or new_status not in valid_statuses:
+            return Response(
+                {"detail": f"Estado no válido. Opciones permitidas: {', '.join(valid_statuses)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Actualizar el estado
+        appointment.status = new_status
+        
+        # Si es un administrador verificando el pago, actualizar el campo correspondiente
+        if user.user_type == 'admin' and new_status == 'PAYMENT_VERIFIED':
+            appointment.payment_verified_by = user
+        
+        # Guardar notas si se proporcionan
+        notes = request.data.get('notes')
+        if notes:
+            if user.user_type == 'admin':
+                appointment.admin_notes = notes
+            elif user.user_type == 'psychologist':
+                appointment.psychologist_notes = notes
+        
+        appointment.save()
+        
+        return Response({
+            "detail": f"Estado actualizado a '{appointment.get_status_display()}'.",
+            "appointment": AppointmentSerializer(appointment).data
+        })
+
+    @action(detail=True, methods=['get'], url_path='download-payment-proof')
+    def download_payment_proof(self, request, pk=None):
+        """Endpoint para descargar el comprobante de pago"""
+        try:
+            # Verificar si se recibió un token explícito en la URL (para visualizaciones en nueva pestaña)
+            token_param = request.query_params.get('token')
+            view_mode = request.query_params.get('view', 'false').lower() == 'true'
+            
+            # Si hay un token en los parámetros, usarlo para la autenticación
+            if token_param:
+                from rest_framework_simplejwt.tokens import AccessToken
+                from rest_framework_simplejwt.exceptions import TokenError
+                try:
+                    # Validar el token y obtener el usuario
+                    token = AccessToken(token_param)
+                    user_id = token.payload.get('user_id')
+                    
+                    from django.contrib.auth import get_user_model
+                    User = get_user_model()
+                    
+                    user = User.objects.get(id=user_id)
+                    request.user = user
+                except (TokenError, User.DoesNotExist) as e:
+                    return Response(
+                        {"detail": "Token inválido o expirado."},
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+                
+            appointment = self.get_object()
+            
+            # Verificar permisos según el rol
+            user = request.user
+            
+            if user.user_type == 'admin':
+                # Los administradores pueden descargar cualquier comprobante
+                pass
+            elif user.user_type == 'psychologist':
+                # Los psicólogos solo pueden descargar comprobantes de sus propias citas
+                try:
+                    psychologist = PsychologistProfile.objects.get(user=user)
+                    if appointment.psychologist != psychologist:
+                        return Response(
+                            {"detail": "No tiene permiso para acceder a este comprobante."},
+                            status=status.HTTP_403_FORBIDDEN
+                        )
+                except PsychologistProfile.DoesNotExist:
+                    return Response(
+                        {"detail": "No se encontró el perfil de psicólogo."},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            elif user.user_type == 'client':
+                # Los clientes solo pueden descargar comprobantes de sus propias citas
+                try:
+                    client = ClientProfile.objects.get(user=user)
+                    if appointment.client != client:
+                        return Response(
+                            {"detail": "No tiene permiso para acceder a este comprobante."},
+                            status=status.HTTP_403_FORBIDDEN
+                        )
+                except ClientProfile.DoesNotExist:
+                    return Response(
+                        {"detail": "No se encontró el perfil de cliente."},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            else:
+                return Response(
+                    {"detail": "No tiene permiso para acceder a este comprobante."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # Verificar que exista el comprobante
+            if not appointment.payment_proof:
+                return Response(
+                    {"detail": "Esta cita no tiene comprobante de pago."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Obtener la ruta del archivo
+            file_path = appointment.payment_proof.path
+            
+            if not os.path.exists(file_path):
+                return Response(
+                    {"detail": "El archivo no existe en el servidor."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Determinar el tipo de contenido basado en la extensión del archivo
+            import mimetypes
+            content_type, encoding = mimetypes.guess_type(file_path)
+            if not content_type:
+                content_type = 'application/octet-stream'
+            
+            # Obtener el nombre original del archivo
+            filename = os.path.basename(file_path)
+            
+            # Abrir y leer el archivo
+            with open(file_path, 'rb') as file:
+                response = HttpResponse(file.read(), content_type=content_type)
+            
+            # Establecer el encabezado Content-Disposition según el modo
+            if view_mode:
+                # Para visualización en el navegador
+                response['Content-Disposition'] = f'inline; filename="{filename}"'
+            else:
+                # Para descarga
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+            return response
+            
+        except Appointment.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró la cita."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+   

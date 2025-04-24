@@ -39,7 +39,26 @@ urlpatterns = [
     }), name='client-appointments-no-slash'),
     # The psychologist appointments endpoint will be handled by the router
     # It will be available at: /api/appointments/psychologist/{id}/
-    path('has-completed-appointments/<int:pk>/', AppointmentViewSet.as_view({
-        'get': 'has_completed_appointments',
-    }), name='has-completed-appointments'),
+    path('has-confirmed-appointments/<int:pk>/', AppointmentViewSet.as_view({
+        'get': 'has_confirmed_appointments',
+    }), name='has-confirmed-appointments'),
+    
+    # Nuevos endpoints para verificación de pagos
+    path('admin-payment-verification/', AppointmentViewSet.as_view({
+        'get': 'admin_payment_verification',
+    }), name='admin-payment-verification'),
+    path('admin_payment_verification/', AppointmentViewSet.as_view({
+        'get': 'admin_payment_verification',
+    }), name='admin_payment_verification'),
+    path('psychologist-pending-payments/', AppointmentViewSet.as_view({
+        'get': 'psychologist_pending_payments',
+    }), name='psychologist-pending-payments'),
+    path('<int:pk>/update-payment-status/', AppointmentViewSet.as_view({
+        'patch': 'update_payment_status',
+    }), name='update-payment-status'),
+    
+    # Nuevo endpoint para descargar comprobante de pago
+    path('<int:pk>/download-payment-proof/', AppointmentViewSet.as_view({
+        'get': 'download_payment_proof',
+    }), name='download-payment-proof'),
 ]

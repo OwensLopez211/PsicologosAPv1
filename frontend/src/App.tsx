@@ -21,7 +21,7 @@ import ClientAppointments from './pages/dashboard/client/ClientAppointments';
 import PatientsManagement from './pages/dashboard/admin/PatientsManagement';
 import PsychologistListPage from './pages/admin/PsychologistListPage';
 import PsychologistDetailPage from './pages/admin/PsychologistDetailPage';
-import PaymentVerificationPage from './pages/dashboard/admin/PaymentVerificationPage';
+import VerificationsPage from './pages/dashboard/VerificationsPage';
 import ToastProvider from './components/toast/ToastProvider';
 
 function App() {
@@ -72,6 +72,7 @@ function App() {
               <Route path="" element={<DashboardHome />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="schedule" element={<SchedulePage />} />
+              <Route path="payments" element={<VerificationsPage />} />
             </Route>
 
             {/* Admin Dashboard routes */}
@@ -85,7 +86,7 @@ function App() {
               <Route path="pacients" element={<PatientsManagement />} />
               <Route path="psychologists" element={<PsychologistListPage />} />
               <Route path="psychologists/:id" element={<PsychologistDetailPage />} />
-              <Route path="payments" element={<PaymentVerificationPage />} />
+              <Route path="payments" element={<VerificationsPage />} />
             </Route>
 
             {/* Catch all route */}

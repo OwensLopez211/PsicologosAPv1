@@ -1,12 +1,18 @@
 from rest_framework import serializers
 from .models import Appointment
 from payments.serializers import PaymentDetailSerializer
+from profiles.serializers import ClientProfileSerializer, PsychologistProfileBasicSerializer
+from django.conf import settings
 
 class AppointmentSerializer(serializers.ModelSerializer):
     payment_detail = PaymentDetailSerializer(read_only=True)
     psychologist_name = serializers.SerializerMethodField()
     client_name = serializers.SerializerMethodField()
     status_display = serializers.SerializerMethodField()
+    payment_proof_url = serializers.SerializerMethodField()
+    client_data = serializers.SerializerMethodField()
+    psychologist_data = serializers.SerializerMethodField()
+    payment_verified_by_name = serializers.SerializerMethodField()
     
     class Meta:
         model = Appointment
@@ -21,6 +27,42 @@ class AppointmentSerializer(serializers.ModelSerializer):
     
     def get_status_display(self, obj):
         return obj.get_status_display()
+        
+    def get_payment_proof_url(self, obj):
+        if obj.payment_proof:
+            return obj.payment_proof.url
+        return None
+    
+    def get_client_data(self, obj):
+        """Obtener datos básicos del cliente"""
+        client = obj.client
+        return {
+            'id': client.id,
+            'user_id': client.user.id,
+            'name': client.user.get_full_name(),
+            'email': client.user.email,
+            'phone': client.phone_number,
+            'profile_image': client.profile_image.url if client.profile_image else None
+        }
+    
+    def get_psychologist_data(self, obj):
+        """Obtener datos básicos del psicólogo"""
+        psychologist = obj.psychologist
+        return {
+            'id': psychologist.id,
+            'user_id': psychologist.user.id,
+            'name': psychologist.user.get_full_name(),
+            'email': psychologist.user.email,
+            'phone': psychologist.phone,
+            'professional_title': psychologist.professional_title,
+            'profile_image': psychologist.profile_image.url if psychologist.profile_image else None
+        }
+    
+    def get_payment_verified_by_name(self, obj):
+        """Obtener el nombre de quien verificó el pago"""
+        if obj.payment_verified_by:
+            return obj.payment_verified_by.get_full_name()
+        return None
 
 # Add the AppointmentCreateSerializer
 class AppointmentCreateSerializer(serializers.ModelSerializer):

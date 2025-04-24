@@ -70,7 +70,8 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    // Añadir overflow-x-hidden para evitar scroll horizontal y min-h-screen para ocupar al menos toda la altura
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-x-hidden">
       {/* TopBar con efecto de elevación al hacer scroll */}
       <div className={`sticky top-0 z-50 transition-shadow duration-300 ${
         scrolled ? 'shadow-md bg-white/80 backdrop-blur-sm' : 'bg-white'
@@ -103,34 +104,37 @@ const DashboardLayout = () => {
         )}
       </AnimatePresence>
       
-      {/* Contenido principal con animaciones de transición entre rutas */}
-      <motion.main 
-        className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full"
-        variants={containerVariants}
-        initial="initial"
-        animate="animate"
-        key={location.pathname}
-      >
-        {/* Decoración sutil de fondo */}
-        <div className="absolute top-0 right-0 -z-10 w-1/2 h-1/2 bg-[#B4E4D3]/10 blur-3xl rounded-full transform translate-x-1/3 -translate-y-1/4"></div>
-        <div className="absolute bottom-0 left-0 -z-10 w-1/2 h-1/2 bg-[#2A6877]/5 blur-3xl rounded-full transform -translate-x-1/3 translate-y-1/4"></div>
+      {/* Contenedor flex que ocupa todo el espacio disponible */}
+      <div className="flex flex-col flex-grow">
+        {/* Decoración sutil de fondo - asegurar que no cause overflow */}
+        <div className="fixed top-0 right-0 -z-10 w-1/2 h-1/2 bg-[#B4E4D3]/10 blur-3xl rounded-full transform translate-x-1/3 -translate-y-1/4"></div>
+        <div className="fixed bottom-0 left-0 -z-10 w-1/2 h-1/2 bg-[#2A6877]/5 blur-3xl rounded-full transform -translate-x-1/3 translate-y-1/4"></div>
         
-        {/* Contenedor para las rutas con animación */}
-        <motion.div
-          className="h-full w-full"
-          variants={contentVariants}
+        {/* Contenido principal con animaciones de transición entre rutas */}
+        <motion.main 
+          className="flex-grow p-4 md:p-6 lg:p-8 mx-auto w-full max-w-full"
+          variants={containerVariants}
+          initial="initial"
+          animate="animate"
           key={location.pathname}
         >
-          <AnimatePresence mode="wait">
-            <Outlet />
-          </AnimatePresence>
-        </motion.div>
+          {/* Contenedor para las rutas con animación */}
+          <motion.div
+            className="w-full"
+            variants={contentVariants}
+            key={location.pathname}
+          >
+            <AnimatePresence mode="wait">
+              <Outlet />
+            </AnimatePresence>
+          </motion.div>
+        </motion.main>
         
-        {/* Footer sutil */}
-        <div className="mt-12 text-center text-sm text-gray-500 py-4">
+        {/* Footer siempre al final */}
+        <footer className="mt-auto text-center text-sm text-gray-500 py-4">
           <p>© {new Date().getFullYear()} Bienestar - Plataforma de Salud Mental</p>
-        </div>
-      </motion.main>
+        </footer>
+      </div>
     </div>
   );
 };

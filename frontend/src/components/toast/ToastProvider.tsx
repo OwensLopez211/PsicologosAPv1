@@ -5,11 +5,15 @@ const ToastProvider = () => {
     <Toaster
       position="top-center"
       gutter={12}
+      containerClassName="toast-container"
       containerStyle={{
-        top: 80, // Aumentado de 40 a 80 para mover las notificaciones más abajo
+        top: 80,
         zIndex: 9999,
       }}
       toastOptions={{
+        // Configuración global para limitar a una notificación a la vez
+        id: 'unique-notification', // Esto hace que todas las notificaciones usen el mismo ID
+        
         // Estilo por defecto para todos los toasts
         style: {
           background: '#FFFFFF',
@@ -28,7 +32,7 @@ const ToastProvider = () => {
           border: '1px solid rgba(255, 255, 255, 0.5)',
         },
         // Duración por defecto
-        duration: 5000,
+        duration: 3000, // Reducida a 3 segundos para que las notificaciones no bloqueen mucho tiempo
         
         // Estilos específicos para cada tipo de toast
         success: {
