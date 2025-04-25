@@ -86,6 +86,15 @@ export interface PsychologistProfile {
   isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  experiences?: {
+    id?: number;
+    experience_type: string;
+    institution: string;
+    role: string;
+    start_date: string;
+    end_date?: string | null;
+    description: string;
+  }[];
 }
 
 export type AppointmentStatus = 
