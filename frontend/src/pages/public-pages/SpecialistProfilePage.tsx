@@ -25,6 +25,16 @@ interface User {
   last_name: string;
 }
 
+interface Experience {
+  id: number;
+  experience_type: string;
+  institution: string;
+  role: string;
+  start_date: string;
+  end_date: string | null;
+  description: string;
+}
+
 interface Specialist {
   id: number;
   user: User;
@@ -51,6 +61,7 @@ interface Specialist {
   bank_account_owner_rut?: string;
   bank_account_owner_email?: string;
   bank_name?: string;
+  experiences?: Experience[];
 }
 
 const SpecialistProfilePage = () => {
@@ -61,6 +72,7 @@ const SpecialistProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [presentationVideoUrl, setPresentationVideoUrl] = useState('');
+  const [experiences, setExperiences] = useState<Experience[]>([]);
   
   useEffect(() => {
     const fetchSpecialist = async () => {
@@ -103,6 +115,25 @@ const SpecialistProfilePage = () => {
         // Add debug logging to clearly show the IDs
         console.log('Specialist profile ID:', specialistData.id);
         console.log('Specialist user ID:', specialistData.user.id);
+        
+        // Intentar obtener las experiencias profesionales desde la respuesta
+        if (specialistData.experiences) {
+          setExperiences(specialistData.experiences);
+        } else {
+          // Si no vienen en la respuesta principal, hacer una solicitud adicional
+          try {
+            const experiencesResponse = await axios.get(`/api/profiles/public/psychologists/${id}/experiences/`, {
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              }
+            });
+            setExperiences(experiencesResponse.data);
+          } catch (expError) {
+            console.error('Error fetching experiences:', expError);
+            setExperiences([]);
+          }
+        }
         
         setSpecialist(formattedSpecialist);
         setLoading(false);
@@ -275,8 +306,8 @@ const SpecialistProfilePage = () => {
                 variants={itemVariants}
               >
                 <PresentationVideo videoUrl={presentationVideoUrl} />
-                {/* Using the enhanced ProfessionalExperience component */}
-                <ProfessionalExperience experienceDescription={specialist.experience_description || ''} />
+                {/* Usamos el nuevo componente con las experiencias profesionales */}
+                <ProfessionalExperience experiences={experiences} />
               </motion.div>
               
               {/* Right Column - Specialties and Education */}
