@@ -496,6 +496,37 @@ const PaymentDetailModal = ({
                 />
               </div>
             )}
+
+            {/* Información del psicólogo (solo para admin) */}
+            {user?.user_type === 'admin' && (
+              <div className="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-md">
+                <h4 className="text-md font-medium text-gray-900 mb-2">Información del psicólogo</h4>
+                <div className="flex items-center">
+                  {appointment.psychologist_data?.profile_image ? (
+                    <img
+                      className="h-10 w-10 rounded-full object-cover border border-gray-200"
+                      src={appointment.psychologist_data.profile_image}
+                      alt={appointment.psychologist_data?.name || 'Psicólogo'}
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-[#2A6877] flex items-center justify-center text-white">
+                      {appointment.psychologist_data?.name?.charAt(0) || 'P'}
+                    </div>
+                  )}
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      {appointment.psychologist_data?.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {appointment.psychologist_data?.professional_title || 'Psicólogo'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {appointment.psychologist_data?.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Botones de acción */}

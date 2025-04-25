@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, AdminProfile
+from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, AdminProfile, ProfessionalExperience
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -101,6 +101,18 @@ class AdminProfileSerializer(BaseProfileSerializer):
         )
         read_only_fields = ('id',)
 
+class ProfessionalExperienceSerializer(serializers.ModelSerializer):
+    """Serializer para experiencias profesionales de psicólogos"""
+    experience_type_display = serializers.CharField(source='get_experience_type_display', read_only=True)
+    
+    class Meta:
+        model = ProfessionalExperience
+        fields = (
+            'id', 'experience_type', 'experience_type_display', 'institution', 
+            'role', 'start_date', 'end_date', 'description'
+        )
+        read_only_fields = ('id',)
+
 class PsychologistProfileSerializer(BaseProfileSerializer):
     """Serializer para perfiles de psicólogo"""
     phone = serializers.CharField(source='phone_number', required=False, allow_blank=True, allow_null=True)
@@ -110,6 +122,7 @@ class PsychologistProfileSerializer(BaseProfileSerializer):
     city = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     user = serializers.SerializerMethodField()
     presentation_video_url = serializers.SerializerMethodField(read_only=True)
+    experiences = ProfessionalExperienceSerializer(many=True, read_only=True)
     
     def get_user(self, obj):
         return {
@@ -130,8 +143,8 @@ class PsychologistProfileSerializer(BaseProfileSerializer):
             'id', 'phone', 'gender', 'rut', 'region', 'city', 'user',
             'professional_title', 'health_register_number', 'university',
             'graduation_year', 'specialties', 'target_populations', 
-            'intervention_areas', 'experience_description', 'verification_status',
-            'presentation_video_url'
+            'intervention_areas', 'verification_status',
+            'presentation_video_url', 'experiences'
         )
         read_only_fields = ('id', 'verification_status')
     documents = ProfessionalDocumentSerializer(many=True, read_only=True, source='professionaldocument_set')
@@ -147,8 +160,8 @@ class PsychologistProfileSerializer(BaseProfileSerializer):
         fields = BaseProfileSerializer.Meta.fields + (
             'id', 'rut', 'phone', 'gender', 'region', 'city',
             'professional_title', 'specialties', 'health_register_number', 'university',
-            'graduation_year', 'experience_description', 'target_populations', 
-            'intervention_areas', 'verification_status', 'documents'
+            'graduation_year', 'target_populations', 'intervention_areas', 
+            'verification_status', 'documents', 'experiences'
         )
         read_only_fields = ('id', 'verification_status', 'created_at', 'updated_at')
 
@@ -185,6 +198,7 @@ class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
     user = UserBasicSerializer(read_only=True)
     verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
     bank_account_type_display = serializers.CharField(source='get_bank_account_type_display', read_only=True)
+    experiences = ProfessionalExperienceSerializer(many=True, read_only=True)
     
     def get_user(self, obj):
         return {
@@ -200,9 +214,10 @@ class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
         fields = (
             'id', 'user', 'profile_image', 'rut', 'phone', 'gender', 'region', 'city',
             'professional_title', 'specialties', 'health_register_number', 'university',
-            'graduation_year', 'experience_description', 'target_populations', 'intervention_areas',
+            'graduation_year', 'target_populations', 'intervention_areas',
             'verification_status', 'verification_status_display', 'created_at', 'updated_at',
             'bank_account_number', 'bank_account_type', 'bank_account_type_display', 
             'bank_account_owner', 'bank_account_owner_rut', 'bank_account_owner_email', 'bank_name',
+            'experiences'
         )
         read_only_fields = ('id', 'user', 'verification_status', 'verification_status_display', 'created_at', 'updated_at')

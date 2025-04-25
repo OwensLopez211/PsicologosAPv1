@@ -8,11 +8,11 @@ from rest_framework.permissions import AllowAny  # Add this import
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 
-from ..models import PsychologistProfile, ProfessionalDocument
+from ..models import PsychologistProfile, ProfessionalDocument, ProfessionalExperience
 
 from ..serializers import (
     PsychologistProfileSerializer, PsychologistProfileBasicSerializer,
-    ProfessionalDocumentSerializer, UserBasicSerializer
+    ProfessionalDocumentSerializer, UserBasicSerializer, ProfessionalExperienceSerializer
 )
 from ..permissions import IsProfileOwner, IsAdminUser
 
@@ -726,42 +726,114 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    @action(detail=False, methods=['get'])
+    def experiences(self, request):
+        """Obtener todas las experiencias profesionales del psicólogo"""
+        psychologist = self.get_object_from_request(request)
+        experiences = ProfessionalExperience.objects.filter(psychologist=psychologist)
+        serializer = ProfessionalExperienceSerializer(experiences, many=True)
+        return Response(serializer.data)
 
-class PublicPsychologistListView(generics.ListAPIView):
-    """API endpoint para listar psicólogos públicamente"""
-    serializer_class = PsychologistProfileBasicSerializer
-    permission_classes = [permissions.AllowAny]
-    
-    def get_queryset(self):
-        # Solo mostrar psicólogos verificados
-        queryset = PsychologistProfile.objects.filter(verification_status='VERIFIED')
+    @action(detail=False, methods=['post'])
+    def update_experiences(self, request):
+        """Actualizar experiencias profesionales del psicólogo"""
+        psychologist = self.get_object_from_request(request)
         
-        # Filtrar por especialidad si se proporciona
-        specialty = self.request.query_params.get('specialty', None)
-        if specialty:
-            queryset = queryset.filter(specialties__contains=[specialty])
+        # Obtener las experiencias del request
+        experiences_data = request.data.get('experiences', [])
         
-        # Filtrar por población objetivo si se proporciona
-        population = self.request.query_params.get('population', None)
-        if population:
-            queryset = queryset.filter(target_populations__contains=[population])
+        # Validar que sea una lista
+        if not isinstance(experiences_data, list):
+            return Response(
+                {"error": "El formato de experiencias debe ser una lista"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        # Filtrar por región si se proporciona
-        region = self.request.query_params.get('region', None)
-        if region:
-            queryset = queryset.filter(region__icontains=region)
+        # Primero eliminamos las experiencias existentes si las hubiera para evitar duplicados
+        ProfessionalExperience.objects.filter(psychologist=psychologist).delete()
         
-        # Filtrar por ciudad si se proporciona
-        city = self.request.query_params.get('city', None)
-        if city:
-            queryset = queryset.filter(city__icontains=city)
+        # Crear nuevas experiencias
+        created_experiences = []
+        for exp_data in experiences_data:
+            # Crear la experiencia con la instancia del psicólogo, no su ID
+            serializer = ProfessionalExperienceSerializer(data=exp_data)
+            if serializer.is_valid():
+                # Guardar pero no llamar a save() todavía
+                experience = serializer.save(psychologist=psychologist)
+                created_experiences.append(serializer.data)
+            else:
+                # Si hay un error, revertir y devolver error
+                return Response(
+                    {"error": "Error al guardar experiencia", "details": serializer.errors}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         
-        # Filtrar por nombre si se proporciona
-        name = self.request.query_params.get('name', None)
-        if name:
-            queryset = queryset.filter(user__first_name__icontains=name) | queryset.filter(user__last_name__icontains=name)
+        return Response(
+            {"message": "Experiencias actualizadas correctamente", "experiences": created_experiences},
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['delete'], url_path='experiences/(?P<experience_id>[^/.]+)')
+    def delete_experience(self, request, experience_id=None):
+        """Eliminar una experiencia profesional específica"""
+        psychologist = self.get_object_from_request(request)
         
-        return queryset
+        try:
+            experience = ProfessionalExperience.objects.get(
+                id=experience_id, 
+                psychologist=psychologist
+            )
+            experience.delete()
+            return Response(
+                {"message": "Experiencia eliminada correctamente"},
+                status=status.HTTP_200_OK
+            )
+        except ProfessionalExperience.DoesNotExist:
+            return Response(
+                {"error": "La experiencia no existe o no pertenece a este psicólogo"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=False, methods=['put'], url_path='experiences/(?P<experience_id>[^/.]+)')
+    def update_experience(self, request, experience_id=None):
+        """Actualizar una experiencia profesional específica"""
+        psychologist = self.get_object_from_request(request)
+        
+        try:
+            experience = ProfessionalExperience.objects.get(
+                id=experience_id, 
+                psychologist=psychologist
+            )
+            
+            # Actualizar los datos de la experiencia
+            serializer = ProfessionalExperienceSerializer(
+                experience, 
+                data=request.data, 
+                partial=True
+            )
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    {"error": "Error al actualizar experiencia", "details": serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except ProfessionalExperience.DoesNotExist:
+            return Response(
+                {"error": "La experiencia no existe o no pertenece a este psicólogo"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    # Función de ayuda para obtener el perfil del psicólogo
+    def get_object_from_request(self, request):
+        """Helper para obtener el perfil del psicólogo desde el request"""
+        user = request.user
+        try:
+            return PsychologistProfile.objects.get(user=user)
+        except PsychologistProfile.DoesNotExist:
+            raise Http404("No existe un perfil de psicólogo para este usuario")
 
 
     

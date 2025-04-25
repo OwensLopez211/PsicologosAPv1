@@ -1,55 +1,126 @@
-import { motion } from 'framer-motion';
+// ExperienceField.tsx - Main component (add and delete, but no edit)
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PlusIcon } from '@heroicons/react/24/outline';
+import { ExperienceList } from './experience/ExperienceList';
+import { ExperienceForm } from './experience/ExperienceForm';
+import { Experience } from '../../../types/experience';
 
 interface ExperienceFieldProps {
-  value: string;
+  experiences: Experience[];
   isEditing: boolean;
-  onChange: (value: string) => void;
+  onExperiencesChange: (experiences: Experience[]) => void;
 }
 
-const ExperienceField = ({ value, isEditing, onChange }: ExperienceFieldProps) => {
+const ExperienceField = ({ experiences = [], isEditing, onExperiencesChange }: ExperienceFieldProps) => {
+  // Estado local para gestionar las experiencias
+  const [localExperiences, setLocalExperiences] = useState<Experience[]>(experiences || []);
+  const [showForm, setShowForm] = useState(false);
+
+  // Actualizar el estado local cuando cambian las experiencias externas
+  useEffect(() => {
+    if (!showForm) {
+      setLocalExperiences(experiences || []);
+    }
+  }, [experiences, showForm]);
+
+  // Función para agregar una nueva experiencia
+  const handleAddExperience = () => {
+    setShowForm(true);
+  };
+
+  // Función para eliminar una experiencia
+  const handleDeleteExperience = (id: number | undefined) => {
+    if (id === undefined) return;
+    
+    const updatedExperiences = localExperiences.filter(exp => exp.id !== id);
+    setLocalExperiences(updatedExperiences);
+    
+    // Notificar al componente padre sobre el cambio
+    if (typeof onExperiencesChange === 'function') {
+      onExperiencesChange(updatedExperiences);
+    }
+  };
+
+  // Función para guardar una nueva experiencia
+  const handleSaveExperience = (newExperience: Experience) => {
+    // Crear un ID temporal negativo
+    const tempId = -(Date.now());
+    const experienceWithId = { ...newExperience, id: tempId };
+    
+    // Agregar la nueva experiencia a la lista
+    const updatedExperiences = [...localExperiences, experienceWithId];
+    setLocalExperiences(updatedExperiences);
+    
+    // Notificar al componente padre
+    onExperiencesChange(updatedExperiences);
+    
+    // Cerrar el formulario
+    setShowForm(false);
+  };
+
+  // Función para cancelar la adición
+  const handleCancel = () => {
+    setShowForm(false);
+  };
+
   return (
     <motion.div 
-      className="p-4 bg-white/80 rounded-lg border border-gray-100"
+      className="p-5 bg-white rounded-lg border border-gray-100 shadow-sm"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3, delay: 0.2 }}
     >
       <motion.div
-        className="mb-2 flex items-center gap-2"
+        className="mb-4 flex items-center justify-between"
         initial={{ x: -20 }}
         animate={{ x: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <span className="text-lg">📚</span>
-        <h3 className="text-md font-medium text-gray-700 border-b border-gray-200 pb-2 w-full">
-          Experiencia Profesional
-        </h3>
+        <div className="flex items-center gap-2">
+          <span className="text-lg">📚</span>
+          <h3 className="text-lg font-medium text-gray-700">
+            Experiencia Profesional
+          </h3>
+        </div>
+        
+        {isEditing && !showForm && (
+          <button 
+            onClick={handleAddExperience}
+            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-[#2A6877] bg-[#2A6877]/10 hover:bg-[#2A6877]/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877]"
+          >
+            <PlusIcon className="h-4 w-4 mr-1" />
+            Agregar
+          </button>
+        )}
       </motion.div>
 
-      <div className="mt-1 relative">
-        <textarea
-          id="experience_description"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={!isEditing}
-          rows={4}
-          placeholder="Describe tu experiencia profesional..."
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#2A6877] focus:ring-[#2A6877] transition-all
-            ${!isEditing ? 'bg-gray-50 cursor-not-allowed' : 'hover:border-[#2A6877]'}`}
+      {/* Lista de experiencias */}
+      {localExperiences.length === 0 && !showForm ? (
+        <div className="text-center py-8 text-gray-500">
+          {isEditing ? (
+            <p>No has añadido experiencias profesionales. Haz clic en "Agregar" para comenzar.</p>
+          ) : (
+            <p>No hay experiencias profesionales para mostrar.</p>
+          )}
+        </div>
+      ) : (
+        <ExperienceList 
+          experiences={localExperiences} 
+          isEditing={isEditing} 
+          onDeleteExperience={handleDeleteExperience}
         />
-        {isEditing && (
-          <motion.div 
-            className="absolute top-2 right-2 pr-1 flex items-center pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            transition={{ duration: 0.2 }}
-          >
-            <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-            </svg>
-          </motion.div>
+      )}
+
+      {/* Formulario para agregar nueva experiencia */}
+      <AnimatePresence>
+        {showForm && (
+          <ExperienceForm
+            onSave={handleSaveExperience}
+            onCancel={handleCancel}
+          />
         )}
-      </div>
+      </AnimatePresence>
     </motion.div>
   );
 };

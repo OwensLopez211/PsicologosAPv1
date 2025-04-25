@@ -29,8 +29,6 @@ const VerificationsPage = () => {
     setError(null);
 
     try {
-      toast.dismiss();
-
       if (user?.user_type === 'admin') {
         try {
           // Para administradores, usar el endpoint de administración con los mismos filtros que ven los psicólogos
@@ -46,14 +44,10 @@ const VerificationsPage = () => {
           setAppointments(appointmentsData);
           
           console.log('Citas cargadas para admin:', appointmentsData.length);
-          
-          if (appointmentsData.length === 0) {
-            toastService.success('No hay citas que coincidan con los filtros seleccionados');
-          }
         } catch (adminError: any) {
           console.error('Error específico de admin:', adminError);
           
-          // Mostrar mensajes de error específicos según la respuesta del servidor
+          // Mantener los mensajes de error específicos ya que son importantes para diagnóstico
           if (adminError.response) {
             const statusCode = adminError.response.status;
             if (statusCode === 404) {
@@ -68,7 +62,6 @@ const VerificationsPage = () => {
                   ['PAYMENT_UPLOADED', 'PAYMENT_VERIFIED', 'CONFIRMED'].includes(app.status)
                 );
                 setAppointments(filteredAppointments);
-                toastService.success(`Se recuperaron ${filteredAppointments.length} citas a través de una ruta alternativa`);
               } catch (fallbackError) {
                 console.error('Falló el intento alternativo:', fallbackError);
               }
@@ -97,10 +90,6 @@ const VerificationsPage = () => {
         setAppointments(appointmentsData);
         
         console.log('Citas cargadas para psicólogo:', appointmentsData.length);
-        
-        if (appointmentsData.length === 0) {
-          toastService.success('No hay citas pendientes que coincidan con los filtros seleccionados');
-        }
       } else {
         setError(new Error('Tipo de usuario no autorizado'));
         toastService.error('Tu tipo de usuario no está autorizado para acceder a esta página');

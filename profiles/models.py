@@ -115,7 +115,6 @@ class PsychologistProfile(BaseProfile):
         null=True,
         blank=True
     )
-    experience_description = models.TextField(blank=True)
     target_populations = models.JSONField(default=list, blank=True)
     intervention_areas = models.JSONField(default=list, blank=True)
     
@@ -199,6 +198,39 @@ class ProfessionalDocument(models.Model):
         
     def __str__(self):
         return f"{self.get_document_type_display()} - {self.psychologist.user.email}"
+
+class ProfessionalExperience(models.Model):
+    """
+    Experiencia profesional para psicólogos.
+    """
+    EXPERIENCE_TYPES = [
+        ('PRACTICUM', 'Pasantía'),
+        ('ASSISTANTSHIP', 'Ayudantía'),
+        ('WORK', 'Trabajo'),
+        ('VOLUNTEERING', 'Voluntariado'),
+        ('OTHER', 'Otro')
+    ]
+    
+    psychologist = models.ForeignKey(
+        PsychologistProfile, 
+        on_delete=models.CASCADE, 
+        related_name='experiences'
+    )
+    experience_type = models.CharField(
+        max_length=20, 
+        choices=EXPERIENCE_TYPES
+    )
+    institution = models.CharField(max_length=200)
+    role = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    description = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-start_date']
+        
+    def __str__(self):
+        return f"{self.get_experience_type_display()} en {self.institution} - {self.psychologist.user.get_full_name() or self.psychologist.user.email}"
 
 
 

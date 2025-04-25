@@ -7,6 +7,7 @@ import PageTransition from '../../components/animations/PageTransition';
 import ScheduleAndFees from '../../components/profile/ScheduleAndFees';
 import DocumentsUpload from '../../components/profile/DocumentsUpload';
 import BankInfo from '../../components/profile/BankInfo';
+import { PsychologistProfile } from '../../types/psychologist';
 // import Loader from '../../components/ui/Loader'; // Make sure you have this component
 
 const ProfilePage = () => {
@@ -66,11 +67,19 @@ const ProfilePage = () => {
     }
   };
 
-  const handleSaveBasicInfo = async (data: any) => {
+  const handleSaveBasicInfo = async (data: any, shouldReloadProfile: boolean = false) => {
     setIsLoading(true);
     try {
-      const updatedProfile = await updateProfile(user?.user_type || '', data);
-      setProfile(updatedProfile);
+      await updateProfile(user?.user_type || '', data);
+      
+      if (shouldReloadProfile) {
+        // Recargar todo el perfil para obtener las experiencias actualizadas
+        await loadProfile();
+      } else {
+        // Para actualizaciones simples, cargamos el perfil sin bloquear la UI
+        const updatedProfile = await getProfile(user?.user_type || '');
+        setProfile(updatedProfile);
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
     } finally {
@@ -179,8 +188,8 @@ const ProfilePage = () => {
               
               {activeTab === 'professional' && user?.user_type === 'psychologist' && (
                 <ProfessionalInfo
-                  profile={profile}
-                  onSave={handleSaveBasicInfo}
+                  profile={profile as PsychologistProfile}
+                  onSave={(data) => handleSaveBasicInfo(data, true)}
                   isLoading={isLoading}
                 />
               )}

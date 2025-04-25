@@ -6,6 +6,7 @@ import ExperienceField from './professional/ExperienceField';
 import MultiSelectSection from './professional/MultiSelectSection';
 import { CheckIcon } from '@heroicons/react/24/outline';
 import optionsData from '../../types/options-data';
+import { updateProfessionalExperiences } from '../../services/profileService';
 
 interface ProfessionalInfoProps {
   profile?: PsychologistProfile;
@@ -13,9 +14,25 @@ interface ProfessionalInfoProps {
   isLoading: boolean;
 }
 
+interface Experience {
+  id?: number;
+  experience_type: string;
+  institution: string;
+  role: string;
+  start_date: string;
+  end_date?: string | null;
+  description: string;
+}
+
 const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  
+  // Estado para almacenar el perfil actual después de guardar
+  const [savedProfile, setSavedProfile] = useState<PsychologistProfile | undefined>(profile);
   
   // Inicializar datos del formulario con valores vacíos
   const [formData, setFormData] = useState<Partial<PsychologistProfile>>({
@@ -41,7 +58,7 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
     }
   };
 
-  // Efecto para cargar datos del perfil
+  // Efecto para cargar datos del perfil y experiencias
   useEffect(() => {
     if (profile) {
       // Establecer título profesional basado en género
@@ -63,6 +80,14 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
         target_populations: Array.isArray(profile.target_populations) ? profile.target_populations : [],
         intervention_areas: Array.isArray(profile.intervention_areas) ? profile.intervention_areas : []
       });
+      
+      // Cargar experiencias si existen
+      if (profile.experiences && Array.isArray(profile.experiences)) {
+        setExperiences(profile.experiences);
+      }
+      
+      // Actualizar el perfil guardado
+      setSavedProfile(profile);
     }
   }, [profile]);
 
@@ -81,21 +106,25 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
     }
   }, [profile?.gender, formData.professional_title]);
 
-  // Resetear mensaje de éxito
+  // Resetear mensaje de éxito y error
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
-    if (saveSuccess) {
+    if (saveSuccess || saveError) {
       timer = setTimeout(() => {
         setSaveSuccess(false);
-      }, 3000);
+        setSaveError(null);
+      }, 5000);
     }
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [saveSuccess]);
+  }, [saveSuccess, saveError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    setIsSaving(true);
+    setSaveError(null);
     
     // Asegurar que professional_title se establezca correctamente antes de guardar
     const dataToSave = {
@@ -118,12 +147,47 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
     }
     
     try {
+      // Solo guardamos las experiencias si hay cambios locales pendientes
+      let updatedExperiences = experiences;
+      
+      // Guardar experiencias profesionales (si hay experiencias)
+      if (experiences && experiences.length > 0) {
+        const experiencesToSave = experiences.map(exp => {
+          const { id, ...rest } = exp;
+          return id && id > 0 ? exp : rest;
+        });
+        
+        const experiencesResponse = await updateProfessionalExperiences(experiencesToSave);
+        updatedExperiences = experiencesResponse.experiences || [];
+      } else {
+        // Si no hay experiencias, enviar array vacío para borrar existentes
+        const experiencesResponse = await updateProfessionalExperiences([]);
+        updatedExperiences = [];
+      }
+      
+      // Guardar información del perfil
       await onSave(dataToSave);
+      
+      // Actualizar estado local
       setIsEditing(false);
       setSaveSuccess(true);
+      setExperiences(updatedExperiences);
+      
+      // Actualizar el perfil guardado
+      const updatedProfile = {
+        ...(savedProfile || {}),
+        ...dataToSave,
+        experiences: updatedExperiences
+      };
+      
+      setSavedProfile(updatedProfile as PsychologistProfile);
+      
+      console.log('Perfil actualizado con éxito, incluyendo experiencias:', updatedExperiences);
     } catch (error) {
       console.error('Error al guardar:', error);
-      // Aquí se podría añadir un estado para mostrar errores
+      setSaveError('Ocurrió un error al guardar los cambios. Por favor intenta nuevamente.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -142,6 +206,12 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
       ? currentArray.filter(item => item !== value)
       : [...currentArray, value];
     setFormData({ ...formData, [field]: newArray });
+  };
+
+  // Manejar cambios en las experiencias
+  const handleExperiencesChange = (updatedExperiences: Experience[]) => {
+    // Actualizar estado local inmediatamente para reflejar los cambios en la UI
+    setExperiences(updatedExperiences);
   };
 
   // Variantes de animación
@@ -226,6 +296,22 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <AnimatePresence>
+              {saveError && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-full text-sm"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>Error al guardar</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
             
             <AnimatePresence>
               {!isEditing ? (
@@ -301,9 +387,9 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
       {/* Campo de experiencia */}
       <motion.div variants={itemVariants}>
         <ExperienceField 
-          value={formData.experience_description || ''}
+          experiences={experiences}
           isEditing={isEditing}
-          onChange={(value) => handleFormChange('experience_description', value)}
+          onExperiencesChange={handleExperiencesChange}
         />
       </motion.div>
 
@@ -364,6 +450,7 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
                   // Restablecer datos del formulario pero asegurar que professional_title se base en el género
                   const professionalTitle = getProfessionalTitleByGender(profile.gender || '');
                   
+                  // Restablecer todos los datos incluyendo experiencias
                   setFormData({
                     professional_title: professionalTitle,
                     specialties: profile.specialties || [],
@@ -374,6 +461,9 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
                     target_populations: profile.target_populations || [],
                     intervention_areas: profile.intervention_areas || []
                   });
+                  
+                  // Restaurar experiencias originales
+                  setExperiences(profile.experiences || []);
                 }
               }}
               className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] transition-all"
@@ -384,10 +474,10 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={isLoading}
+              disabled={isSaving}
               className="inline-flex justify-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-[#2A6877] to-[#235A67] hover:from-[#235A67] hover:to-[#1A4652] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] disabled:opacity-50 transition-all"
             >
-              {isLoading ? (
+              {isSaving ? (
                 <span className="flex items-center">
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

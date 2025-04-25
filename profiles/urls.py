@@ -141,6 +141,13 @@ urlpatterns = [
          AdminProfileViewSet.as_view({'patch': 'update_bank_info'}),
          name='admin-update-bank-info'),
          
+    # Añadir estos endpoints para experiencias profesionales
+    path('psychologist-profiles/me/experiences/', 
+         PsychologistProfileViewSet.as_view({'get': 'experiences', 'post': 'update_experiences'}), 
+         name='psychologist-experiences'),
+    path('psychologist-profiles/me/experiences/<int:experience_id>/', 
+         PsychologistProfileViewSet.as_view({'delete': 'delete_experience', 'put': 'update_experience'}), 
+         name='psychologist-experience-detail'),
 
 ]
 

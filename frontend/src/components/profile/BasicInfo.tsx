@@ -83,10 +83,8 @@ const BasicInfo = ({ profile, onSave, isLoading }: BasicInfoProps) => {
     try {
       console.log("Enviando datos al backend:", formData); // Añadir log para depuración
       
-      const dataToSave = { ...formData };
-      
       // No enviamos la imagen de perfil en los datos a guardar
-      delete dataToSave.profile_image;
+      const { profile_image, ...dataToSave } = formData;
       
       await onSave(dataToSave);
       setIsEditing(false);

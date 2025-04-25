@@ -4,7 +4,7 @@ import { login } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import PageTransition from '../../components/animations/PageTransition';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import toastService from '../../services/toastService';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ const LoginPage = () => {
     const params = new URLSearchParams(location.search);
     const expired = params.get('expired');
     if (expired === 'true') {
-      toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+      toastService.showError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     }
   }, [location]);
 
@@ -40,59 +40,53 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await login(formData.email, formData.password);
+      const result = await login(formData.email, formData.password);
       
-      // Gestionar "recordarme"
-      if (formData.remember) {
-        localStorage.setItem('rememberedEmail', formData.email);
+      if ('error' in result) {
+        // Usar toastService aquí
+        switch (result.error) {
+          case 'INVALID_CREDENTIALS':
+            toastService.error('Correo o contraseña incorrectos. Por favor verifica tus credenciales.');
+            break;
+          // Manejar otros errores...
+        }
       } else {
-        localStorage.removeItem('rememberedEmail');
+        // Gestionar "recordarme"
+        if (formData.remember) {
+          localStorage.setItem('rememberedEmail', formData.email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+        
+        // Normalizar el tipo de usuario
+        const normalizedUserType = result.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
+        
+        setUser({
+          ...result.user,
+          user_type: normalizedUserType
+        });
+        
+        // Mostrar mensaje de bienvenida
+        toastService.showSuccess(`¡Bienvenido de nuevo, ${result.user.first_name || 'Usuario'}!`);
+        
+        // Navegar según el tipo de usuario
+        switch (normalizedUserType) {
+          case 'client':
+            navigate('/dashboard');
+            break;
+          case 'psychologist':
+            navigate('/psicologo/dashboard');
+            break;
+          case 'admin':
+            navigate('/admin/dashboard');
+            break;
+          default:
+            console.error('Unknown user type:', result.user.user_type);
+            toastService.showError('Error en el tipo de usuario');
+        }
       }
-      
-      // Normalizar el tipo de usuario
-      const normalizedUserType = response.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
-      
-      setUser({
-        ...response.user,
-        user_type: normalizedUserType
-      });
-      
-      // Mostrar mensaje de bienvenida
-      toast.success(`¡Bienvenido de nuevo, ${response.user.first_name || 'Usuario'}!`);
-      
-      // Navegar según el tipo de usuario
-      switch (normalizedUserType) {
-        case 'client':
-          navigate('/dashboard');
-          break;
-        case 'psychologist':
-          navigate('/psicologo/dashboard');
-          break;
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        default:
-          console.error('Unknown user type:', response.user.user_type);
-          toast.error('Error en el tipo de usuario');
-      }
-    } catch (err: any) {
-      console.error('Login error:', err);
-      
-      const errorMessage = err.message;
-      
-      switch (errorMessage) {
-        case 'NETWORK_ERROR':
-          toast.error('Error de conexión. Por favor, verifica tu conexión a internet.');
-          break;
-        case 'INVALID_CREDENTIALS':
-          toast.error('Correo electrónico o contraseña incorrectos');
-          break;
-        case 'USER_INACTIVE':
-          toast.error('Tu cuenta está inactiva. Por favor, contacta al soporte.');
-          break;
-        default:
-          toast.error('Error al iniciar sesión. Por favor, intente nuevamente.');
-      }
+    } catch (err) {
+      console.error('Unexpected login error:', err);
     } finally {
       setIsLoading(false);
     }
