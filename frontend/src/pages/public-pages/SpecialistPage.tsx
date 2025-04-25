@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import HeaderPage from '../../components/public-components/HeaderPage';
 import PageTransition from '../../components/animations/PageTransition';
-import SpecialistCard from '../../components/public-components/SpecialistCard';
+import SpecialistList from '../../components/specialist-list/SpecialistList';
 import SpecialistFilters from '../../components/specialist-list/SpecialistFilters';
 
 interface Specialist {
@@ -14,7 +14,7 @@ interface Specialist {
   profile_image?: string;
   verification_status: string;
   professional_title?: string;
-  gender?: string; // Add gender field to the interface
+  gender?: string;
 }
 
 const SpecialistPage = () => {
@@ -27,11 +27,9 @@ const SpecialistPage = () => {
   });
 
   useEffect(() => {
-    // In your fetchSpecialists function, update the API endpoint path
     const fetchSpecialists = async () => {
       try {
         setLoading(true);
-        // Update this URL to match your Django URL configuration
         const response = await axios.get('/api/profiles/public/psychologists/', {
           headers: {
             'Accept': 'application/json',
@@ -39,13 +37,11 @@ const SpecialistPage = () => {
           }
         });
         
-        // Check if the response contains data property
         const responseData = response.data;
         
         if (Array.isArray(responseData)) {
           setSpecialists(responseData);
         } else if (responseData && Array.isArray(responseData.results)) {
-          // Some APIs wrap the array in a results property
           setSpecialists(responseData.results);
         } else {
           console.error('API response is not in expected format:', responseData);
@@ -55,7 +51,6 @@ const SpecialistPage = () => {
         setLoading(false);
       } catch (err) {
         console.error('Error fetching specialists:', err);
-        // For debugging, log more details about the error
         if (axios.isAxiosError(err)) {
           console.error('Response:', err.response?.data);
           console.error('Status:', err.response?.status);
@@ -68,9 +63,7 @@ const SpecialistPage = () => {
     fetchSpecialists();
   }, []);
 
-  // Rest of the component remains the same
   const filteredSpecialists = specialists.length > 0 ? specialists.filter(specialist => {
-    // Only include specialists with specialties that match the filter
     if (filters.specialty && specialist.specialties) {
       return specialist.specialties.some(specialty => 
         specialty.toLowerCase().includes(filters.specialty.toLowerCase())
@@ -137,29 +130,7 @@ const SpecialistPage = () => {
             totalSpecialists={filteredSpecialists.length}
             onFilterChange={handleFilterChange}
           />
-          {filteredSpecialists.length > 0 ? (
-            <div className="divide-y divide-gray-100">
-              {filteredSpecialists.map((specialist) => (
-                <SpecialistCard
-                  key={specialist.id}
-                  id={specialist.id}
-                  name={specialist.name}
-                  university={specialist.university || ''}
-                  specialties={Array.isArray(specialist.specialties) ? specialist.specialties.join(', ') : ''}
-                  experience={specialist.experience || ''}
-                  imageUrl={specialist.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(specialist.name)}&background=2A6877&color=fff&size=300`}
-                  verification_status={specialist.verification_status}
-                  gender={specialist.gender} // Pass the gender property to the component
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="p-12 text-center">
-              <div className="text-5xl mb-4">🔍</div>
-              <h3 className="text-xl font-medium text-gray-700 mb-2">No se encontraron especialistas</h3>
-              <p className="text-gray-500">No hay especialistas verificados que coincidan con tus criterios de búsqueda.</p>
-            </div>
-          )}
+          <SpecialistList specialists={filteredSpecialists} />
         </div>
       </section>
     </PageTransition>
