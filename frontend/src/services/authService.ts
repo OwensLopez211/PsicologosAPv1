@@ -29,7 +29,7 @@ export interface RegisterData {
   // Puedes añadir más campos según necesites
 }
 
-export const login = async (email: string, password: string): Promise<AuthResponse | undefined> => {
+export const login = async (email: string, password: string): Promise<AuthResponse | { error: string }> => {
   try {
     const response = await api.post<AuthResponse>('/auth/login/', {
       email: email.toLowerCase().trim(),
@@ -53,7 +53,28 @@ export const login = async (email: string, password: string): Promise<AuthRespon
     
     return response.data;
   } catch (error: any) {
-    // El manejo de errores permanece igual
+    if (!error.response) {
+      return { error: 'NETWORK_ERROR' };
+    }
+
+    const errorData = error.response?.data;
+    const statusCode = error.response?.status;
+    
+    if (statusCode === 401) {
+      return { error: 'INVALID_CREDENTIALS' };
+    }
+    
+    // Cuenta inactiva
+    if (errorData?.detail && errorData.detail.includes('inactive')) {
+      return { error: 'USER_INACTIVE' };
+    }
+    
+    // Para cualquier otro mensaje de error específico del backend
+    if (errorData?.detail) {
+      return { error: errorData.detail };
+    }
+    
+    return { error: 'UNKNOWN_ERROR' };
   }
 };
 

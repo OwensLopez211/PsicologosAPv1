@@ -38,6 +38,14 @@ export const getProfile = async (userType: string) => {
         'Authorization': `Bearer ${token}`
       }
     });
+    
+    // Si es un perfil de psicólogo, asegurarse de que las experiencias estén en formato de array
+    if (userType.toLowerCase() === 'psychologist' && response.data) {
+      if (!response.data.experiences) {
+        response.data.experiences = [];
+      }
+    }
+    
     console.log('Profile data received:', response.data);
     return response.data;
   } catch (error) {
@@ -217,6 +225,99 @@ export const updateBankInfo = async (bankData: any) => {
     return response.data;
   } catch (error) {
     console.error('Error updating bank info:', error);
+    throw error;
+  }
+};
+
+// Función para actualizar experiencias profesionales
+export const updateProfessionalExperiences = async (experiences: any[]) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Authentication required');
+  }
+  
+  try {
+    // Asegúrate de eliminar cualquier propiedad 'psychologist' o 'psychologist_id' en los objetos de experiencia
+    // y filtrar cualquier dato no válido antes de enviar al backend
+    const cleanedExperiences = experiences.map(exp => {
+      // Destructurar para eliminar propiedades innecesarias
+      const { 
+        psychologist, 
+        psychologist_id,
+        experience_type_display,  // Eliminar campos de display
+        ...cleanExp 
+      } = exp;
+      
+      // Asegurarse de que las fechas estén en el formato correcto
+      if (cleanExp.start_date && typeof cleanExp.start_date === 'string') {
+        // Si ya es una string ISO, no hacer nada
+        // Si es un objeto Date, convertirlo a ISO
+        if (cleanExp.start_date instanceof Date) {
+          cleanExp.start_date = cleanExp.start_date.toISOString().split('T')[0];
+        }
+      }
+      
+      // Igual para end_date
+      if (cleanExp.end_date && typeof cleanExp.end_date === 'string') {
+        if (cleanExp.end_date instanceof Date) {
+          cleanExp.end_date = cleanExp.end_date.toISOString().split('T')[0];
+        }
+      }
+      
+      // Solo incluir los campos necesarios para el backend
+      return {
+        id: cleanExp.id > 0 ? cleanExp.id : undefined, // Solo incluir IDs positivos (existentes en BD)
+        experience_type: cleanExp.experience_type,
+        institution: cleanExp.institution,
+        role: cleanExp.role,
+        start_date: cleanExp.start_date,
+        end_date: cleanExp.end_date || null,
+        description: cleanExp.description || ''
+      };
+    });
+    
+    console.log('Enviando experiencias profesionales al backend:', cleanedExperiences);
+    const response = await api.post('/profiles/psychologist-profiles/me/experiences/', { 
+      experiences: cleanedExperiences 
+    });
+    console.log('Experiencias actualizadas correctamente en el backend:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar experiencias en el backend:', error);
+    throw error;
+  }
+};
+
+// Función para obtener experiencias profesionales
+export const getProfessionalExperiences = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Authentication required');
+  }
+  
+  try {
+    const response = await api.get('/profiles/psychologist-profiles/me/experiences/');
+    console.log('Experiencias obtenidas:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener experiencias:', error);
+    throw error;
+  }
+};
+
+// Función para eliminar una experiencia específica
+export const deleteProfessionalExperience = async (experienceId: number) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Authentication required');
+  }
+  
+  try {
+    const response = await api.delete(`/profiles/psychologist-profiles/me/experiences/${experienceId}/`);
+    console.log('Experiencia eliminada:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al eliminar experiencia:', error);
     throw error;
   }
 };
