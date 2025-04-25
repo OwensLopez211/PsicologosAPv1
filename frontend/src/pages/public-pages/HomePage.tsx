@@ -4,7 +4,7 @@ import HowItWorks from '../../components/public-components/HowItWorks'
 import PsychologistCTA from '../../components/public-components/PsychologistCTA'
 import PageTransition from '../../components/animations/PageTransition'
 import useScreenSize from '../../hooks/useScreenSize'
-
+import HelpCenter from '../../components/public-components/HelpCenter'
 const HomePage = () => {
   const { isMobile } = useScreenSize();
 
@@ -13,6 +13,7 @@ const HomePage = () => {
       {isMobile ? <MobileHero /> : <Hero />}
       <HowItWorks />
       <PsychologistCTA />
+      <HelpCenter />
     </PageTransition>
   )
 }
