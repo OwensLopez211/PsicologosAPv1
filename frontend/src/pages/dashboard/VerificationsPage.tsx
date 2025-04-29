@@ -39,9 +39,9 @@ const VerificationsPage = () => {
             status: statusFilter
           });
           
-          // Manejar diferentes formatos de respuesta
+        // Manejar diferentes formatos de respuesta
           const appointmentsData = Array.isArray(data) ? data : (data as any).results || [];
-          setAppointments(appointmentsData);
+        setAppointments(appointmentsData);
           
           console.log('Citas cargadas para admin:', appointmentsData.length);
         } catch (adminError: any) {
@@ -169,7 +169,7 @@ const VerificationsPage = () => {
         setTimeout(() => {
           const appointmentExists = appointments.some(app => app.id === appointmentId);
           if (appointmentExists) {
-            fetchAppointments();
+      fetchAppointments();
           }
         }, 300);
       }
@@ -185,9 +185,9 @@ const VerificationsPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
             {user?.user_type === 'admin' ? 'Verificación de Pagos (Admin)' : 'Mis Pagos Pendientes'}
-          </h1>
+        </h1>
           {user?.user_type === 'admin' && (
             <p className="mt-1 text-sm text-gray-500">
               Visualizando citas de todos los psicólogos con estado de pago pendiente o verificado

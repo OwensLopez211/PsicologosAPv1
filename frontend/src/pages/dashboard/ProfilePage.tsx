@@ -78,7 +78,7 @@ const ProfilePage = () => {
       } else {
         // Para actualizaciones simples, cargamos el perfil sin bloquear la UI
         const updatedProfile = await getProfile(user?.user_type || '');
-        setProfile(updatedProfile);
+      setProfile(updatedProfile);
       }
     } catch (error) {
       console.error('Error updating profile:', error);

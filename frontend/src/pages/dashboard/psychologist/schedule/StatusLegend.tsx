@@ -5,6 +5,7 @@ const StatusLegend: React.FC = () => {
   const statuses = [
     { label: 'Pendiente de pago', color: 'bg-yellow-100 text-yellow-800' },
     { label: 'Esperando Verificación de pago', color: 'bg-orange-100 text-orange-800' },
+    { label: 'Pago verificado', color: 'bg-green-100 text-green-800' },
     { label: 'Confirmada', color: 'bg-green-100 text-green-800' },
     { label: 'Completada', color: 'bg-blue-100 text-blue-800' },
     { label: 'Cancelada', color: 'bg-red-100 text-red-800' }

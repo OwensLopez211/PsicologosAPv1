@@ -51,36 +51,36 @@ const LoginPage = () => {
           // Manejar otros errores...
         }
       } else {
-        // Gestionar "recordarme"
-        if (formData.remember) {
-          localStorage.setItem('rememberedEmail', formData.email);
-        } else {
-          localStorage.removeItem('rememberedEmail');
-        }
-        
-        // Normalizar el tipo de usuario
+      // Gestionar "recordarme"
+      if (formData.remember) {
+        localStorage.setItem('rememberedEmail', formData.email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
+      
+      // Normalizar el tipo de usuario
         const normalizedUserType = result.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
-        
-        setUser({
+      
+      setUser({
           ...result.user,
-          user_type: normalizedUserType
-        });
-        
-        // Mostrar mensaje de bienvenida
+        user_type: normalizedUserType
+      });
+      
+      // Mostrar mensaje de bienvenida
         toastService.showSuccess(`¡Bienvenido de nuevo, ${result.user.first_name || 'Usuario'}!`);
-        
-        // Navegar según el tipo de usuario
-        switch (normalizedUserType) {
-          case 'client':
-            navigate('/dashboard');
-            break;
-          case 'psychologist':
-            navigate('/psicologo/dashboard');
-            break;
-          case 'admin':
-            navigate('/admin/dashboard');
-            break;
-          default:
+      
+      // Navegar según el tipo de usuario
+      switch (normalizedUserType) {
+        case 'client':
+          navigate('/dashboard');
+          break;
+        case 'psychologist':
+          navigate('/psicologo/dashboard');
+          break;
+        case 'admin':
+          navigate('/admin/dashboard');
+          break;
+        default:
             console.error('Unknown user type:', result.user.user_type);
             toastService.showError('Error en el tipo de usuario');
         }

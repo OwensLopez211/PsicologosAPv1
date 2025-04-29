@@ -766,7 +766,7 @@ export const getPsychologistPendingPayments = async (
     });
     throw error;
   }
-};
+}; 
 
 /**
  * Verifica si la cita es la primera entre un cliente y un psicólogo

@@ -102,7 +102,7 @@ const StaggeredChildren = ({ children }: { children: ReactNode }) => {
                 transition: { duration: 0.2 }
               }
             }}
-          >
+    >
             {child}
           </motion.div>
         );

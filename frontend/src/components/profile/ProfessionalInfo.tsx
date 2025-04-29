@@ -337,7 +337,7 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
       </motion.div>
 
       {/* Datos profesionales */}
-      <motion.div variants={itemVariants}>
+      <motion.div variants={itemVariants} className="z-20 relative">
         <ProfessionalFormFields 
           formData={formData}
           isEditing={isEditing}
@@ -353,7 +353,7 @@ const ProfessionalInfo = ({ profile, onSave, isLoading }: ProfessionalInfoProps)
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="bg-amber-50/90 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-amber-100"
+            className="bg-amber-50/90 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-amber-100 z-10 relative mt-4"
           >
             <div className="flex items-start gap-3">
               <div className="mt-0.5 text-amber-500 flex-shrink-0">

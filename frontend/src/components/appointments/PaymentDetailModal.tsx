@@ -128,22 +128,22 @@ const PaymentDetailModal = ({
         console.error('Error en la llamada API:', apiError);
         // Intentar con fetch como alternativa
         const response = await fetch(`/appointments/${appointment.id}/download-payment-proof/?view=true`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error al cargar la vista previa: ${response.status} ${response.statusText}`);
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-        
-        // Obtener el blob de la respuesta
-        const blob = await response.blob();
-        
-        // Crear una URL temporal para el blob
-        const url = window.URL.createObjectURL(blob);
-        setPreviewUrl(url);
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error al cargar la vista previa: ${response.status} ${response.statusText}`);
+      }
+      
+      // Obtener el blob de la respuesta
+      const blob = await response.blob();
+      
+      // Crear una URL temporal para el blob
+      const url = window.URL.createObjectURL(blob);
+      setPreviewUrl(url);
       }
     } catch (error) {
       console.error('Error al cargar la vista previa:', error);
@@ -193,46 +193,46 @@ const PaymentDetailModal = ({
       } catch (apiError) {
         console.error('Error en la llamada API de descarga:', apiError);
         // Intentar con fetch como alternativa
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-          throw new Error('No se encontró el token de autenticación');
-        }
-        
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No se encontró el token de autenticación');
+      }
+      
         const response = await fetch(`/appointments/${appointment.id}/download-payment-proof/`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error al descargar: ${response.status} ${response.statusText}`);
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-        
-        // Obtener el blob de la respuesta
-        const blob = await response.blob();
-        
-        // Crear un enlace de descarga temporal
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        
-        // Obtener el nombre del archivo del Content-Disposition o usar uno predeterminado
-        let filename = 'comprobante.pdf';
-        const contentDisposition = response.headers.get('Content-Disposition');
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-          if (filenameMatch && filenameMatch[1]) {
-            filename = filenameMatch[1];
-          }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error al descargar: ${response.status} ${response.statusText}`);
+      }
+      
+      // Obtener el blob de la respuesta
+      const blob = await response.blob();
+      
+      // Crear un enlace de descarga temporal
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      
+      // Obtener el nombre del archivo del Content-Disposition o usar uno predeterminado
+      let filename = 'comprobante.pdf';
+      const contentDisposition = response.headers.get('Content-Disposition');
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
         }
-        
-        a.href = url;
-        a.download = filename;
-        a.click();
-        
-        // Liberar recursos
-        window.URL.revokeObjectURL(url);
+      }
+      
+      a.href = url;
+      a.download = filename;
+      a.click();
+      
+      // Liberar recursos
+      window.URL.revokeObjectURL(url);
       }
       
       // Eliminar notificación después de un tiempo
@@ -376,11 +376,11 @@ const PaymentDetailModal = ({
               
               <div className="flex items-center mb-4">
                 {appointment.client_data?.profile_image ? (
-                  <img
-                    className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
+                <img
+                  className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
                     src={appointment.client_data.profile_image}
                     alt={appointment.client_data?.name || 'Cliente'}
-                  />
+                />
                 ) : (
                   <AvatarInitials 
                     name={appointment.client_data?.name || 'Cliente'} 

@@ -10,6 +10,7 @@ interface MultiSelectSectionProps {
   onChange: (value: string) => void;
   icon?: string;
   maxVisibleOptions?: number;
+  maxSelected?: number;
 }
 
 const MultiSelectSection = ({ 
@@ -19,7 +20,8 @@ const MultiSelectSection = ({
   isEditing, 
   onChange,
   icon = "🔍",
-  maxVisibleOptions = 9
+  maxVisibleOptions = 9,
+  maxSelected = 5
 }: MultiSelectSectionProps) => {
   const [showModal, setShowModal] = useState(false);
   
@@ -27,6 +29,8 @@ const MultiSelectSection = ({
   const visibleOptions = options.slice(0, maxVisibleOptions);
   const hasMoreOptions = options.length > maxVisibleOptions;
   
+  const isLimitReached = selectedValues.length >= maxSelected;
+
   return (
     <>
       <motion.div 
@@ -48,36 +52,40 @@ const MultiSelectSection = ({
         </motion.div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {visibleOptions.map((option, index) => (
-            <motion.div
-              key={option}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: 0.1 + index * 0.03 }}
-            >
-              <label
-                className={`flex items-center p-3 rounded-lg border ${
-                  selectedValues.includes(option)
-                    ? 'bg-[#2A6877] text-white border-[#2A6877]'
-                    : 'border-gray-200 hover:border-[#2A6877]'
-                } ${!isEditing ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} transition-all duration-200`}
+          {visibleOptions.map((option, index) => {
+            const checked = selectedValues.includes(option);
+            const disabled = !checked && isLimitReached;
+            return (
+              <motion.div
+                key={option}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: 0.1 + index * 0.03 }}
               >
-                <input
-                  type="checkbox"
-                  className="hidden"
-                  disabled={!isEditing}
-                  checked={selectedValues.includes(option)}
-                  onChange={() => onChange(option)}
-                />
-                <motion.span 
-                  className="text-sm"
-                  whileHover={isEditing ? { scale: 1.02 } : {}}
+                <label
+                  className={`flex items-center p-3 rounded-lg border ${
+                    checked
+                      ? 'bg-[#2A6877] text-white border-[#2A6877]'
+                      : 'border-gray-200 hover:border-[#2A6877]'
+                  } ${!isEditing || disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} transition-all duration-200`}
                 >
-                  {option}
-                </motion.span>
-              </label>
-            </motion.div>
-          ))}
+                  <input
+                    type="checkbox"
+                    className="hidden"
+                    disabled={!isEditing || disabled}
+                    checked={checked}
+                    onChange={() => onChange(option)}
+                  />
+                  <motion.span 
+                    className="text-sm"
+                    whileHover={isEditing && !disabled ? { scale: 1.02 } : {}}
+                  >
+                    {option}
+                  </motion.span>
+                </label>
+              </motion.div>
+            );
+          })}
           
           {/* Botón "Ver más" si hay más opciones */}
           {hasMoreOptions && (
@@ -110,6 +118,12 @@ const MultiSelectSection = ({
             </motion.div>
           )}
         </div>
+        {/* Mensaje de límite */}
+        {isLimitReached && (
+          <div className="text-xs text-red-500 mt-2">
+            Solo puedes seleccionar hasta {maxSelected} opciones.
+          </div>
+        )}
       </motion.div>
       
       {/* Modal con todas las opciones */}
@@ -123,6 +137,7 @@ const MultiSelectSection = ({
             onClose={() => setShowModal(false)}
             isEditing={isEditing}
             icon={icon}
+            maxSelected={maxSelected}
           />
         )}
       </AnimatePresence>

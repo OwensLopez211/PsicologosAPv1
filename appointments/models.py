@@ -85,6 +85,12 @@ class Appointment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # Nuevo campo
+    is_first_appointment = models.BooleanField(
+        default=False,
+        help_text="Indica si esta cita es la primera entre el cliente y el psicólogo"
+    )
+    
     class Meta:
         verbose_name = "Cita"
         verbose_name_plural = "Citas"
@@ -94,3 +100,12 @@ class Appointment(models.Model):
     
     def __str__(self):
         return f"Cita: {self.client.user.get_full_name()} con {self.psychologist.user.get_full_name()} - {self.date} {self.start_time}"
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            exists = Appointment.objects.filter(
+                psychologist=self.psychologist,
+                client=self.client
+            ).exclude(pk=self.pk).exists()
+            self.is_first_appointment = not exists
+        super().save(*args, **kwargs)

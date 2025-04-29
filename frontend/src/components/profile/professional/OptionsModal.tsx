@@ -9,6 +9,7 @@ interface OptionsModalProps {
   onChange: (value: string) => void;
   onClose: () => void;
   icon?: string;
+  maxSelected?: number;
 }
 
 const OptionsModal = ({
@@ -18,7 +19,8 @@ const OptionsModal = ({
   isEditing,
   onChange,
   onClose,
-  icon = "🔍"
+  icon = "🔍",
+  maxSelected = 5
 }: OptionsModalProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [localSelectedValues, setLocalSelectedValues] = useState<string[]>([...selectedValues]);
@@ -35,14 +37,17 @@ const OptionsModal = ({
     option.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
+  const isLimitReached = localSelectedValues.length >= maxSelected;
+  
   // Manejar cambios en las selecciones localmente
   const handleOptionChange = (option: string) => {
-    const newValues = localSelectedValues.includes(option)
+    const alreadySelected = localSelectedValues.includes(option);
+    if (!alreadySelected && isLimitReached) return;
+    const newValues = alreadySelected
       ? localSelectedValues.filter(val => val !== option)
       : [...localSelectedValues, option];
-    
     setLocalSelectedValues(newValues);
-    onChange(option); // También notificar al componente padre
+    onChange(option);
   };
   
   // Enfocar el input de búsqueda cuando se abre el modal
@@ -165,58 +170,67 @@ const OptionsModal = ({
         <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(80vh - 140px)' }}>
           {filteredOptions.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {filteredOptions.map((option, index) => (
-                <motion.div
-                  key={option}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.01 }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                >
-                  <label
-                    className={`flex items-center p-3 rounded-lg border ${
-                      localSelectedValues.includes(option)
-                        ? 'bg-[#2A6877] text-white border-[#2A6877]'
-                        : 'border-gray-200 hover:border-[#2A6877]'
-                    } ${!isEditing ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} transition-all duration-200`}
+              {filteredOptions.map((option, index) => {
+                const checked = localSelectedValues.includes(option);
+                const disabled = !checked && isLimitReached;
+                return (
+                  <motion.div
+                    key={option}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.01 }}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      if (isEditing) {
-                        handleOptionChange(option);
-                      }
                     }}
                   >
-                    <input
-                      type="checkbox"
-                      className="hidden"
-                      disabled={!isEditing}
-                      checked={localSelectedValues.includes(option)}
-                      onChange={(e) => {
+                    <label
+                      className={`flex items-center p-3 rounded-lg border ${
+                        checked
+                          ? 'bg-[#2A6877] text-white border-[#2A6877]'
+                          : 'border-gray-200 hover:border-[#2A6877]'
+                      } ${!isEditing || disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} transition-all duration-200`}
+                      onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (isEditing) {
+                        if (isEditing && !disabled) {
                           handleOptionChange(option);
                         }
                       }}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <motion.span 
-                      className="text-sm"
-                      whileHover={isEditing ? { scale: 1.02 } : {}}
                     >
-                      {option}
-                    </motion.span>
-                  </label>
-                </motion.div>
-              ))}
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        disabled={!isEditing || disabled}
+                        checked={checked}
+                        onChange={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (isEditing && !disabled) {
+                            handleOptionChange(option);
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <motion.span 
+                        className="text-sm"
+                        whileHover={isEditing && !disabled ? { scale: 1.02 } : {}}
+                      >
+                        {option}
+                      </motion.span>
+                    </label>
+                  </motion.div>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
               No se encontraron opciones que coincidan con la búsqueda.
+            </div>
+          )}
+          {isLimitReached && (
+            <div className="text-xs text-red-500 mt-2 text-center">
+              Solo puedes seleccionar hasta {maxSelected} opciones.
             </div>
           )}
         </div>

@@ -307,7 +307,7 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
             <AnimatePresence>
               {showUniversityDropdown && !isFieldDisabled('university') && (
                 <motion.div 
-                  className="absolute z-50 mt-1 w-full bg-white/95 backdrop-blur-sm shadow-lg max-h-60 rounded-lg border border-gray-200 overflow-hidden"
+                  className="absolute z-50 mt-1 w-full bg-white/95 backdrop-blur-sm shadow-lg max-h-60 rounded-lg border border-gray-200 overflow-hidden overflow-x-hidden"
                   onClick={(e) => e.stopPropagation()}
                   variants={dropdownVariants}
                   initial="hidden"
