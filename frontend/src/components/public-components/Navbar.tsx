@@ -17,7 +17,7 @@ const Navbar = () => {
     };
 
     // Throttle scroll event for better performance
-    let timeoutId: NodeJS.Timeout | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     const throttledScroll = () => {
       if (timeoutId === null) {
         timeoutId = setTimeout(() => {
@@ -47,12 +47,11 @@ const Navbar = () => {
 
   // Close mobile menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isMenuOpen && !event.target.closest('nav')) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMenuOpen && event.target instanceof HTMLElement && !event.target.closest('nav')) {
         setIsMenuOpen(false);
       }
     };
-    
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMenuOpen]);
@@ -69,7 +68,7 @@ const Navbar = () => {
     };
   }, [isMenuOpen]);
 
-  const handleNavigation = (path) => {
+  const handleNavigation = (path: string) => {
     setIsMenuOpen(false);
     navigate(path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -266,8 +265,8 @@ const Navbar = () => {
     <nav 
       className={`fixed w-full transition-all duration-300 z-40 top-0 ${
         isScrolled 
-          ? 'bg-white/95 backdrop-blur-sm shadow-lg py-2' 
-          : 'bg-white/80 py-3'
+          ? 'bg-white shadow-lg py-2' 
+          : 'bg-white py-3'
       }`}
     >
       <div className="container mx-auto flex justify-between items-center px-4 md:px-6">
@@ -347,7 +346,7 @@ const Navbar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-30"
+              className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30"
               onClick={() => setIsMenuOpen(false)}
             />
           )}
@@ -357,14 +356,14 @@ const Navbar = () => {
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              className="lg:hidden fixed top-0 right-0 h-full w-4/5 max-w-sm bg-white shadow-xl z-40 overflow-y-auto"
+              className="lg:hidden fixed top-0 right-0 h-[100dvh] w-4/5 max-w-sm bg-white shadow-xl z-40 overflow-y-auto"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
             >
               <div className="flex flex-col h-full">
-                <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
                   <Link to="/" className="flex items-center space-x-3" onClick={() => setIsMenuOpen(false)}>
                     <img 
                       src="/logo.jpeg" 
@@ -376,10 +375,9 @@ const Navbar = () => {
                       <span className="text-gray-500 text-xs">Psicología Online</span>
                     </div>
                   </Link>
-                  {/* Se eliminó el botón X redundante que estaba aquí */}
                 </div>
                 
-                <div className="p-4 flex flex-col flex-1">
+                <div className="p-4 flex flex-col flex-1 bg-white">
                   <div className="space-y-1 mb-6">
                     {renderMobileNavItems()}
                   </div>

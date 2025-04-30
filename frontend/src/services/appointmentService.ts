@@ -349,31 +349,53 @@ class AppointmentService {
   /**
    * Fetches available time slots for a psychologist
    * @param psychologistId The ID of the psychologist
+   * @param forceRefresh Optional parameter to force refresh and ignore cache
    * @returns Promise with available days and time slots
    */
-  async getAvailableTimeSlots(psychologistId: number): Promise<DaySlot[]> {
+  async getAvailableTimeSlots(psychologistId: number, forceRefresh?: boolean): Promise<DaySlot[]> {
     try {
-      // Get the authentication token
+      verifyPsychologistId(psychologistId);
+      
+      console.log('Fetching available time slots for psychologist:', psychologistId, forceRefresh ? '(forzando recarga)' : '');
+      
+      // Obtener el token de autenticación
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Debe iniciar sesión para ver los horarios disponibles.');
+        console.error('No authentication token found');
+        throw new Error('No authentication token found');
       }
 
-      // Fetch existing appointments first
-      const existingAppointments = await this.fetchExistingAppointments(psychologistId, token);
+      // Paso 1: Obtener la configuración de horario del psicólogo
+      const scheduleConfig = await this.fetchPsychologistSchedule(psychologistId, token, forceRefresh);
       
-      // Then fetch the psychologist's schedule
-      const scheduleConfig = await this.fetchPsychologistSchedule(psychologistId, token);
+      if (!scheduleConfig) {
+        console.error('No schedule configuration found for psychologist');
+        throw new Error('No schedule configuration found');
+      }
+
+      // Paso 2: Generar los días disponibles a partir de la configuración
+      const availableDays = generateAvailableDays(scheduleConfig);
       
-      // Generate available days based on the schedule
-      let availableDays = generateAvailableDays(scheduleConfig);
+      if (availableDays.length === 0) {
+        console.log('No available days found from schedule configuration');
+        return [];
+      }
       
-      // Filter out booked slots and past time slots
-      availableDays = this.filterAvailableDays(availableDays, existingAppointments);
+      console.log('Available days from schedule:', availableDays);
       
-      return availableDays;
+      // Paso 3: Obtener las citas existentes para filtrar los horarios ocupados
+      const existingAppointments = await this.fetchExistingAppointments(psychologistId, token, forceRefresh);
+      
+      console.log('Existing appointments:', existingAppointments);
+      
+      // Paso 4: Filtrar los días y horarios disponibles
+      const filteredDays = this.filterAvailableDays(availableDays, existingAppointments);
+      
+      console.log('Filtered available days:', filteredDays);
+      
+      return filteredDays;
     } catch (error) {
-      console.error('Error fetching available time slots:', error);
+      console.error('Error in getAvailableTimeSlots:', error);
       throw error;
     }
   }
@@ -382,12 +404,20 @@ class AppointmentService {
    * Fetches existing appointments for a psychologist
    * @param psychologistId The ID of the psychologist
    * @param token Authentication token
+   * @param forceRefresh Optional parameter to force refresh
    * @returns Promise with existing appointments
    */
-  private async fetchExistingAppointments(psychologistId: number, token: string): Promise<ExistingAppointment[]> {
+  private async fetchExistingAppointments(
+    psychologistId: number, 
+    token: string,
+    forceRefresh?: boolean
+  ): Promise<ExistingAppointment[]> {
     try {
+      // Añadir un parámetro de consulta para evitar caché si se fuerza la actualización
+      const timestamp = forceRefresh ? `?t=${Date.now()}` : '';
+      
       const response = await axios.get<ExistingAppointment[]>(
-        `/api/appointments/psychologist/${psychologistId}/`,
+        `/api/appointments/psychologist/${psychologistId}/${timestamp}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -406,11 +436,18 @@ class AppointmentService {
    * Fetches a psychologist's schedule
    * @param psychologistId The ID of the psychologist
    * @param token Authentication token
+   * @param forceRefresh Optional parameter to force refresh
    * @returns Promise with schedule configuration
    */
-  private async fetchPsychologistSchedule(psychologistId: number, token: string): Promise<ScheduleConfig> {
+  private async fetchPsychologistSchedule(
+    psychologistId: number, 
+    token: string,
+    forceRefresh?: boolean
+  ): Promise<ScheduleConfig> {
     try {
-      const url = `/api/schedules/psychologist/${psychologistId}/`;
+      // Añadir un parámetro de consulta para evitar caché si se fuerza la actualización
+      const timestamp = forceRefresh ? `?t=${Date.now()}` : '';
+      const url = `/api/schedules/psychologist/${psychologistId}/${timestamp}`;
       
       const response = await axios.get<ScheduleResponse>(
         url,
@@ -440,22 +477,43 @@ class AppointmentService {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     
+    console.log('Filtrando días disponibles, hoy es:', currentDate);
+    
     const filteredDays = days.map(day => {
+      console.log(`Procesando día: ${day.date} (${day.day_name})`);
+      
       // Filter out slots that are already booked
       let availableSlots = day.slots.filter(
         slot => !this.isTimeSlotBooked(day.date, slot.start_time, slot.end_time, existingAppointments)
       );
       
-      // Filter out past time slots
-      if (day.date === currentDate) {
+      // Log slots before filtering past slots
+      console.log(`Slots antes de filtrar por hora actual: ${availableSlots.length}`);
+      
+      // Create date objects with consistent timezone handling
+      const dayDateString = day.date;
+      const currentDateString = currentDate;
+      
+      // Compare dates as strings first (YYYY-MM-DD) to avoid timezone issues
+      if (dayDateString === currentDateString) {
+        // Same day - filter by time
+        console.log(`Día actual: filtrando slots por hora (hora actual: ${currentHour}:${currentMinute})`);
+        
         availableSlots = availableSlots.filter(slot => {
           const [hours, minutes] = slot.start_time.split(':').map(Number);
           return hours > currentHour || (hours === currentHour && minutes > currentMinute);
         });
-      } else if (day.date < currentDate) {
-        // Remove all slots for past days
+      } else {
+        // Compare dates correctly for past filtering
+        const isPast = this.compareDates(dayDateString, currentDateString) < 0;
+        
+        if (isPast) {
+          console.log(`Día pasado (${dayDateString} < ${currentDateString}): removiendo todos los slots`);
         availableSlots = [];
+        }
       }
+      
+      console.log(`Slots después de filtrar: ${availableSlots.length}`);
       
       return {
         ...day,
@@ -463,7 +521,26 @@ class AppointmentService {
       };
     }).filter(day => day.slots.length > 0); // Only keep days that have available slots
     
+    console.log(`Total de días disponibles después de filtrar: ${filteredDays.length}`);
     return filteredDays;
+  }
+
+  /**
+   * Compares two date strings in format YYYY-MM-DD
+   * @param date1 First date string
+   * @param date2 Second date string
+   * @returns -1 if date1 < date2, 0 if equal, 1 if date1 > date2
+   */
+  private compareDates(date1: string, date2: string): number {
+    // Parse dates with consistent timezone handling by using the same time and timezone
+    // for both dates
+    const d1 = new Date(`${date1}T12:00:00.000Z`);
+    const d2 = new Date(`${date2}T12:00:00.000Z`);
+    
+    // Compare timestamps
+    if (d1.getTime() < d2.getTime()) return -1;
+    if (d1.getTime() > d2.getTime()) return 1;
+    return 0;
   }
 
   /**

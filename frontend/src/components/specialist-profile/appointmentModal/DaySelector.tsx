@@ -33,26 +33,93 @@ const DaySelector: FC<DaySelectorProps> = ({
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Establecer a medianoche para comparar solo fechas
   
+  // Debugging: Mostrar la fecha actual
+  console.log('Fecha actual del sistema:', today.toISOString());
+  console.log('Fecha sin timezone:', today.getFullYear() + '-' + 
+    String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+    String(today.getDate()).padStart(2, '0'));
+  
+  // Organizar los días disponibles por mes para mejor navegación
+  const [availableDaysByMonth, setAvailableDaysByMonth] = useState<{[key: string]: DaySlot[]}>({});
+  
+  // Listar todos los días disponibles para debugging
+  useEffect(() => {
+    console.log('TODOS LOS DÍAS DISPONIBLES:');
+    availableDays.forEach(day => {
+      console.log(`> ${day.date} (${day.day_name}): ${day.slots.length} slots`);
+      // Verificar específicamente si existe el 30 de abril
+      if (day.date === '2025-04-30') {
+        console.log('*** SE ENCONTRÓ EL 30 DE ABRIL EN LOS DÍAS DISPONIBLES ***');
+      }
+    });
+  }, [availableDays]);
+  
+  useEffect(() => {
+    // Organizar los días disponibles por mes para facilitar la navegación
+    const daysByMonth: {[key: string]: DaySlot[]} = {};
+    
+    availableDays.forEach(day => {
+      // Asegurarnos de crear la fecha sin conversión de zona horaria (usar hora fija)
+      const dateParts = day.date.split('-');
+      if (dateParts.length !== 3) return;
+      
+      const year = parseInt(dateParts[0]);
+      const month = parseInt(dateParts[1]) - 1; // Meses en JS son 0-11
+      
+      const monthKey = `${year}-${month + 1}`;
+      
+      if (!daysByMonth[monthKey]) {
+        daysByMonth[monthKey] = [];
+      }
+      
+      daysByMonth[monthKey].push(day);
+    });
+    
+    console.log('Días disponibles por mes:', Object.keys(daysByMonth).map(key => 
+      `${key}: ${daysByMonth[key].length} días`
+    ));
+    
+    setAvailableDaysByMonth(daysByMonth);
+  }, [availableDays]);
+  
+  // Función auxiliar para obtener una fecha YYYY-MM-DD sin conversión de zona horaria
+  const getLocalDateString = (date: Date): string => {
+    return date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
+  };
+  
   // Filtrar los días disponibles para mostrar solo desde hoy en adelante
   const filteredDays = availableDays.filter(day => {
-    // Importante: Usamos el string de fecha directamente para comparar
-    // Creamos un objeto Date solo para la comparación, sin modificar el valor original
-    const dayDate = new Date(day.date + 'T00:00:00');
-    return dayDate >= today;
+    // Importante: Comparar fechas como strings para evitar problemas de zona horaria
+    const todayStr = getLocalDateString(today);
+    
+    // Comparar fechas como strings (YYYY-MM-DD)
+    const result = day.date >= todayStr;
+    console.log(`Comparando: ${day.date} >= ${todayStr} = ${result}`);
+    return result;
   }).map(day => {
     // Si es el día de hoy, filtrar también los horarios que ya han pasado
-    if (new Date(day.date + 'T00:00:00').toDateString() === today.toDateString()) {
+    const todayStr = getLocalDateString(today);
+    
+    if (day.date === todayStr) {
       // Filtrar slots que no han pasado aún
       const currentHour = now.getHours();
       const currentMinutes = now.getMinutes();
+      
+      console.log(`Filtrando slots para hoy (${todayStr}), hora actual: ${currentHour}:${currentMinutes}`);
       
       const availableSlots = day.slots.filter(slot => {
         // Convertir la hora de inicio a horas y minutos
         const [hours, minutes] = slot.start_time.split(':').map(Number);
         
         // Comparar con la hora actual
-        return (hours > currentHour) || 
-               (hours === currentHour && minutes > currentMinutes);
+        const isAvailable = (hours > currentHour) || 
+                            (hours === currentHour && minutes > currentMinutes);
+                            
+        console.log(`- Slot ${slot.start_time}-${slot.end_time}: ${isAvailable ? 'Disponible' : 'No disponible'}`);
+        
+        return isAvailable;
       });
       
       // Devolver el día con los slots filtrados
@@ -66,11 +133,80 @@ const DaySelector: FC<DaySelectorProps> = ({
     return day;
   }).filter(day => day.slots.length > 0); // Eliminar días que no tienen slots disponibles
   
+  // Verificar específicamente el 30 de abril en los días filtrados
+  useEffect(() => {
+    const april30Found = filteredDays.some(day => day.date === '2025-04-30');
+    console.log('¿El 30 de abril está en los días filtrados?', april30Found);
+  }, [filteredDays]);
+  
+  // Obtener los días disponibles para el mes actual que se está mostrando
+  const getCurrentMonthKey = () => {
+    return `${currentMonth.getFullYear()}-${currentMonth.getMonth() + 1}`;
+  };
+  
+  // Obtener los días filtrados para el mes actual
+  const filteredDaysForCurrentMonth = filteredDays.filter(day => {
+    const dateParts = day.date.split('-');
+    if (dateParts.length !== 3) return false;
+    
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1; // Meses en JS son 0-11
+    
+    return month === currentMonth.getMonth() && 
+           year === currentMonth.getFullYear();
+  });
+  
+  // Comprobar si hay disponibilidad en el mes actual
+  const hasAvailabilityInCurrentMonth = filteredDaysForCurrentMonth.length > 0;
+  console.log(`¿Hay disponibilidad en el mes actual (${getCurrentMonthKey()})?`, 
+    hasAvailabilityInCurrentMonth, 
+    `(${filteredDaysForCurrentMonth.length} días)`
+  );
+  
+  // Comprobar si hay disponibilidad en el mes siguiente
+  const nextMonth = new Date(currentMonth);
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+  const nextMonthKey = `${nextMonth.getFullYear()}-${nextMonth.getMonth() + 1}`;
+  
+  // Verificar disponibilidad en el mes siguiente mirando a los días filtrados
+  const hasAvailabilityInNextMonth = filteredDays.some(day => {
+    const dateParts = day.date.split('-');
+    if (dateParts.length !== 3) return false;
+    
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1; // Meses en JS son 0-11
+    
+    return month === nextMonth.getMonth() && 
+           year === nextMonth.getFullYear();
+  });
+  
+  console.log(`¿Hay disponibilidad en el mes siguiente (${nextMonthKey})?`, hasAvailabilityInNextMonth);
+  
+  // Comprobar si hay disponibilidad en el mes anterior
+  const prevMonth = new Date(currentMonth);
+  prevMonth.setMonth(prevMonth.getMonth() - 1);
+  const prevMonthKey = `${prevMonth.getFullYear()}-${prevMonth.getMonth() + 1}`;
+  
+  // Verificar disponibilidad en el mes anterior mirando a los días filtrados
+  const hasAvailabilityInPrevMonth = filteredDays.some(day => {
+    const dateParts = day.date.split('-');
+    if (dateParts.length !== 3) return false;
+    
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1; // Meses en JS son 0-11
+    
+    return month === prevMonth.getMonth() && 
+           year === prevMonth.getFullYear();
+  });
+  
+  console.log(`¿Hay disponibilidad en el mes anterior (${prevMonthKey})?`, hasAvailabilityInPrevMonth);
+  
   // Actualizar la selección si el día seleccionado ya no está disponible
   useEffect(() => {
     if (filteredDays.length > 0) {
       // Si no hay fecha seleccionada o la fecha seleccionada no está en los días filtrados
       if (!selectedDate || !filteredDays.some(day => day.date === selectedDate)) {
+        console.log(`No hay día seleccionado o el día seleccionado no está disponible. Seleccionando ${filteredDays[0].date}`);
         onDateSelect(filteredDays[0].date);
       }
     }
@@ -88,16 +224,20 @@ const DaySelector: FC<DaySelectorProps> = ({
   
   // Función personalizada para formatear la fecha correctamente
   const correctFormatDate = (dateStr: string) => {
-    // Crear una fecha a partir del string pero sin conversión de zona horaria
-    const date = new Date(dateStr + 'T12:00:00');
+    // Usar los componentes de la fecha directamente sin crear un objeto Date
+    const dateParts = dateStr.split('-');
+    if (dateParts.length !== 3) return dateStr;
     
-    // Obtener el día correcto
-    const day = date.getDate();
-    const month = date.toLocaleString('es-CL', { month: 'long' });
-    const year = date.getFullYear();
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1;
+    const day = parseInt(dateParts[2]);
     
-    // Formatear la fecha correctamente
-    return `${day} de ${month} de ${year}`;
+    // Crear una fecha sin ajuste de zona horaria usando componentes específicos
+    const date = new Date(year, month, day, 12, 0, 0);
+    
+    return date.getDate() + ' de ' + 
+      date.toLocaleString('es-CL', { month: 'long' }) + ' de ' + 
+      date.getFullYear();
   };
 
   // Función para obtener el nombre del mes actual
@@ -107,17 +247,45 @@ const DaySelector: FC<DaySelectorProps> = ({
 
   // Función para cambiar al mes anterior
   const goToPreviousMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+    
+    // Convertir a fecha local sin ajustes de zona horaria
+    const currentMonthNow = new Date();
+    currentMonthNow.setDate(1);
+    currentMonthNow.setHours(0, 0, 0, 0);
+    
+    console.log('Intentando cambiar al mes anterior:', 
+      getMonthName(newDate), 
+      newDate.getFullYear(), 
+      `(¿Hay disponibilidad?: ${hasAvailabilityInPrevMonth})`
+    );
+    
+    // Permitir cambiar al mes anterior si hay disponibilidad o si es el mes actual
+    if (hasAvailabilityInPrevMonth || 
+        (newDate.getMonth() === new Date().getMonth() && 
+         newDate.getFullYear() === new Date().getFullYear())) {
+      setCurrentMonth(newDate);
+    }
   };
 
   // Función para cambiar al mes siguiente
   const goToNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+    console.log('Intentando cambiar al mes siguiente:', 
+      getMonthName(nextMonth), 
+      nextMonth.getFullYear(), 
+      `(¿Hay disponibilidad?: ${hasAvailabilityInNextMonth})`
+    );
+    
+    // Solo permitir cambiar al mes siguiente si hay días disponibles en ese mes
+    if (hasAvailabilityInNextMonth) {
+      setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+    }
   };
 
   // Función para verificar si un día tiene slots disponibles
   const hasSlotsForDate = (dateStr: string) => {
-    return filteredDays.some(day => day.date === dateStr && day.slots.length > 0);
+    const hasSlots = filteredDays.some(day => day.date === dateStr && day.slots.length > 0);
+    return hasSlots;
   };
 
   // Función para generar el calendario del mes actual
@@ -191,13 +359,27 @@ const DaySelector: FC<DaySelectorProps> = ({
   
   return (
     <div className="p-6">
+      {/* Información de disponibilidad por mes */}
+      <div className="mb-4 text-sm text-gray-600 text-center">
+        <p>Puede agendar sus citas para los próximos 30 días</p>
+      </div>
+      
       {/* Calendario */}
       <div className="mb-6">
         <div className={`border-2 rounded-lg p-4 ${currentMonthColor}`}>
           <div className="flex justify-between items-center mb-4">
             <button 
               onClick={goToPreviousMonth}
-              className="text-gray-600 hover:text-gray-900"
+              className={`text-gray-600 hover:text-gray-900 ${
+                !hasAvailabilityInPrevMonth &&
+                (prevMonth.getMonth() !== new Date().getMonth() || 
+                 prevMonth.getFullYear() !== new Date().getFullYear())
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : ''
+              }`}
+              disabled={!hasAvailabilityInPrevMonth &&
+                (prevMonth.getMonth() !== new Date().getMonth() || 
+                 prevMonth.getFullYear() !== new Date().getFullYear())}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -208,7 +390,10 @@ const DaySelector: FC<DaySelectorProps> = ({
             </h3>
             <button 
               onClick={goToNextMonth}
-              className="text-gray-600 hover:text-gray-900"
+              className={`text-gray-600 hover:text-gray-900 ${
+                !hasAvailabilityInNextMonth ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              disabled={!hasAvailabilityInNextMonth}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -244,10 +429,13 @@ const DaySelector: FC<DaySelectorProps> = ({
                   day
                 );
                 
-                const isToday = dateStr === today.toISOString().split('T')[0];
+                const isToday = dateStr === getLocalDateString(today);
                 const isSelected = dateStr === selectedDate;
                 const hasSlots = hasSlotsForDate(dateStr);
-                const isPast = new Date(dateStr) < today;
+                
+                // Usar comparación directa de strings para evitar problemas de timezone
+                const todayStr = getLocalDateString(today);
+                const isPast = dateStr < todayStr;
                 
                 return (
                   <div 
@@ -261,7 +449,12 @@ const DaySelector: FC<DaySelectorProps> = ({
                     `}
                     onClick={() => {
                       if (hasSlots && !isPast) {
+                        console.log(`Seleccionando fecha: ${dateStr}`);
                         onDateSelect(dateStr);
+                      } else if (!hasSlots) {
+                        console.log(`No hay slots disponibles para ${dateStr}`);
+                      } else if (isPast) {
+                        console.log(`La fecha ${dateStr} es en el pasado`);
                       }
                     }}
                   >
@@ -272,6 +465,14 @@ const DaySelector: FC<DaySelectorProps> = ({
             ))}
           </div>
         </div>
+        
+        {/* Mensaje si no hay disponibilidad en el mes actual */}
+        {!hasAvailabilityInCurrentMonth && (
+          <div className="mt-3 text-center text-amber-600 text-sm">
+            No hay horarios disponibles para este mes. 
+            {hasAvailabilityInNextMonth && ' Intente el próximo mes.'}
+          </div>
+        )}
       </div>
 
       {/* Fecha seleccionada */}

@@ -1,7 +1,7 @@
 from django.db import models
 from authentication.models import User
 from profiles.models import PsychologistProfile, ClientProfile
-
+import datetime
 class Appointment(models.Model):
     """
     Modelo para citas entre clientes y psicólogos.
@@ -82,8 +82,8 @@ class Appointment(models.Model):
     )
     
     # Metadatos
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=datetime.datetime.now, editable=False)
+    updated_at = models.DateTimeField(default=datetime.datetime.now)
     
     # Nuevo campo
     is_first_appointment = models.BooleanField(

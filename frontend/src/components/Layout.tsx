@@ -5,10 +5,10 @@ import ScrollToTop from './public-components/ScrollToTop';
 
 const Layout = () => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <ScrollToTop />
       <Navbar />
-      <main className="flex-grow pt-[60px]">
+      <main className="flex-grow mt-16 lg:mt-20">
         <Outlet />
       </main>
       <Footer />

@@ -81,6 +81,10 @@ class PsychologistPriceViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     def get_permissions(self):
+        # Permitir acceso público al endpoint get_psychologist_price
+        if self.action == 'get_psychologist_price':
+            return [permissions.AllowAny()]
+        # Mantener restricciones para otros endpoints
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [permissions.IsAuthenticated(), IsAdminUser()]
         return [permissions.IsAuthenticated()]

@@ -17,6 +17,7 @@ interface PaymentSelectorProps {
   psychologistName: string;
   formatDate: (dateStr: string) => string;
   formatTime: (time: string) => string;
+  sessionPrice?: number;
 }
 
 const PaymentSelector: FC<PaymentSelectorProps> = ({
@@ -26,7 +27,8 @@ const PaymentSelector: FC<PaymentSelectorProps> = ({
   selectedSlot,
   psychologistName,
   formatDate,
-  formatTime
+  formatTime,
+  sessionPrice
 }) => {
   // Función personalizada para formatear la fecha correctamente
   const correctFormatDate = (dateStr: string) => {
@@ -40,6 +42,15 @@ const PaymentSelector: FC<PaymentSelectorProps> = ({
     
     // Formatear la fecha correctamente
     return `${day} de ${month} de ${year}`;
+  };
+  
+  // Formatear el precio para mostrarlo en pesos chilenos
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+    }).format(price);
   };
   
   return (
@@ -105,6 +116,11 @@ const PaymentSelector: FC<PaymentSelectorProps> = ({
           <p className="text-sm text-gray-700">
             <span className="font-medium">Especialista:</span> {psychologistName}
           </p>
+          {sessionPrice && (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">Valor:</span> {formatPrice(sessionPrice)}
+            </p>
+          )}
         </div>
       )}
     </div>

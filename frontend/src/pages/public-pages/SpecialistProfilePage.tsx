@@ -78,6 +78,8 @@ const SpecialistProfilePage = () => {
     const fetchSpecialist = async () => {
       try {
         setLoading(true);
+        
+        // Obtener datos del psicólogo
         const response = await axios.get(`/api/profiles/public/psychologists/${id}/`, {
           headers: {
             'Accept': 'application/json',

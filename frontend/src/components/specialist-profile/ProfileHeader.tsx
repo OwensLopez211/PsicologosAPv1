@@ -1,5 +1,6 @@
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 import AppointmentModal from './appointmentModal';
 import { useAuth } from '../../context/AuthContext';
 
@@ -21,9 +22,42 @@ const ProfileHeader: FC<ProfileHeaderProps> = ({
   verificationStatus = 'VERIFIED'
 }) => {
   const [showModal, setShowModal] = useState(false);
+  const [sessionPrice, setSessionPrice] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
   const showScheduleButton = isAuthenticated && user?.user_type !== 'psychologist';
+
+  // Efecto para cargar el precio de la sesión
+  useEffect(() => {
+    const fetchSessionPrice = async () => {
+      if (!psychologistId) return;
+      
+      setLoading(true);
+      try {
+        // No necesitamos incluir headers de autenticación ya que ahora el endpoint es público
+        const response = await axios.get(`/api/pricing/psychologist-prices/psychologist/${psychologistId}/`);
+        if (response.data && response.data.price !== undefined) {
+          setSessionPrice(response.data.price);
+        }
+      } catch (error) {
+        console.error('Error al obtener el precio de la sesión:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSessionPrice();
+  }, [psychologistId]);
+
+  // Formatear el precio para mostrarlo en pesos chilenos
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
 
   return (
     <>
@@ -69,7 +103,7 @@ const ProfileHeader: FC<ProfileHeaderProps> = ({
             {/* Info Section */}
             <div className="md:w-3/4 mt-6 md:mt-0">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <motion.h1 
                     className="text-3xl font-bold text-gray-900"
                     initial={{ opacity: 0, x: -20 }}
@@ -86,19 +120,50 @@ const ProfileHeader: FC<ProfileHeaderProps> = ({
                   >
                     {title}
                   </motion.p>
-                  {registrationNumber && (
-                    <motion.div 
-                      className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-                      </svg>
-                      Registro: {registrationNumber}
-                    </motion.div>
-                  )}
+                  
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    {/* Mostrar el precio de la sesión con un diseño más destacado */}
+                    {sessionPrice !== null && (
+                      <motion.div
+                        className="flex items-center bg-gradient-to-r from-[#2A6877] to-[#3a8a9e] text-white px-4 py-1.5 rounded-lg text-sm font-semibold shadow-sm"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, delay: 0.25 }}
+                        whileHover={{ y: -2, scale: 1.03 }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                        </svg>
+                        <span className="whitespace-nowrap">Valor sesión: </span>
+                        <span className="ml-1 font-bold">{formatPrice(sessionPrice)}</span>
+                      </motion.div>
+                    )}
+                    
+                    {loading && (
+                      <div className="inline-flex items-center text-gray-500 text-sm">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#2A6877]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Cargando precio...
+                      </div>
+                    )}
+                  
+                    {registrationNumber && (
+                      <motion.div 
+                        className="inline-flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                        </svg>
+                        Registro: {registrationNumber}
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
                 {showScheduleButton ? (
                   <motion.button 

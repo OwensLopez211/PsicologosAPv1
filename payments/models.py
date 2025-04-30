@@ -1,5 +1,6 @@
 from django.db import models
 from appointments.models import Appointment
+import datetime
 
 class PaymentDetail(models.Model):
     """
@@ -37,3 +38,38 @@ class PaymentDetail(models.Model):
     
     def __str__(self):
         return f"Pago para cita {self.appointment.id}"
+    
+    def save(self, *args, **kwargs):
+        """
+        Sobrescribir el método save para asegurar que los campos de fecha
+        se guarden con la hora local correcta sin conversiones de zona horaria.
+        """
+        # Si es un objeto nuevo (sin ID), establecer created_at manualmente
+        if not self.pk:
+            # Desactivar auto_now_add para created_at
+            for field in self._meta.fields:
+                if field.name == 'created_at' and field.auto_now_add:
+                    field.auto_now_add = False
+            
+            # Establecer created_at manualmente con la fecha/hora actual exacta
+            import datetime
+            self.created_at = datetime.datetime.now()
+        
+        # Desactivar auto_now para updated_at
+        for field in self._meta.fields:
+            if field.name == 'updated_at' and field.auto_now:
+                field.auto_now = False
+        
+        # Establecer updated_at manualmente
+        import datetime
+        self.updated_at = datetime.datetime.now()
+        
+        # Llamar al método save original
+        super().save(*args, **kwargs)
+        
+        # Restaurar auto_now y auto_now_add para mantener la funcionalidad original
+        for field in self._meta.fields:
+            if field.name == 'created_at':
+                field.auto_now_add = True
+            elif field.name == 'updated_at':
+                field.auto_now = True

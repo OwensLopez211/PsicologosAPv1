@@ -22,6 +22,7 @@ interface PaymentConfirmationModalProps {
   formatDate: (dateStr: string) => string;
   formatTime: (timeStr: string) => string;
   isFirstAppointment: boolean;
+  sessionPrice?: number; // Añadido precio de la sesión
 }
 
 const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
@@ -32,7 +33,8 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
   onClose,
   formatDate,
   formatTime,
-  isFirstAppointment
+  isFirstAppointment,
+  sessionPrice
 }) => {
   const navigate = useNavigate();
   const [hasConfirmedAppointments, setHasConfirmedAppointments] = useState(false);
@@ -51,6 +53,15 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
     
     // Formatear la fecha correctamente
     return `${day} de ${month} de ${year}`;
+  };
+  
+  // Formatear el precio para mostrarlo en pesos chilenos
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+    }).format(price);
   };
   
   // Verificar si existen citas completadas con este psicólogo
@@ -211,6 +222,11 @@ const PaymentConfirmationModal: FC<PaymentConfirmationModalProps> = ({
             <p className="text-sm text-gray-700">
               <span className="font-medium">Especialista:</span> {psychologistName}
             </p>
+            {sessionPrice && (
+              <p className="text-sm text-gray-700">
+                <span className="font-medium">Valor:</span> {formatPrice(sessionPrice)}
+              </p>
+            )}
           </div>
           
           {/* Información sobre primera cita o sin citas completadas */}
