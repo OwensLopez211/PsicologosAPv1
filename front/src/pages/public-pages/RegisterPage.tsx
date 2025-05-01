@@ -1,0 +1,135 @@
+// src/pages/public-pages/RegisterPage.tsx
+import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import PageTransition from '../../components/animations/PageTransition';
+import UserTypeSelection from '../../components/auth/UserTypeSelection';
+import RegistrationForm from '../../components/auth/RegistrationForm';
+import { register } from '../../services/authService';
+import toast from 'react-hot-toast';
+
+type UserType = 'patient' | 'psychologist' | null;
+
+const RegisterPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
+  const [userType, setUserType] = useState<UserType>(location.state?.userType || null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleUserTypeSelect = (type: UserType) => {
+    setUserType(type);
+  };
+
+  const handleFormSubmit = async (formData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    phoneNumber: string;
+    terms: boolean;
+  }) => {
+    setIsLoading(true);
+    
+    try {
+      // Add password validation
+      if (formData.password.length < 8) {
+        toast.error('La contraseña debe tener al menos 8 caracteres');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[A-Z]/.test(formData.password)) {
+        toast.error('La contraseña debe incluir al menos una letra mayúscula');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[0-9]/.test(formData.password)) {
+        toast.error('La contraseña debe incluir al menos un número');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!/[^A-Za-z0-9]/.test(formData.password)) {
+        toast.error('La contraseña debe incluir al menos un símbolo especial');
+        setIsLoading(false);
+        return;
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        toast.error('Las contraseñas no coinciden');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Mapear el tipo de usuario UI a los valores del backend
+      const backendUserType = userType === 'patient' ? 'client' : 'psychologist';
+
+      // Crear objeto de datos incluyendo datos para el perfil
+      const registerData = {
+        email: formData.email.trim(),
+        username: formData.email.trim(),
+        password: formData.password,
+        password2: formData.confirmPassword,
+        user_type: backendUserType,
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim() || ' ',
+        phone_number: formData.phoneNumber || '',
+        ...(userType === 'psychologist' ? {
+          professional_title: 'Psicólogo',
+        } : {})
+      };
+
+      const response = await register({
+        ...registerData,
+        user_type: backendUserType as 'psychologist' | 'client' | 'admin'
+      });
+      
+      // Normalizar el tipo de usuario para la consistencia en la aplicación
+      const normalizedUserType = response.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
+      
+      setUser({
+        ...response.user,
+        user_type: normalizedUserType
+      });
+      
+      toast.success('Registro exitoso');
+      
+      // Redireccionar según el tipo de usuario
+      navigate(userType === 'patient' ? '/dashboard' : '/psicologo/dashboard');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      if (error.message === 'EMAIL_EXISTS') {
+        // El toast ya se mostró en el servicio de autenticación
+      } else if (error.message === 'VALIDATION_ERROR') {
+        // El toast ya se mostró en el servicio de autenticación
+      } else if (!error.response) {
+        toast.error('Error de conexión. Por favor, verifica tu conexión a internet.');
+      } else {
+        toast.error('Error en el registro. Por favor, intenta nuevamente.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <PageTransition>
+      {!userType ? (
+        <UserTypeSelection onSelectUserType={handleUserTypeSelect} />
+      ) : (
+        <RegistrationForm 
+          userType={userType} 
+          onSubmit={handleFormSubmit} 
+          onChangeUserType={() => setUserType(null)}
+          isLoading={isLoading}
+        />
+      )}
+    </PageTransition>
+  );
+};
+
+export default RegisterPage;
