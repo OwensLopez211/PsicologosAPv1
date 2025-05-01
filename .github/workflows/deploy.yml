@@ -22,4 +22,5 @@ jobs:
         script: |
           cd /home/bienestarapp/PsicologosAPv1
           git pull origin main
+          source venv/bin/activate
           ./deploy.sh
