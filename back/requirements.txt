@@ -10,7 +10,7 @@ psycopg[binary]==3.2.6  # Updated to latest compatible version
 dj-database-url==2.1.0
 
 # Image processing
-Pillow==11.2.0  # Updated to version compatible with Python 3.13
+Pillow==11.2.1
 
 # Environment variables
 python-dotenv==1.0.0
