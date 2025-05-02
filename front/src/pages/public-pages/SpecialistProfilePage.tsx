@@ -79,7 +79,7 @@ const SpecialistProfilePage = () => {
       try {
         setLoading(true);
         
-        // Obtener datos del psicólogo
+        // Obtener datos del psicólogo - corregir URL para evitar duplicar /api/
         const response = await axios.get(`/api/profiles/public/psychologists/${id}/`, {
           headers: {
             'Accept': 'application/json',
@@ -141,6 +141,11 @@ const SpecialistProfilePage = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching specialist by ID:', error);
+        // Mostrar detalles del error para depuración
+        if (axios.isAxiosError(error) && error.response) {
+          console.error('Response status:', error.response.status);
+          console.error('Response data:', error.response.data);
+        }
         setError('No se pudo cargar la información del especialista. Por favor, intenta de nuevo más tarde.');
         setLoading(false);
       }

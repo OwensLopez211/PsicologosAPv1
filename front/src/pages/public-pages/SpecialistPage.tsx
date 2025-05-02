@@ -54,6 +54,7 @@ const SpecialistPage = () => {
         if (axios.isAxiosError(err)) {
           console.error('Response:', err.response?.data);
           console.error('Status:', err.response?.status);
+          console.error('Request Config:', err.config);
         }
         setError('No se pudieron cargar los especialistas. Por favor, intenta de nuevo más tarde.');
         setLoading(false);

@@ -100,6 +100,11 @@ class PsychologistDetailView(generics.RetrieveAPIView):
             data['presentation_video_url'] = presentation_video.file.url if presentation_video.file else None
         else:
             data['presentation_video_url'] = None
+        
+        # Add professional experiences to the response
+        experiences = ProfessionalExperience.objects.filter(psychologist=instance)
+        experience_serializer = ProfessionalExperienceSerializer(experiences, many=True)
+        data['experiences'] = experience_serializer.data
             
         return Response(data)
 
@@ -730,6 +735,26 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
     def experiences(self, request):
         """Obtener todas las experiencias profesionales del psicólogo"""
         psychologist = self.get_object_from_request(request)
+        experiences = ProfessionalExperience.objects.filter(psychologist=psychologist)
+        serializer = ProfessionalExperienceSerializer(experiences, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def public_experiences(self, request, pk=None):
+        """Obtener públicamente las experiencias profesionales de un psicólogo específico"""
+        try:
+            # Intentar obtener el perfil por ID primero
+            psychologist = PsychologistProfile.objects.get(id=pk, verification_status='VERIFIED')
+        except PsychologistProfile.DoesNotExist:
+            try:
+                # Si no se encuentra, intentar por ID de usuario
+                psychologist = PsychologistProfile.objects.get(user_id=pk, verification_status='VERIFIED')
+            except PsychologistProfile.DoesNotExist:
+                return Response(
+                    {"detail": "No se encontró el perfil del psicólogo"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        
         experiences = ProfessionalExperience.objects.filter(psychologist=psychologist)
         serializer = ProfessionalExperienceSerializer(experiences, many=True)
         return Response(serializer.data)
