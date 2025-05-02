@@ -2,7 +2,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: 'http://186.64.113.186/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
