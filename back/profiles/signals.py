@@ -32,8 +32,30 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         if created:
             # Crear nuevo perfil de psicólogo con el mismo ID que el usuario
             with transaction.atomic():
-                profile = PsychologistProfile(user=instance, id=instance.id, **profile_data)
-                profile.save()
+                # Asegurarnos de que hay un valor para experience_description si existe en la tabla
+                # pero no en el modelo (debido a una migración incompleta)
+                if 'experience_description' not in profile_data:
+                    try:
+                        # Intentar crear con un valor por defecto para experience_description
+                        profile = PsychologistProfile(
+                            user=instance, 
+                            id=instance.id, 
+                            experience_description="", 
+                            **profile_data
+                        )
+                        profile.save()
+                    except TypeError:
+                        # Si el modelo no tiene el campo experience_description, 
+                        # crear sin ese campo
+                        profile = PsychologistProfile(
+                            user=instance, 
+                            id=instance.id, 
+                            **profile_data
+                        )
+                        profile.save()
+                else:
+                    profile = PsychologistProfile(user=instance, id=instance.id, **profile_data)
+                    profile.save()
         else:
             # Actualizar perfil existente si hay datos
             if profile_data and hasattr(instance, 'psychologistprofile_profile'):
