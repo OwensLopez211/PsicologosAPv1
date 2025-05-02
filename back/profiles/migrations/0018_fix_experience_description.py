@@ -8,4 +8,9 @@ class Migration(migrations.Migration):
         ("profiles", "0017_remove_psychologistprofile_experience_description_and_more"),
     ]
 
-    operations = []
+    operations = [
+        migrations.RunSQL(
+            "ALTER TABLE profiles_psychologistprofile ALTER COLUMN experience_description DROP NOT NULL;",
+            "ALTER TABLE profiles_psychologistprofile ALTER COLUMN experience_description SET NOT NULL;"
+        ),
+    ]
