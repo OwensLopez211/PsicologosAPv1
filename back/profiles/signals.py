@@ -32,34 +32,57 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         if created:
             # Crear nuevo perfil de psicólogo con el mismo ID que el usuario
             with transaction.atomic():
-                # Asegurarnos de que hay un valor para experience_description si existe en la tabla
-                # pero no en el modelo (debido a una migración incompleta)
-                if 'experience_description' not in profile_data:
+                try:
+                    # Intentar crear el perfil
+                    # Primero, limpiar datos que no existen en el modelo
+                    filtered_profile_data = {}
+                    for key, value in profile_data.items():
+                        if key != 'experience_description':
+                            filtered_profile_data[key] = value
+                    
+                    # Crear el perfil con los datos filtrados
+                    profile = PsychologistProfile(
+                        user=instance, 
+                        id=instance.id, 
+                        **filtered_profile_data
+                    )
+                    
+                    # Intentar añadir experience_description a la conexión SQL directamente si es necesario
+                    # Esto se hace de esta manera porque el modelo no tiene el campo pero la base de datos sí
+                    profile.save()
+                    
+                    # Si la tabla en la base de datos tiene la columna experience_description,
+                    # realizar una actualización directa con SQL
                     try:
-                        # Intentar crear con un valor por defecto para experience_description
-                        profile = PsychologistProfile(
-                            user=instance, 
-                            id=instance.id, 
-                            experience_description="", 
-                            **profile_data
-                        )
-                        profile.save()
-                    except TypeError:
-                        # Si el modelo no tiene el campo experience_description, 
-                        # crear sin ese campo
-                        profile = PsychologistProfile(
-                            user=instance, 
-                            id=instance.id, 
-                            **profile_data
-                        )
-                        profile.save()
-                else:
-                    profile = PsychologistProfile(user=instance, id=instance.id, **profile_data)
+                        from django.db import connection
+                        with connection.cursor() as cursor:
+                            cursor.execute(
+                                "UPDATE profiles_psychologistprofile SET experience_description = %s WHERE id = %s",
+                                ["", profile.id]
+                            )
+                    except Exception as e:
+                        print(f"Error al actualizar experience_description: {e}")
+                        
+                except Exception as e:
+                    print(f"Error al crear perfil de psicólogo: {e}")
+                    # Reintento sin experience_description
+                    profile = PsychologistProfile(
+                        user=instance, 
+                        id=instance.id, 
+                        **filtered_profile_data
+                    )
                     profile.save()
         else:
             # Actualizar perfil existente si hay datos
             if profile_data and hasattr(instance, 'psychologistprofile_profile'):
+                # Filtrar los datos para eliminar experience_description
+                filtered_profile_data = {}
                 for key, value in profile_data.items():
+                    if key != 'experience_description':
+                        filtered_profile_data[key] = value
+                
+                # Actualizar con los datos filtrados
+                for key, value in filtered_profile_data.items():
                     setattr(instance.psychologistprofile_profile, key, value)
                 instance.psychologistprofile_profile.save()
     
