@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import ClientProfile, PsychologistProfile, ProfessionalDocument, AdminProfile, ProfessionalExperience
 from django.contrib.auth import get_user_model
+from django.db import connection
 
 User = get_user_model()
 
