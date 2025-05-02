@@ -1,6 +1,6 @@
 import api from './api';
 
-// Asegúrate de que la interfaz Document tenga estos campos
+// Interfaces (mantenidas igual)
 export interface Document {
   id: number;
   document_type: string;
@@ -64,15 +64,46 @@ export interface PsychologistDocument {
 
 class PsychologistService {
   /**
+   * Registra un mensaje de diagnóstico en la consola
+   * @param message Mensaje a registrar
+   * @param data Datos adicionales
+   */
+  private logDebug(message: string, data?: any): void {
+    console.log(`[PsychologistService] ${message}`);
+    if (data) {
+      console.log(data);
+    }
+  }
+
+  /**
+   * Registra un error en la consola
+   * @param message Mensaje de error
+   * @param error Error capturado
+   */
+  private logError(message: string, error?: any): void {
+    console.error(`[PsychologistService] ERROR: ${message}`);
+    if (error) {
+      console.error(error);
+      // Mostrar detalles específicos de la respuesta de error
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+    }
+  }
+
+  /**
    * Get all psychologists
    * @returns Promise with psychologist data
    */
   async getAllPsychologists(): Promise<Psychologist[]> {
+    this.logDebug('Fetching all psychologists');
     try {
       const response = await api.get('/profiles/admin/psychologists/');
+      this.logDebug('Received psychologists data', response.data);
       return this.normalizeData(response.data);
     } catch (error) {
-      console.error('Error fetching psychologists:', error);
+      this.logError('Error fetching psychologists', error);
       throw error;
     }
   }
@@ -83,12 +114,31 @@ class PsychologistService {
    * @returns Promise with psychologist data
    */
   async getPsychologistById(id: number): Promise<Psychologist> {
+    this.logDebug(`Fetching psychologist with ID ${id}`);
     try {
-      const response = await api.get(`/profiles/admin/psychologists/${id}/`);
+      // Primera estrategia: intentar obtener por ID de perfil
+      const endpoint = `/profiles/admin/psychologists/${id}/`;
+      this.logDebug(`Making request to: ${endpoint}`);
+      
+      const response = await api.get(endpoint);
+      this.logDebug(`Received psychologist data for ID ${id}`, response.data);
       return this.normalizeData(response.data);
     } catch (error) {
-      console.error(`Error fetching psychologist with ID ${id}:`, error);
-      throw error;
+      this.logError(`Error fetching psychologist with ID ${id}`, error);
+      
+      // Segunda estrategia: si falla, podría ser un ID de usuario, intentar buscar por ese ID
+      try {
+        this.logDebug(`Attempting fallback strategy for ID ${id}`);
+        const publicEndpoint = `/profiles/public/psychologists/${id}/`;
+        this.logDebug(`Making request to: ${publicEndpoint}`);
+        
+        const response = await api.get(publicEndpoint);
+        this.logDebug(`Received psychologist data from public endpoint for ID ${id}`, response.data);
+        return this.normalizeData(response.data);
+      } catch (secondError) {
+        this.logError(`Fallback strategy also failed for ID ${id}`, secondError);
+        throw secondError;
+      }
     }
   }
 
@@ -98,31 +148,42 @@ class PsychologistService {
    * @returns Normalized data
    */
   private normalizeData(data: any): any {
-    // If it's an array, normalize each item
-    if (Array.isArray(data)) {
-      return data.map(item => this.normalizeData(item));
+    try {
+      // If it's an array, normalize each item
+      if (Array.isArray(data)) {
+        return data.map(item => this.normalizeData(item));
+      }
+      
+      if (!data) {
+        this.logError('Received null or undefined data in normalizeData');
+        return null;
+      }
+      
+      // Ensure arrays are properly initialized
+      const normalizedData = {
+        ...data,
+        specialties: Array.isArray(data.specialties) ? data.specialties : [],
+        target_populations: Array.isArray(data.target_populations) ? data.target_populations : [],
+        intervention_areas: Array.isArray(data.intervention_areas) ? data.intervention_areas : [],
+        verification_documents: Array.isArray(data.verification_documents) 
+          ? data.verification_documents 
+          : []
+      };
+      
+      // Ensure graduation_year is a number or null
+      if (normalizedData.graduation_year !== null && normalizedData.graduation_year !== undefined) {
+        const yearValue = parseInt(normalizedData.graduation_year.toString(), 10);
+        normalizedData.graduation_year = isNaN(yearValue) ? null : yearValue;
+      } else {
+        normalizedData.graduation_year = null;
+      }
+      
+      return normalizedData;
+    } catch (error) {
+      this.logError('Error normalizing data', error);
+      // Devolver los datos originales en caso de error
+      return data;
     }
-    
-    // Ensure arrays are properly initialized
-    const normalizedData = {
-      ...data,
-      specialties: Array.isArray(data.specialties) ? data.specialties : [],
-      target_populations: Array.isArray(data.target_populations) ? data.target_populations : [],
-      intervention_areas: Array.isArray(data.intervention_areas) ? data.intervention_areas : [],
-      verification_documents: Array.isArray(data.verification_documents) 
-        ? data.verification_documents 
-        : []
-    };
-    
-    // Ensure graduation_year is a number or null
-    if (normalizedData.graduation_year !== null && normalizedData.graduation_year !== undefined) {
-      const yearValue = parseInt(normalizedData.graduation_year.toString(), 10);
-      normalizedData.graduation_year = isNaN(yearValue) ? null : yearValue;
-    } else {
-      normalizedData.graduation_year = null;
-    }
-    
-    return normalizedData;
   }
 
   /**
@@ -131,148 +192,146 @@ class PsychologistService {
    * @returns Promise with documents data
    */
   async getPsychologistDocuments(id: number): Promise<PsychologistDocument[]> {
+    this.logDebug(`Fetching documents for psychologist ${id}`);
     try {
       const response = await api.get(`/profiles/admin/psychologists/${id}/documents/`);
+      this.logDebug(`Received documents for psychologist ${id}`, response.data);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching documents for psychologist ${id}:`, error);
-      throw error;
+      this.logError(`Error fetching documents for psychologist ${id}`, error);
+      return []; // Devolver array vacío en caso de error
     }
   }
 
   /**
-   * Update psychologist verification status
+   * Get public psychologist profile
    * @param id Psychologist ID
-   * @param status New verification status
-   * @param rejectionReason Optional reason for rejection
-   * @returns Promise with updated psychologist data
+   * @returns Promise with psychologist data
    */
-  async updatePsychologistStatus(
-    id: number, 
-    status: string,
-    rejectionReason?: string
-  ): Promise<Psychologist> {
+  async getPublicPsychologistProfile(id: number): Promise<Psychologist> {
+    this.logDebug(`Fetching public profile for psychologist ${id}`);
     try {
-      const data: any = { verification_status: status };
-      if (status === 'REJECTED' && rejectionReason) {
-        data.rejection_reason = rejectionReason;
-      }
-      
-      const response = await api.patch(`/profiles/admin/psychologists/${id}/verify/`, data);
+      const response = await api.get(`/profiles/public/psychologists/${id}/`);
+      this.logDebug(`Received public profile for psychologist ${id}`, response.data);
+      return this.normalizeData(response.data);
+    } catch (error) {
+      this.logError(`Error fetching public profile for psychologist ${id}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get psychologist suggested price
+   * @param id Psychologist ID
+   * @returns Promise with suggested price data
+   */
+  async getPsychologistSuggestedPrice(id: number): Promise<{ price: number | null }> {
+    this.logDebug(`Fetching suggested price for psychologist ${id}`);
+    try {
+      // Intentar directamente con el ID proporcionado
+      const response = await api.get(`/pricing/suggested-prices/psychologist/${id}/`);
+      this.logDebug(`Received suggested price for psychologist ${id}`, response.data);
       return response.data;
     } catch (error) {
-      console.error(`Error updating verification status for psychologist ${id}:`, error);
-      throw error;
+      // Si falla, puede ser porque necesitamos el ID de usuario en lugar del ID de perfil
+      this.logError(`Error fetching suggested price for psychologist ${id}`, error);
+      
+      try {
+        // Obtener el psicólogo para conseguir el user_id
+        this.logDebug(`Attempting to get psychologist profile for ID ${id}`);
+        const psychologist = await this.getPsychologistById(id);
+        if (!psychologist || !psychologist.user) {
+          throw new Error(`Could not find psychologist with ID ${id}`);
+        }
+        
+        const userId = psychologist.user.id;
+        this.logDebug(`Using user ID ${userId} instead of profile ID ${id}`);
+        
+        // Intentar de nuevo con el ID de usuario
+        const response = await api.get(`/pricing/suggested-prices/psychologist/${userId}/`);
+        this.logDebug(`Received suggested price using user ID ${userId}`, response.data);
+        return response.data;
+      } catch (fallbackError) {
+        this.logError(`Fallback strategy also failed for suggested price`, fallbackError);
+        return { price: null };
+      }
     }
   }
 
   /**
-   * Update document verification status
-   * @param documentId Document ID
-   * @param status New verification status
-   * @param rejectionReason Optional reason for rejection
-   * @returns Promise with updated document data
+   * Get psychologist approved price
+   * @param id Psychologist ID
+   * @returns Promise with approved price data
    */
-  async updateDocumentStatus(documentId: number, status: string, rejectionReason?: string) {
+  async getPsychologistApprovedPrice(id: number): Promise<{ price: number | null }> {
+    this.logDebug(`Fetching approved price for psychologist ${id}`);
     try {
-      const data = {
-        verification_status: status,
-        ...(rejectionReason && { rejection_reason: rejectionReason }),
-        update_profile_status: false // Add this flag to prevent profile status update
-      };
-      
-      // Use the api instance that already has authentication configured
-      const response = await api.patch(`/profiles/admin/psychologists/documents/${documentId}/status/`, data);
-      
+      // Intentar directamente con el ID proporcionado
+      const response = await api.get(`/pricing/psychologist-prices/psychologist/${id}/`);
+      this.logDebug(`Received approved price for psychologist ${id}`, response.data);
       return response.data;
     } catch (error) {
-      console.error('Error updating document status:', error);
-      throw error;
+      // Si falla, puede ser porque necesitamos el ID de usuario en lugar del ID de perfil
+      this.logError(`Error fetching approved price for psychologist ${id}`, error);
+      
+      try {
+        // Obtener el psicólogo para conseguir el user_id
+        this.logDebug(`Attempting to get psychologist profile for ID ${id}`);
+        const psychologist = await this.getPsychologistById(id);
+        if (!psychologist || !psychologist.user) {
+          throw new Error(`Could not find psychologist with ID ${id}`);
+        }
+        
+        const userId = psychologist.user.id;
+        this.logDebug(`Using user ID ${userId} instead of profile ID ${id}`);
+        
+        // Intentar de nuevo con el ID de usuario
+        const response = await api.get(`/pricing/psychologist-prices/psychologist/${userId}/`);
+        this.logDebug(`Received approved price using user ID ${userId}`, response.data);
+        return response.data;
+      } catch (fallbackError) {
+        this.logError(`Fallback strategy also failed for approved price`, fallbackError);
+        return { price: null };
+      }
     }
   }
 
   /**
-   * Get document download URL
-   * @param psychologistId Psychologist ID
-   * @param documentId Document ID
-   * @returns Download URL for the document
+   * Update psychologist approved price
+   * @param id Psychologist ID
+   * @param price New approved price
+   * @returns Promise with updated price data
    */
-  getDocumentDownloadUrl(psychologistId: number, documentId: number): string {
-    return `${api.defaults.baseURL}/profiles/psychologist-profiles/${psychologistId}/documents/download/${documentId}/`;
-  }
-
-  /**
-   * Download document directly
-   * @param psychologistId Psychologist ID
-   * @param documentId Document ID
-   * @param _fileName Original file name to determine content type
-   */
-  async downloadDocument(psychologistId: number, documentId: number, _fileName: string): Promise<Blob> {
+  async updatePsychologistApprovedPrice(id: number, price: number): Promise<{ price: number }> {
+    this.logDebug(`Updating approved price for psychologist ${id} to ${price}`);
     try {
-      // Get the token from localStorage
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      
-      // For all files, use the fetch API with proper authentication
-      const url = `${api.defaults.baseURL}/profiles/psychologist-profiles/${psychologistId}/documents/download/${documentId}/`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      // Get the blob directly from the response
-      const blob = await response.blob();
-      return blob;
+      // Intentar directamente con el ID proporcionado
+      const response = await api.post(`/pricing/psychologist-prices/set_psychologist_price/${id}/`, { price });
+      this.logDebug(`Successfully updated price for psychologist ${id}`, response.data);
+      return response.data;
     } catch (error) {
-      console.error(`Error downloading document ${documentId}:`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * Download document directly by document ID
-   * @param documentId Document ID
-   * @returns Promise with blob data
-   */
-  async downloadDocumentById(documentId: number): Promise<Blob> {
-    try {
-      // Get the token from localStorage
-      const token = localStorage.getItem('token');
+      // Si falla, puede ser porque necesitamos el ID de usuario en lugar del ID de perfil
+      this.logError(`Error updating approved price for psychologist ${id}`, error);
       
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      
-      // For all files, use the fetch API with proper authentication
-      const url = `${api.defaults.baseURL}/profiles/admin/psychologists/documents/${documentId}/download/`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      try {
+        // Obtener el psicólogo para conseguir el user_id
+        this.logDebug(`Attempting to get psychologist profile for ID ${id}`);
+        const psychologist = await this.getPsychologistById(id);
+        if (!psychologist || !psychologist.user) {
+          throw new Error(`Could not find psychologist with ID ${id}`);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const userId = psychologist.user.id;
+        this.logDebug(`Using user ID ${userId} instead of profile ID ${id}`);
+        
+        // Intentar de nuevo con el ID de usuario
+        const response = await api.post(`/pricing/psychologist-prices/set_psychologist_price/${userId}/`, { price });
+        this.logDebug(`Successfully updated price using user ID ${userId}`, response.data);
+        return response.data;
+      } catch (fallbackError) {
+        this.logError(`Fallback strategy also failed for updating price`, fallbackError);
+        throw fallbackError;
       }
-      
-      // Get the blob directly from the response
-      const blob = await response.blob();
-      return blob;
-    } catch (error) {
-      console.error(`Error downloading document ${documentId}:`, error);
-      throw error;
     }
   }
 
@@ -291,78 +350,6 @@ class PsychologistService {
     const lastInitial = lastName.length > 0 ? lastName.charAt(0).toUpperCase() : '';
     
     return (firstInitial + lastInitial) || '??';
-  }
-
-  /**
-   * Get psychologist suggested price
-   * @param id Psychologist ID
-   * @returns Promise with suggested price data
-   */
-  async getPsychologistSuggestedPrice(id: number): Promise<{ price: number | null }> {
-    try {
-      // Obtener el psicólogo para conseguir el user_id
-      const psychologist = await this.getPsychologistById(id);
-      const userId = psychologist.user.id;
-      
-      console.log(`Fetching suggested price for psychologist ID: ${id}, user ID: ${userId}`);
-      
-      // Usar el user_id en lugar del profile_id
-      const response = await api.get(`/pricing/suggested-prices/psychologist/${userId}/`);
-      console.log('Suggested price response:', response.data);
-      
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching suggested price for psychologist ${id}:`, error);
-      return { price: null };
-    }
-  }
-
-  /**
-   * Get psychologist approved price
-   * @param id Psychologist ID
-   * @returns Promise with approved price data
-   */
-  async getPsychologistApprovedPrice(id: number): Promise<{ price: number | null }> {
-    try {
-      // Obtener el psicólogo para conseguir el user_id
-      const psychologist = await this.getPsychologistById(id);
-      const userId = psychologist.user.id;
-      
-      console.log(`Fetching approved price for psychologist ID: ${id}, user ID: ${userId}`);
-      
-      // Usar el user_id en lugar del profile_id
-      const response = await api.get(`/pricing/psychologist-prices/psychologist/${userId}/`);
-      console.log('Approved price response:', response.data);
-      
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching approved price for psychologist ${id}:`, error);
-      return { price: null };
-    }
-  }
-
-  /**
-   * Update psychologist approved price
-   * @param id Psychologist ID
-   * @param price New approved price
-   * @returns Promise with updated price data
-   */
-  async updatePsychologistApprovedPrice(id: number, price: number): Promise<{ price: number }> {
-    try {
-      console.log(`Updating price for psychologist ID: ${id} to ${price}`);
-      
-      // Use the updated endpoint
-      const response = await api.post(`/pricing/psychologist-prices/set_psychologist_price/${id}/`, { 
-        price
-      });
-      
-      console.log('Update price response:', response.data);
-      
-      return response.data;
-    } catch (error) {
-      console.error(`Error updating approved price for psychologist ${id}:`, error);
-      throw error;
-    }
   }
 }
 
