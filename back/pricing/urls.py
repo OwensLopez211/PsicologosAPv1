@@ -43,7 +43,7 @@ urlpatterns = [
          SuggestedPriceViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), 
          name='suggested-price-detail'),
     path('suggested-prices/my-suggestion/', 
-         SuggestedPriceViewSet.as_view({'get': 'my_suggestion', 'post': 'my_suggestion'}), 
+         SuggestedPriceViewSet.as_view({'get': 'my-suggestion', 'post': 'my-suggestion'}), 
          name='my-suggested-price'),
     path('suggested-prices/psychologist/<int:psychologist_id>/', 
          SuggestedPriceViewSet.as_view({'get': 'get_psychologist_suggested_price'}), 
