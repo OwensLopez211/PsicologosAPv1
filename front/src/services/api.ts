@@ -12,6 +12,15 @@ const baseURL = isProduction
 
 console.log(`API configured with baseURL: ${baseURL}, environment: ${isProduction ? 'production' : 'development'}`);
 
+// Evento personalizado para manejar la expiración de sesión
+export const SESSION_EXPIRED_EVENT = 'session_expired';
+
+// Función para emitir evento de sesión expirada
+export const emitSessionExpired = () => {
+  const event = new CustomEvent(SESSION_EXPIRED_EVENT);
+  window.dispatchEvent(event);
+};
+
 const api = axios.create({
   baseURL,
   headers: {
@@ -86,6 +95,7 @@ api.interceptors.response.use(
           const timeSinceLastAttempt = now - parseInt(lastRefreshAttempt);
           if (timeSinceLastAttempt < 10000) { // 10 segundos
             console.log('[API] Token refresh attempted too recently, skipping');
+            emitSessionExpired();
             return Promise.reject(error);
           }
         }
@@ -99,9 +109,8 @@ api.interceptors.response.use(
           
           // Solo redireccionar si no hay refresh token o hay otros problemas
           if (!refreshToken) {
-            console.log('[API] No refresh token available, redirecting to login');
-            localStorage.removeItem('token');
-            window.location.href = '/login?expired=true';
+            console.log('[API] No refresh token available, emitting session expired event');
+            emitSessionExpired();
             return Promise.reject(error);
           }
           
@@ -122,14 +131,13 @@ api.interceptors.response.use(
             }
           } catch (refreshError) {
             console.error('[API] Error refreshing token:', refreshError);
-            // Si hay un error al refrescar, limpiar token y redireccionar
-            localStorage.removeItem('token');
-            localStorage.removeItem('refresh_token');
-            window.location.href = '/login?expired=true';
+            // Si hay un error al refrescar, emitir evento de sesión expirada
+            emitSessionExpired();
           }
         }
       } catch (e) {
         console.error('[API] Error in refresh token logic:', e);
+        emitSessionExpired();
       }
     }
 

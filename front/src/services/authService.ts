@@ -1,4 +1,4 @@
-import api from './api';
+import api, { emitSessionExpired } from './api';
 import { toast } from 'react-hot-toast';
 
 export interface User {
@@ -135,6 +135,8 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
 export const refreshToken = async (): Promise<string | null> => {
   const refresh = localStorage.getItem('refresh_token');
   if (!refresh) {
+    // Si no hay refresh token, emitir evento de sesión expirada
+    emitSessionExpired();
     throw new Error('No refresh token available');
   }
   
@@ -172,6 +174,8 @@ export const refreshToken = async (): Promise<string | null> => {
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');
       console.log('Tokens cleared due to authentication error');
+      // Emitir evento de sesión expirada
+      emitSessionExpired();
     }
     
     throw error;
