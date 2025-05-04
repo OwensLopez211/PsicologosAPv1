@@ -42,24 +42,24 @@ ENV/
 env.bak/
 venv.bak/
 
-# React Frontend
-frontend/node_modules/
-frontend/.pnp
-frontend/.pnp.js
-frontend/coverage/
-frontend/build/
+# React front
+front/node_modules/
+front/.pnp
+front/.pnp.js
+front/coverage/
+front/build/
 
 # React environment variables
-frontend/.env
-frontend/.env.local
-frontend/.env.development.local
-frontend/.env.test.local
-frontend/.env.production.local
+front/.env
+front/.env.local
+front/.env.development.local
+front/.env.test.local
+front/.env.production.local
 
 # React logs
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
+front/npm-debug.log*
+front/yarn-debug.log*
+front/yarn-error.log*
 
 # IDE specific files
 .idea/
