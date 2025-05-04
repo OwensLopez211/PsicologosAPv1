@@ -236,7 +236,7 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
               {/* Precio sugerido */}
               <motion.div 
                 className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-5 rounded-xl border border-blue-100 shadow-sm"
-                whileHover={{ y: -2, boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-start gap-3 mb-3">
                   <div className="p-2 bg-blue-100/80 rounded-lg text-blue-600">
@@ -273,7 +273,7 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
               {/* Precio aprobado */}
               <motion.div 
                 className="bg-gradient-to-br from-green-50 to-green-100/50 p-5 rounded-xl border border-green-100 shadow-sm"
-                whileHover={{ y: -2, boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-start gap-3 mb-3">
                   <div className="p-2 bg-green-100/80 rounded-lg text-green-600">

@@ -58,11 +58,6 @@ const PageTransition = ({ children, variant = 'fade' }: PageTransitionProps) => 
       animate={variants[variant].animate}
       exit={variants[variant].exit}
       transition={transitions[variant]}
-      style={{
-        width: '100%',
-        height: '100%',
-        willChange: 'opacity, transform'
-      }}
     >
       {variant === 'stagger' ? (
         <StaggeredChildren>{children}</StaggeredChildren>
@@ -81,11 +76,9 @@ const StaggeredChildren = ({ children }: { children: ReactNode }) => {
       animate="animate"
       exit="exit"
       transition={{ staggerChildren: 0.1 }}
-      style={{ width: '100%', height: '100%' }}
     >
       {Children.map(children, (child, i) => {
         if (!isValidElement(child)) return child;
-        
         return (
           <motion.div
             key={i}
