@@ -3,7 +3,7 @@ import api from './api';
 // Obtener el precio sugerido del psicólogo actual
 export const getCurrentUserSuggestedPrice = async () => {
   try {
-    // Use the my_suggestion endpoint instead of profile ID
+    // Use the my-suggestion endpoint instead of profile ID
     const response = await api.get(`/pricing/suggested-prices/my-suggestion/`);
     return response.data;
   } catch (error) {
@@ -40,7 +40,7 @@ export const updateSuggestedPrice = async (price: number, userId?: number) => {
     
     console.log('Enviando solicitud con payload:', payload);
     
-    const response = await api.post(`/pricing/suggested-prices/my-suggestion/`, payload);
+    const response = await api.post(`/pricing/suggested-prices/my__ssuggestion/`, payload);
     console.log('Respuesta recibida:', response.data);
     
     return response.data;
