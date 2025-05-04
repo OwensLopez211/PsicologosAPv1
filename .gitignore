@@ -48,6 +48,8 @@ front/.pnp
 front/.pnp.js
 front/coverage/
 front/build/
+front/package.json
+front/package-lock.json
 
 # React environment variables
 front/.env
@@ -55,6 +57,8 @@ front/.env.local
 front/.env.development.local
 front/.env.test.local
 front/.env.production.local
+front/package.json
+front/package-lock.json
 
 # React logs
 front/npm-debug.log*
