@@ -100,33 +100,6 @@ class PsychologistDetailView(generics.RetrieveAPIView):
             data['presentation_video_url'] = presentation_video.file.url if presentation_video.file else None
         else:
             data['presentation_video_url'] = None
-        
-        # Agregar experiencias profesionales de forma segura
-        try:
-            from django.db import connection
-            
-            # Verificar si la tabla existe antes de consultarla
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_schema = 'public'
-                        AND table_name = 'profiles_professionalexperience'
-                    )
-                """)
-                table_exists = cursor.fetchone()[0]
-                
-            # Solo consultar la tabla si existe
-            if table_exists:
-                experiences = ProfessionalExperience.objects.filter(psychologist=instance)
-                experience_serializer = ProfessionalExperienceSerializer(experiences, many=True)
-                data['experiences'] = experience_serializer.data
-            else:
-                # Si la tabla no existe, agregar una lista vacía
-                data['experiences'] = []
-        except Exception as e:
-            print(f"Error al consultar experiencias profesionales: {e}")
-            data['experiences'] = []
             
         return Response(data)
 
@@ -296,126 +269,86 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
                 {"detail": "Este endpoint es solo para psicólogos."},
                 status=status.HTTP_403_FORBIDDEN
             )
+            
+        profile = PsychologistProfile.objects.get(user=user)
         
-        try:
-            profile = PsychologistProfile.objects.get(user=user)
+        if request.method == 'GET':
+            serializer = self.get_serializer(profile)
+            return Response(serializer.data)
+        
+        # Para PATCH o PUT
+        # Extract user data from request
+        user_data = {}
+        profile_data = request.data.copy()
+        
+        # Remove profile_image from regular update if it's present but not a file
+        if 'profile_image' in profile_data and not hasattr(profile_data['profile_image'], 'read'):
+            profile_data.pop('profile_image')
+        
+        # Move user-related fields to user_data
+        for field in ['first_name', 'last_name']:
+            if field in profile_data:
+                user_data[field] = profile_data.pop(field)
+        
+        # Log the data being processed
+        print("User data to update:", user_data)
+        print("Profile data to update:", profile_data)
+        
+        # Update user if needed
+        if user_data:
+            user_serializer = UserBasicSerializer(user, data=user_data, partial=True)
+            if user_serializer.is_valid():
+                user_serializer.save()
+            else:
+                return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update profile
+        serializer = self.get_serializer(profile, data=profile_data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
             
-            if request.method == 'GET':
+            # Return the complete updated profile
+            updated_serializer = self.get_serializer(profile)
+            return Response(updated_serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def upload_image(self, request):
+        """Endpoint para subir imagen de perfil"""
+        user = self.request.user
+        if user.user_type != 'psychologist':
+            return Response(
+                {"detail": "Este endpoint es solo para psicólogos."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        profile = PsychologistProfile.objects.get(user=user)
+        
+        if 'profile_image' not in request.FILES:
+            return Response(
+                {"detail": "No se ha proporcionado ninguna imagen."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Delete previous image if it exists
+        if profile.profile_image:
+            # Get the old file path
+            old_image_path = profile.profile_image.path
+            
+            # Check if the file exists and is not the default image
+            if os.path.isfile(old_image_path) and not old_image_path.endswith('default-profile.png'):
                 try:
-                    serializer = self.get_serializer(profile)
-                    return Response(serializer.data)
-                except Exception as e:
-                    # Verificar si el error es por la tabla faltante
-                    error_msg = str(e)
-                    if "relation" in error_msg and "professionalexperience" in error_msg and "does not exist" in error_msg:
-                        print(f"Error controlado en me(): {error_msg}")
-                        # Construir respuesta manual sin las experiencias
-                        basic_data = {
-                            'id': profile.id,
-                            'user': {
-                                'id': user.id,
-                                'email': user.email,
-                                'first_name': user.first_name,
-                                'last_name': user.last_name,
-                                'is_active': user.is_active
-                            },
-                            'profile_image': profile.profile_image.url if profile.profile_image else None,
-                            'rut': profile.rut,
-                            'phone': profile.phone,
-                            'gender': profile.gender,
-                            'region': profile.region,
-                            'city': profile.city,
-                            'professional_title': profile.professional_title,
-                            'specialties': profile.specialties,
-                            'health_register_number': profile.health_register_number,
-                            'university': profile.university,
-                            'graduation_year': profile.graduation_year,
-                            'target_populations': profile.target_populations,
-                            'intervention_areas': profile.intervention_areas,
-                            'verification_status': profile.verification_status,
-                            'verification_status_display': profile.get_verification_status_display(),
-                            'experiences': []  # Lista vacía para experiencias
-                        }
-                        return Response(basic_data)
-                    # Si es otro tipo de error, propagarlo
-                    raise
-            
-            # Para PATCH o PUT
-            # Extract user data from request
-            user_data = {}
-            profile_data = request.data.copy()
-            
-            # Remove profile_image from regular update if it's present but not a file
-            if 'profile_image' in profile_data and not hasattr(profile_data['profile_image'], 'read'):
-                profile_data.pop('profile_image')
-            
-            # Move user-related fields to user_data
-            for field in ['first_name', 'last_name']:
-                if field in profile_data:
-                    user_data[field] = profile_data.pop(field)
-            
-            # Log the data being processed
-            print("User data to update:", user_data)
-            print("Profile data to update:", profile_data)
-            
-            # Update user if needed
-            if user_data:
-                user_serializer = UserBasicSerializer(user, data=user_data, partial=True)
-                if user_serializer.is_valid():
-                    user_serializer.save()
-                else:
-                    return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Update profile
-            try:
-                serializer = self.get_serializer(profile, data=profile_data, partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    
-                    # Return the complete updated profile - con manejo de error para experiencias
-                    try:
-                        updated_serializer = self.get_serializer(profile)
-                        return Response(updated_serializer.data)
-                    except Exception as e:
-                        # Si falla por la tabla faltante, return una respuesta básica
-                        error_msg = str(e)
-                        if "relation" in error_msg and "professionalexperience" in error_msg and "does not exist" in error_msg:
-                            print(f"Error controlado al devolver perfil actualizado: {error_msg}")
-                            # Construir respuesta básica similar a la anterior
-                            basic_data = {
-                                'id': profile.id,
-                                'user': {
-                                    'id': user.id,
-                                    'email': user.email,
-                                    'first_name': user.first_name,
-                                    'last_name': user.last_name,
-                                    'is_active': user.is_active
-                                },
-                                'profile_image': profile.profile_image.url if profile.profile_image else None,
-                                'message': 'Perfil actualizado correctamente',
-                                # Incluir los campos actualizados
-                                **{k: getattr(profile, k) for k in profile_data.keys() if hasattr(profile, k)},
-                                'experiences': []  # Lista vacía para experiencias
-                            }
-                            return Response(basic_data)
-                        # Otro tipo de error, propagarlo
-                        raise
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            except Exception as e:
-                print(f"Error en actualización de perfil: {e}")
-                return Response({"detail": f"Error al actualizar perfil: {str(e)}"}, 
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except PsychologistProfile.DoesNotExist:
-            return Response(
-                {"detail": "No se encontró el perfil de psicólogo para este usuario."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            print(f"Error general en me(): {e}")
-            return Response(
-                {"detail": f"Error inesperado: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+                    os.remove(old_image_path)
+                except (OSError, FileNotFoundError) as e:
+                    # Log the error but continue with the upload
+                    print(f"Error deleting previous image: {e}")
+        
+        # Save the new image
+        profile.profile_image = request.FILES['profile_image']
+        profile.save()
+        
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['delete'])
     def delete_image(self, request):
@@ -797,105 +730,14 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
     def experiences(self, request):
         """Obtener todas las experiencias profesionales del psicólogo"""
         psychologist = self.get_object_from_request(request)
-        
-        # Verificar si la tabla existe antes de consultarla
-        try:
-            from django.db import connection
-            
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_schema = 'public'
-                        AND table_name = 'profiles_professionalexperience'
-                    )
-                """)
-                table_exists = cursor.fetchone()[0]
-                
-            # Solo consultar la tabla si existe
-            if table_exists:
-                experiences = ProfessionalExperience.objects.filter(psychologist=psychologist)
-                serializer = ProfessionalExperienceSerializer(experiences, many=True)
-                return Response(serializer.data)
-            else:
-                # Si la tabla no existe, devolver una lista vacía
-                return Response([])
-        except Exception as e:
-            print(f"Error al consultar experiencias profesionales: {e}")
-            return Response([])
-
-    @action(detail=True, methods=['get'])
-    def public_experiences(self, request, pk=None):
-        """Obtener públicamente las experiencias profesionales de un psicólogo específico"""
-        try:
-            # Intentar obtener el perfil por ID primero
-            psychologist = PsychologistProfile.objects.get(id=pk, verification_status='VERIFIED')
-        except PsychologistProfile.DoesNotExist:
-            try:
-                # Si no se encuentra, intentar por ID de usuario
-                psychologist = PsychologistProfile.objects.get(user_id=pk, verification_status='VERIFIED')
-            except PsychologistProfile.DoesNotExist:
-                return Response(
-                    {"detail": "No se encontró el perfil del psicólogo"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-        
-        # Verificar si la tabla existe antes de consultarla
-        try:
-            from django.db import connection
-            
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_schema = 'public'
-                        AND table_name = 'profiles_professionalexperience'
-                    )
-                """)
-                table_exists = cursor.fetchone()[0]
-                
-            # Solo consultar la tabla si existe
-            if table_exists:
-                experiences = ProfessionalExperience.objects.filter(psychologist=psychologist)
-                serializer = ProfessionalExperienceSerializer(experiences, many=True)
-                return Response(serializer.data)
-            else:
-                # Si la tabla no existe, devolver una lista vacía
-                return Response([])
-        except Exception as e:
-            print(f"Error al consultar experiencias profesionales públicas: {e}")
-            return Response([])
+        experiences = ProfessionalExperience.objects.filter(psychologist=psychologist)
+        serializer = ProfessionalExperienceSerializer(experiences, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
     def update_experiences(self, request):
         """Actualizar experiencias profesionales del psicólogo"""
         psychologist = self.get_object_from_request(request)
-        
-        # Verificar si la tabla existe antes de consultarla
-        try:
-            from django.db import connection
-            
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT EXISTS (
-                        SELECT FROM information_schema.tables 
-                        WHERE table_schema = 'public'
-                        AND table_name = 'profiles_professionalexperience'
-                    )
-                """)
-                table_exists = cursor.fetchone()[0]
-                
-            if not table_exists:
-                return Response(
-                    {"detail": "No se pueden actualizar experiencias en este momento. Contacte al administrador."},
-                    status=status.HTTP_503_SERVICE_UNAVAILABLE
-                )
-        except Exception as e:
-            print(f"Error al verificar tabla de experiencias: {e}")
-            return Response(
-                {"detail": "Error al procesar la solicitud."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
         
         # Obtener las experiencias del request
         experiences_data = request.data.get('experiences', [])

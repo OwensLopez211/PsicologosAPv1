@@ -45,6 +45,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Las contraseñas no coinciden"})
+        
+        # Validar que no se creen usuarios administradores
+        user_type = attrs.get('user_type', '').lower()
+        if user_type == 'admin' or user_type == 'administrador':
+            raise serializers.ValidationError({"user_type": "No está permitido crear cuentas de administrador"})
+            
         return attrs
 
     def create(self, validated_data):

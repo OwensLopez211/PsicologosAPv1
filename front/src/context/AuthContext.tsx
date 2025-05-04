@@ -1,9 +1,6 @@
 // AuthContext.tsx (actualizado)
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { refreshToken } from '../services/authService';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { SESSION_EXPIRED_EVENT } from '../services/api';
-import toastService from '../services/toastService';
 // import toast from 'react-hot-toast';
 
 interface User {
@@ -23,7 +20,6 @@ interface AuthContextType {
   logout: () => void;
   refreshUserSession: () => Promise<boolean>;
   token: string | null; // Add token to the context
-  handleSessionExpired: () => void; // Añadimos la función para manejar sesión expirada
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,41 +28,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null); // Add token state
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Función para manejar la expiración de sesión
-  const handleSessionExpired = () => {
-    console.log('Session expired event triggered, redirecting to login');
-    // Limpiar datos de autenticación
-    localStorage.removeItem('token');
-    localStorage.removeItem('refresh_token');
-    // Mantener el usuario para mostrar mensaje personalizado
-    const savedUser = localStorage.getItem('user');
-    
-    // Limpiar estado
-    setUser(null);
-    setToken(null);
-    
-    // Redireccionar con parámetro expired=true
-    navigate('/login?expired=true', { replace: true });
-    
-    // Mostrar mensaje de sesión expirada
-    toastService.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-  };
-
-  // Escuchar evento de sesión expirada
-  useEffect(() => {
-    const handleExpiredEvent = () => {
-      handleSessionExpired();
-    };
-    
-    window.addEventListener(SESSION_EXPIRED_EVENT, handleExpiredEvent);
-    
-    return () => {
-      window.removeEventListener(SESSION_EXPIRED_EVENT, handleExpiredEvent);
-    };
-  }, [navigate]);
 
   // En la función logout, añadir:
   const logout = () => {
@@ -179,8 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loading,
       logout,
       refreshUserSession,
-      token, // Include token in the context
-      handleSessionExpired // Exponemos la función para manejar la sesión expirada
+      token // Include token in the context
     }}>
       {children}
     </AuthContext.Provider>

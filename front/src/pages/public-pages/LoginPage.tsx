@@ -24,13 +24,8 @@ const LoginPage = () => {
     const expired = params.get('expired');
     if (expired === 'true') {
       toastService.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-      
-      // Limpiar el parámetro de URL para evitar mostrar el mensaje múltiples veces
-      // si el usuario recarga la página
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
     }
-  }, [location.search]);
+  }, [location]);
 
   // Cargar email recordado
   useEffect(() => {

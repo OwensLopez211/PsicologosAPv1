@@ -81,10 +81,6 @@ urlpatterns = [
           PsychologistProfileViewSet.as_view({'delete': 'delete_image'}), 
           name='psychologist-delete-image'),
      
-     path('psychologist-profiles/me/experiences/', 
-          PsychologistProfileViewSet.as_view({'get': 'experiences'}), 
-          name='psychologist-experiences'),
-         
      # Add admin profile endpoints
      path('admin-profiles/me/upload_image/', 
           AdminProfileViewSet.as_view({'post': 'upload_image'}), 
@@ -149,10 +145,10 @@ urlpatterns = [
           name='admin-update-bank-info'),
           
      # Añadir estos endpoints para experiencias profesionales
-     path('psychologist-profiles/me/experiences/', 
+     path('profiles/psychologist-profiles/me/experiences/', 
           PsychologistProfileViewSet.as_view({'get': 'experiences', 'post': 'update_experiences'}), 
           name='psychologist-experiences'),
-     path('psychologist-profiles/me/experiences/<int:experience_id>/', 
+     path('profiles/psychologist-profiles/me/experiences/<int:experience_id>/', 
           PsychologistProfileViewSet.as_view({'delete': 'delete_experience', 'put': 'update_experience'}), 
           name='psychologist-experience-detail'),
 

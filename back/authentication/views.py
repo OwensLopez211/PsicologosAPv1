@@ -28,6 +28,14 @@ class RegisterView(generics.CreateAPIView):
         # Imprime los datos recibidos para debugging
         print(f"Register request data: {request.data}")
         
+        # Verificar si el usuario está intentando registrarse como administrador
+        user_type = request.data.get('user_type', 'client').lower()
+        if user_type == 'admin' or user_type == 'administrador':
+            return Response({
+                'detail': 'No está permitido crear cuentas de administrador',
+                'error': 'ADMIN_CREATION_RESTRICTED'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         # Asegurarse de que first_name y last_name estén presentes y no sean None
         first_name = request.data.get('first_name', '')
         last_name = request.data.get('last_name', '')
@@ -43,7 +51,7 @@ class RegisterView(generics.CreateAPIView):
             'username': request.data.get('email'),
             'password': request.data.get('password'),
             'password2': request.data.get('password2'),
-            'user_type': request.data.get('user_type', 'client').lower(),
+            'user_type': user_type,
             'first_name': first_name,
             'last_name': last_name
         }
