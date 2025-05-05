@@ -2,6 +2,11 @@ import { FC, useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 
+// Usar la misma lógica que en api.ts para la URL base
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://186.64.113.186/api';
+// Eliminar '/api' para tener la base correcta para archivos de media
+const BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '');
+
 interface PresentationVideoProps {
   videoUrl: string;
 }
@@ -22,9 +27,9 @@ const PresentationVideo: FC<PresentationVideoProps> = ({ videoUrl }) => {
     // Process the URL to ensure it's a full URL
     let processedUrl = videoUrl;
     
-    // If the URL is a relative path, prepend the backend URL
+    // Si la URL es una ruta relativa, anteponer la URL base
     if (videoUrl.startsWith('/media/')) {
-      processedUrl = `http://localhost:8000${videoUrl}`;
+      processedUrl = `${BASE_URL}${videoUrl}`;
     }
     
     // Fetch the video as a blob to avoid CORS issues
