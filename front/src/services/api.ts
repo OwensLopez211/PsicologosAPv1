@@ -1,8 +1,11 @@
 // api.ts (actualizado)
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
+// Usar la variable de entorno o una URL por defecto apuntando al servidor de producción
+const API_URL = import.meta.env.VITE_API_URL || 'https://186.64.113.186/api';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
