@@ -365,7 +365,7 @@ class PsychologistService {
   async updateDocumentStatus(documentId: number, status: string, rejectionReason?: string): Promise<any> {
     this.logDebug(`Updating document ${documentId} status to ${status}`);
     try {
-      const data: any = { status };
+      const data: any = { verification_status: status };
       if (status === 'rejected' && rejectionReason) {
         data.rejection_reason = rejectionReason;
       }
