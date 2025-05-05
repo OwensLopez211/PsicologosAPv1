@@ -336,6 +336,72 @@ class PsychologistService {
   }
 
   /**
+   * Update psychologist verification status
+   * @param id Psychologist ID
+   * @param status New verification status
+   * @returns Promise with updated psychologist data
+   */
+  async updatePsychologistStatus(id: number, status: string): Promise<any> {
+    this.logDebug(`Updating status for psychologist ${id} to ${status}`);
+    try {
+      const response = await api.patch(`/profiles/admin/psychologists/${id}/toggle-status/`, {
+        verification_status: status
+      });
+      this.logDebug(`Successfully updated status for psychologist ${id}`, response.data);
+      return response.data;
+    } catch (error) {
+      this.logError(`Error updating status for psychologist ${id}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update document verification status
+   * @param documentId Document ID
+   * @param status New verification status ('verified' or 'rejected')
+   * @param rejectionReason Reason for rejection (required if status is 'rejected')
+   * @returns Promise with updated document data
+   */
+  async updateDocumentStatus(documentId: number, status: string, rejectionReason?: string): Promise<any> {
+    this.logDebug(`Updating document ${documentId} status to ${status}`);
+    try {
+      const data: any = { status };
+      if (status === 'rejected' && rejectionReason) {
+        data.rejection_reason = rejectionReason;
+      }
+      
+      const response = await api.patch(`/profiles/admin/psychologists/documents/${documentId}/status/`, data);
+      this.logDebug(`Successfully updated document ${documentId} status`, response.data);
+      return response.data;
+    } catch (error) {
+      this.logError(`Error updating document ${documentId} status`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Download document file
+   * @param psychologistId Psychologist ID
+   * @param documentId Document ID
+   * @param _fileName Name of the file to download
+   * @returns Promise with file blob
+   */
+  async downloadDocument(psychologistId: number, documentId: number, _fileName: string): Promise<Blob> {
+    this.logDebug(`Downloading document ${documentId} for psychologist ${psychologistId}`);
+    try {
+      const response = await api.get(
+        `/profiles/psychologist-profiles/me/documents/download/${documentId}/`,
+        { responseType: 'blob' }
+      );
+      this.logDebug(`Successfully downloaded document ${documentId}`);
+      return response.data;
+    } catch (error) {
+      this.logError(`Error downloading document ${documentId}`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get psychologist initials from first and last name
    * @param psychologist Psychologist object
    * @returns String with psychologist initials
