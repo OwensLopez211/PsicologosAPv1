@@ -835,5 +835,49 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         except PsychologistProfile.DoesNotExist:
             raise Http404("No existe un perfil de psicólogo para este usuario")
 
+    @action(detail=True, methods=['patch'])
+    def toggle_verification_status(self, request, pk=None):
+        """
+        Endpoint para que los administradores actualicen el estado de verificación de un psicólogo
+        """
+        user = self.request.user
+        if user.user_type != 'admin':
+            return Response(
+                {"detail": "Este endpoint es solo para administradores."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        # Obtener el perfil del psicólogo
+        try:
+            profile = PsychologistProfile.objects.get(id=pk)
+        except PsychologistProfile.DoesNotExist:
+            return Response(
+                {"detail": f"No se encontró ningún perfil de psicólogo con ID {pk}"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Validar el nuevo estado
+        new_status = request.data.get('verification_status')
+        valid_statuses = [status[0] for status in PsychologistProfile._meta.get_field('verification_status').choices]
+        
+        if not new_status or new_status not in valid_statuses:
+            return Response(
+                {"detail": f"Estado de verificación inválido. Opciones válidas: {', '.join(valid_statuses)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Actualizar el estado de verificación
+        profile.verification_status = new_status
+        
+        # Si se proporciona un motivo de rechazo, guardarlo
+        if new_status == 'REJECTED' and 'rejection_reason' in request.data:
+            profile.rejection_reason = request.data.get('rejection_reason')
+        
+        profile.save()
+        
+        # Devolver el perfil actualizado
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
+
 
     
