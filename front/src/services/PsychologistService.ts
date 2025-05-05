@@ -344,7 +344,7 @@ class PsychologistService {
   async updatePsychologistStatus(id: number, status: string): Promise<any> {
     this.logDebug(`Updating status for psychologist ${id} to ${status}`);
     try {
-      const response = await api.patch(`/profiles/admin/psychologists/${id}/toggle-status/`, {
+      const response = await api.patch(`/profiles/admin/psychologists/${id}/verify/`, {
         verification_status: status
       });
       this.logDebug(`Successfully updated status for psychologist ${id}`, response.data);
