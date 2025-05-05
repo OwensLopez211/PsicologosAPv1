@@ -2,7 +2,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // Utilizar variables de entorno para la URL base de la API
-const API_URL = import.meta.env.VITE_API_URL || 'http://186.64.113.186/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const api = axios.create({
   baseURL: API_URL,
