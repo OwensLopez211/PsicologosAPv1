@@ -20,13 +20,10 @@ interface DocumentCardProps {
 
 const DocumentCard: React.FC<DocumentCardProps> = ({
   document,
-
   onDownload,
   onVerify,
   onReject
 }) => {
-
-
   const handleDownload = (e: React.MouseEvent) => {
     e.preventDefault();
     if (typeof onDownload === 'function') {
@@ -59,9 +56,9 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
   const fileName = document.file.split('/').pop() || `documento_${document.id}`;
 
   return (
-    <div className="border rounded-lg overflow-hidden shadow-sm">
-      <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
-        <h3 className="font-medium text-gray-700">
+    <div className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      <div className="bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 border-b flex justify-between items-center">
+        <h3 className="font-medium text-gray-700 text-xs sm:text-sm">
           {document.document_type === 'professional_title' && 'Título Profesional'}
           {document.document_type === 'id_card' && 'Cédula de Identidad'}
           {document.document_type === 'professional_license' && 'Licencia Profesional'}
@@ -71,7 +68,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           {document.document_type === 'specialty_document' && 'Documento de Especialidad'}
           {document.document_type === 'other' && 'Otro Documento'}
         </h3>
-        <span className={`px-2 py-1 text-xs rounded-full ${
+        <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-2xs sm:text-xs rounded-full ${
           document.verification_status === 'verified' 
             ? 'bg-green-100 text-green-800' 
             : document.verification_status === 'rejected'
@@ -84,16 +81,16 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
         </span>
       </div>
       
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         {/* Document filename display */}
-        <div className="mb-3 bg-gray-50 p-2 rounded border">
-          <p className="text-sm font-medium text-gray-700 mb-1">Archivo:</p>
-          <p className="text-sm break-all">{fileName}</p>
+        <div className="mb-2 sm:mb-3 bg-gray-50 p-1.5 sm:p-2 rounded border">
+          <p className="text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">Archivo:</p>
+          <p className="text-xs sm:text-sm break-all">{fileName}</p>
         </div>
         
-        <div className="mb-3">
-          <p className="text-sm text-gray-500 mb-1">Descripción:</p>
-          <p className="text-sm">
+        <div className="mb-2 sm:mb-3">
+          <p className="text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1">Descripción:</p>
+          <p className="text-xs sm:text-sm">
             {document.description || (
               <>
                 <span className="text-gray-700 font-medium">
@@ -112,24 +109,16 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
         </div>
         
         {document.rejection_reason && (
-          <div className="mb-3 bg-red-50 p-2 rounded border border-red-200">
-            <p className="text-sm font-medium text-red-700 mb-1">Motivo de rechazo:</p>
-            <p className="text-sm text-red-600">{document.rejection_reason}</p>
+          <div className="mb-2 sm:mb-3 bg-red-50 p-1.5 sm:p-2 rounded border border-red-200">
+            <p className="text-xs sm:text-sm font-medium text-red-700 mb-0.5 sm:mb-1">Motivo de rechazo:</p>
+            <p className="text-xs sm:text-sm text-red-600">{document.rejection_reason}</p>
           </div>
         )}
         
-        <div className="flex flex-wrap gap-2 mt-4">
-          {/* 
-          <button 
-            onClick={handleView}
-            className="px-3 py-1 bg-blue-50 text-blue-600 rounded border border-blue-200 text-sm hover:bg-blue-100 transition-colors"
-          >
-            {isVideoFile(document.file) ? 'Ver Video' : 'Ver Documento'}
-          </button> */}
-          
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-3 sm:mt-4">
           <button 
             onClick={handleDownload}
-            className="px-3 py-1 bg-gray-50 text-gray-600 rounded border border-gray-200 text-sm hover:bg-gray-100 transition-colors"
+            className="px-2 sm:px-3 py-1 bg-gray-50 text-gray-600 rounded border border-gray-200 text-xs sm:text-sm hover:bg-gray-100 transition-colors"
           >
             Descargar
           </button>
@@ -137,7 +126,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           {document.verification_status !== 'verified' && (
             <button 
               onClick={handleVerify}
-              className="px-3 py-1 bg-green-50 text-green-600 rounded border border-green-200 text-sm hover:bg-green-100 transition-colors"
+              className="px-2 sm:px-3 py-1 bg-green-50 text-green-600 rounded border border-green-200 text-xs sm:text-sm hover:bg-green-100 transition-colors"
             >
               Aprobar
             </button>
@@ -146,7 +135,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           {document.verification_status !== 'rejected' && (
             <button 
               onClick={handleReject}
-              className="px-3 py-1 bg-red-50 text-red-600 rounded border border-red-200 text-sm hover:bg-red-100 transition-colors"
+              className="px-2 sm:px-3 py-1 bg-red-50 text-red-600 rounded border border-red-200 text-xs sm:text-sm hover:bg-red-100 transition-colors"
             >
               Rechazar
             </button>

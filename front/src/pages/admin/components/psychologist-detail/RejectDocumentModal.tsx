@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface RejectDocumentModalProps {
   isOpen: boolean;
@@ -17,6 +17,25 @@ const RejectDocumentModal: React.FC<RejectDocumentModalProps> = ({
 }) => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  // Efecto para controlar el scroll del body
+  useEffect(() => {
+    if (isOpen) {
+      // Bloquear scroll cuando el modal está abierto
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '15px'; // Compensar el ancho de la barra de scroll
+    } else {
+      // Restaurar scroll cuando el modal se cierra
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+
+    // Limpiar efecto al desmontar el componente
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +56,7 @@ const RejectDocumentModal: React.FC<RejectDocumentModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-auto">
         <div className="border-b px-6 py-4">
           <h3 className="text-lg font-medium text-gray-900">Rechazar Documento</h3>
         </div>

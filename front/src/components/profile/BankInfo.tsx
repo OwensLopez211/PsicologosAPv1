@@ -34,7 +34,7 @@ const BankInfo = ({ profile, isLoading, onProfileUpdate }: Omit<BankInfoProps, '
         bank_account_owner: profile.bank_account_owner || '',
         bank_account_owner_rut: profile.bank_account_owner_rut || '',
         bank_account_owner_email: profile.bank_account_owner_email || '',
-        bank_name: profile.bank_name || '', // Fixed duplicate key
+        bank_name: profile.bank_name || '',
       });
       
       // Set disclaimer to true if profile already has bank info
@@ -152,19 +152,19 @@ const BankInfo = ({ profile, isLoading, onProfileUpdate }: Omit<BankInfoProps, '
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+      className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm p-3 sm:p-6 border border-gray-100"
     >
-      <div className="flex items-center mb-6">
-        <div className="bg-[#2A6877]/10 p-2 rounded-full mr-3">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#2A6877]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="flex items-center mb-3 sm:mb-6">
+        <div className="bg-[#2A6877]/10 p-1.5 sm:p-2 rounded-full mr-2 sm:mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 text-[#2A6877]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold text-gray-800">Información Bancaria</h2>
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Información Bancaria</h2>
       </div>
       
-      <div className="bg-blue-50 p-4 rounded-lg mb-6 border-l-4 border-blue-500">
-        <p className="text-gray-700">
+      <div className="bg-blue-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 border-l-4 border-blue-500">
+        <p className="text-xs sm:text-sm text-gray-700">
           {getDescriptionText()} Por favor, asegúrate de que los datos sean correctos.
         </p>
       </div>

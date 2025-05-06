@@ -185,7 +185,7 @@ const VerificationsPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+        <h1 className="text-2xl mt-12 md:text-3xl font-bold text-[#2A6877] mb-4 md:mb-6">
             {user?.user_type === 'admin' ? 'Verificación de Pagos (Admin)' : 'Mis Pagos Pendientes'}
         </h1>
           {user?.user_type === 'admin' && (

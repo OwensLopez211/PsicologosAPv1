@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import PsychologistService, { Psychologist } from '../../services/PsychologistService';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
@@ -13,6 +13,7 @@ import ProfessionalInfo from './components/psychologist-detail/ProfessionalInfo'
 import SpecialtiesAndPopulations from './components/psychologist-detail/SpecialtiesAndPopulations';
 import DocumentsSection from './components/psychologist-detail/DocumentsSection';
 import PricingManagement from './components/psychologist-detail/PricingManagement';
+import ProfessionalExperiences from './components/psychologist-detail/ProfessionalExperiences';
 
 const PsychologistDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -213,14 +214,15 @@ const { } = useAuth();
 
   return (
     <PageTransition>
-      <div className="container mx-auto px-4 py-8">
-        <button 
-          onClick={() => navigate('/admin/dashboard/psychologists')}
-          className="flex items-center text-[#2A6877] mb-6 hover:underline"
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        {/* Botón "Volver a Especialistas" según la imagen */}
+        <Link 
+          to="/admin/dashboard/psychologists"
+          className="flex items-center text-[#2A6877] mb-4 sm:mb-6 border border-gray-300 rounded-md px-3 py-2 w-fit shadow-sm hover:bg-gray-50 transition-colors"
         >
-          <ArrowLeftIcon className="w-4 h-4 mr-1" />
-          Volver al listado
-        </button>
+          <ArrowLeftIcon className="w-4 h-4 mr-2" />
+          Volver a Especialistas
+        </Link>
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
@@ -233,8 +235,8 @@ const { } = useAuth();
           />
 
           {/* Content */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="p-3 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
               {/* Personal Information */}
               <PersonalInfo 
                 user={psychologist.user}
@@ -261,8 +263,15 @@ const { } = useAuth();
               onRefreshPrices={handleRefreshPrices}
             />
 
+            {/* Professional Experiences - Nuevo componente */}
+            <div className="mt-6 md:mt-8">
+              <ProfessionalExperiences 
+                experiences={psychologist.experiences || psychologist.professional_experiences || []}
+              />
+            </div>
+
             {/* Specialties and Target Populations */}
-            <div className="mt-8">
+            <div className="mt-6 md:mt-8">
               <SpecialtiesAndPopulations 
                 specialties={psychologist.specialties}
                 target_populations={psychologist.target_populations}
@@ -272,7 +281,7 @@ const { } = useAuth();
             </div>
 
             {/* Documents Section */}
-            <div className="mt-8">
+            <div className="mt-6 md:mt-8">
               <DocumentsSection 
                 documents={psychologist.verification_documents}
                 onVerifyDocument={handleDocumentVerification}

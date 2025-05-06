@@ -88,7 +88,7 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-4 sm:space-y-6">
       <AnimatePresence mode="wait">
         {isEditing ? (
           <motion.div
@@ -98,9 +98,9 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
               <div className="space-y-1">
-                <label htmlFor="bank_name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="bank_name" className="block text-xs sm:text-sm font-medium text-gray-700">
                   Nombre del Banco
                 </label>
                 <select
@@ -108,7 +108,7 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                   name="bank_name"
                   value={formData.bank_name}
                   onChange={onChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200 bg-white"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200 bg-white"
                 >
                   <option value="">Seleccionar banco</option>
                   {chileanBanks.map(bank => (
@@ -120,7 +120,7 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
               </div>
               
               <div className="space-y-1">
-                <label htmlFor="bank_account_type" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="bank_account_type" className="block text-xs sm:text-sm font-medium text-gray-700">
                   Tipo de Cuenta
                 </label>
                 <select
@@ -128,7 +128,7 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                   name="bank_account_type"
                   value={formData.bank_account_type}
                   onChange={onChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200 bg-white"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200 bg-white"
                 >
                   <option value="">Seleccionar tipo de cuenta</option>
                   <option value="CORRIENTE">Cuenta Corriente</option>
@@ -139,7 +139,7 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
               </div>
               
               <div className="space-y-1">
-                <label htmlFor="bank_account_number" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="bank_account_number" className="block text-xs sm:text-sm font-medium text-gray-700">
                   Número de Cuenta
                 </label>
                 <input
@@ -148,13 +148,13 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                   name="bank_account_number"
                   value={formData.bank_account_number}
                   onChange={onChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200"
                   placeholder="Ej: 00012345678"
                 />
               </div>
               
               <div className="space-y-1">
-                <label htmlFor="bank_account_owner" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="bank_account_owner" className="block text-xs sm:text-sm font-medium text-gray-700">
                   Nombre del Titular
                 </label>
                 <input
@@ -163,13 +163,13 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                   name="bank_account_owner"
                   value={formData.bank_account_owner}
                   onChange={onChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200"
                   placeholder="Ej: Juan Pérez González"
                 />
               </div>
               
               <div className="space-y-1">
-                <label htmlFor="bank_account_owner_rut" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="bank_account_owner_rut" className="block text-xs sm:text-sm font-medium text-gray-700">
                   RUT del Titular
                 </label>
                 <input
@@ -178,13 +178,13 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                   name="bank_account_owner_rut"
                   value={formData.bank_account_owner_rut}
                   onChange={onChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200"
                   placeholder="Ej: 12.345.678-9"
                 />
               </div>
               
               <div className="space-y-1">
-                <label htmlFor="bank_account_owner_email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="bank_account_owner_email" className="block text-xs sm:text-sm font-medium text-gray-700">
                   Correo Electrónico del Titular
                 </label>
                 <input
@@ -193,13 +193,13 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                   name="bank_account_owner_email"
                   value={formData.bank_account_owner_email}
                   onChange={onChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-200"
                   placeholder="Ej: correo@ejemplo.com"
                 />
               </div>
             </div>
             
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="mt-3 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex items-start">
                 <div className="flex items-center h-5">
                   <input
@@ -211,7 +211,7 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                     className="h-4 w-4 text-[#2A6877] border-gray-300 rounded focus:ring-[#2A6877]"
                   />
                 </div>
-                <div className="ml-3 text-sm">
+                <div className="ml-2 sm:ml-3 text-xs sm:text-sm">
                   <label htmlFor="disclaimer" className="font-medium text-gray-700">
                     Confirmo que la cuenta bancaria está a mi nombre
                   </label>
@@ -222,15 +222,15 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
               </div>
             </div>
             
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex justify-end space-x-2 sm:space-x-3 pt-3 sm:pt-4">
               <motion.button
                 type="button"
                 onClick={handleCancelEdit}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 flex items-center"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all duration-200 flex items-center"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
                 Cancelar
@@ -241,11 +241,11 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                 disabled={saving || isLoading}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="px-6 py-2 bg-[#2A6877] text-white rounded-lg hover:bg-[#1e4e5a] focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 flex items-center"
+                className="px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm bg-[#2A6877] text-white rounded-lg hover:bg-[#1e4e5a] focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 flex items-center"
               >
                 {(saving || isLoading) ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin -ml-1 mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -253,10 +253,10 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
                   </>
                 ) : (
                   <>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
-                    Guardar Información Bancaria
+                    Guardar Información
                   </>
                 )}
               </motion.button>
@@ -271,58 +271,58 @@ const BankInfoForm: React.FC<BankInfoFormProps> = ({
             transition={{ duration: 0.2 }}
           >
             {/* Read-only view */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Nombre del Banco</h3>
-                <p className="text-gray-900 font-medium">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-500 mb-1">Nombre del Banco</h3>
+                <p className="text-xs sm:text-sm text-gray-900 font-medium">
                   {formData.bank_name ? getBankDisplayName(formData.bank_name) : 'No especificado'}
                 </p>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Tipo de Cuenta</h3>
-                <p className="text-gray-900 font-medium">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-500 mb-1">Tipo de Cuenta</h3>
+                <p className="text-xs sm:text-sm text-gray-900 font-medium">
                   {formData.bank_account_type ? getAccountTypeDisplayName(formData.bank_account_type) : 'No especificado'}
                 </p>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Número de Cuenta</h3>
-                <p className="text-gray-900 font-medium">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-500 mb-1">Número de Cuenta</h3>
+                <p className="text-xs sm:text-sm text-gray-900 font-medium">
                   {formData.bank_account_number || 'No especificado'}
                 </p>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Nombre del Titular</h3>
-                <p className="text-gray-900 font-medium">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-500 mb-1">Nombre del Titular</h3>
+                <p className="text-xs sm:text-sm text-gray-900 font-medium">
                   {formData.bank_account_owner || 'No especificado'}
                 </p>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">RUT del Titular</h3>
-                <p className="text-gray-900 font-medium">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-500 mb-1">RUT del Titular</h3>
+                <p className="text-xs sm:text-sm text-gray-900 font-medium">
                   {formData.bank_account_owner_rut || 'No especificado'}
                 </p>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Correo Electrónico del Titular</h3>
-                <p className="text-gray-900 font-medium">
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <h3 className="text-xs sm:text-sm font-medium text-gray-500 mb-1">Correo Electrónico del Titular</h3>
+                <p className="text-xs sm:text-sm text-gray-900 font-medium">
                   {formData.bank_account_owner_email || 'No especificado'}
                 </p>
               </div>
             </div>
             
-            <div className="flex justify-end pt-6">
+            <div className="flex justify-end pt-3 sm:pt-6">
               <motion.button
                 type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="px-6 py-2 bg-[#2A6877] text-white rounded-lg hover:bg-[#1e4e5a] focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:ring-offset-2 transition-all duration-200 flex items-center"
+                className="px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm bg-[#2A6877] text-white rounded-lg hover:bg-[#1e4e5a] focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:ring-offset-2 transition-all duration-200 flex items-center"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
                 Editar Información

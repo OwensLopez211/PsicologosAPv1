@@ -7,7 +7,7 @@ export interface Document {
   file?: File | null;
   file_url?: string;
   description?: string;
-  verification_status?: 'pending' | 'approved' | 'rejected' | 'not_uploaded';
+  verification_status?: 'pending' | 'approved' | 'verified' | 'rejected' | 'not_uploaded';
   rejection_reason?: string | null;
   uploaded_at?: string;
 }

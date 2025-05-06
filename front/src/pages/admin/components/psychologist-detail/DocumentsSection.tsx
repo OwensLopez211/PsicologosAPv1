@@ -50,13 +50,13 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   };
 
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+    <div>
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 border-b pb-2">
         Documentos de Verificación
       </h2>
       
       {documents && documents.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {documents.map((document, index) => (
             <DocumentCard
               onView={() => {}} // Add missing required onView prop
@@ -69,7 +69,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
           ))}
         </div>
       ) : (
-        <p className="text-gray-500">No hay documentos de verificación disponibles</p>
+        <p className="text-sm sm:text-base text-gray-500">No hay documentos de verificación disponibles</p>
       )}
 
       <RejectDocumentModal

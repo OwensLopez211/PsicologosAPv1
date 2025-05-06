@@ -11,6 +11,17 @@ export interface Document {
   uploaded_at: string;
 }
 
+interface Experience {
+  id: number;
+  position: string;
+  company: string;
+  location: string | null;
+  start_date: string;
+  end_date: string | null;
+  description: string | null;
+  is_current: boolean;
+}
+
 export interface Psychologist {
   id: number;
   user: {
@@ -46,6 +57,8 @@ export interface Psychologist {
   bank_account_owner_email: string;
   bank_name: string;
   verification_documents: PsychologistDocument[];
+  professional_experiences: Experience[] | null;
+  experiences?: Experience[] | null;
 }
 
 export interface PsychologistDocument {
@@ -167,7 +180,9 @@ class PsychologistService {
         intervention_areas: Array.isArray(data.intervention_areas) ? data.intervention_areas : [],
         verification_documents: Array.isArray(data.verification_documents) 
           ? data.verification_documents 
-          : []
+          : [],
+        professional_experiences: Array.isArray(data.professional_experiences) ? data.professional_experiences : null,
+        experiences: Array.isArray(data.experiences) ? data.experiences : null
       };
       
       // Ensure graduation_year is a number or null
