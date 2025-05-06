@@ -166,16 +166,16 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
 
   return (
     <motion.div 
-      className="space-y-4 bg-white/90 backdrop-blur-sm p-6 rounded-xl shadow-sm border border-gray-100"
+      className="space-y-3 sm:space-y-4 bg-white/90 backdrop-blur-sm p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-[#2A6877] text-white">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-green-500 to-[#2A6877] text-white">
             <motion.span 
-              className="text-2xl"
+              className="text-xl sm:text-2xl"
               initial={{ rotate: -10, scale: 0.8 }}
               animate={{ rotate: 0, scale: 1 }}
               transition={{ duration: 0.5, type: "spring" }}
@@ -184,21 +184,21 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
             </motion.span>
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Tarifas</h2>
-            <p className="text-sm text-gray-500 mt-0.5">Configura el precio de tus sesiones de terapia</p>
+            <h2 className="text-base sm:text-xl font-semibold text-gray-900">Tarifas</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Configura el precio de tus sesiones de terapia</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <AnimatePresence>
             {saveSuccess && (
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-sm"
+                className="flex items-center gap-0.5 sm:gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-50 text-green-600 rounded-full text-xs sm:text-sm"
               >
-                <CheckIcon className="h-4 w-4" />
+                <CheckIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Guardado</span>
               </motion.div>
             )}
@@ -214,10 +214,10 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                 whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center px-4 py-2 border border-[#2A6877] text-sm font-medium rounded-full text-[#2A6877] hover:bg-[#2A6877] hover:text-white transition-all shadow-sm"
+                className="inline-flex items-center px-2 sm:px-4 py-1 sm:py-2 border border-[#2A6877] text-xs sm:text-sm font-medium rounded-full text-[#2A6877] hover:bg-[#2A6877] hover:text-white transition-all shadow-sm"
                 disabled={localLoading || isLoading}
               >
-                <PencilIcon className="h-4 w-4 mr-2" />
+                <PencilIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Editar
               </motion.button>
             ) : null}
@@ -230,41 +230,41 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
         {!isEditing ? (
           <motion.div 
             variants={itemVariants}
-            className="mt-4 space-y-6"
+            className="mt-2 sm:mt-4 space-y-4 sm:space-y-6"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {/* Precio sugerido */}
               <motion.div 
-                className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-5 rounded-xl border border-blue-100 shadow-sm"
+                className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-3 sm:p-5 rounded-xl border border-blue-100 shadow-sm"
                 whileHover={{ y: -2 }}
               >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="p-2 bg-blue-100/80 rounded-lg text-blue-600">
-                    <CurrencyDollarIcon className="w-5 h-5" />
+                <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="p-1.5 sm:p-2 bg-blue-100/80 rounded-lg text-blue-600">
+                    <CurrencyDollarIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Precio sugerido</h3>
-                    <p className="text-sm text-gray-600">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Precio sugerido</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Este es el precio que has sugerido para tus sesiones
                     </p>
                   </div>
                 </div>
                 
-                <div className="text-3xl font-bold text-[#2A6877] mb-3">
+                <div className="text-xl sm:text-3xl font-bold text-[#2A6877] mb-2 sm:mb-3">
                   {suggestedPrice ? formatCurrency(suggestedPrice) : 'No definido'}
                 </div>
                 
                 {suggestedPrice ? (
-                  <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg text-sm text-gray-600 border border-blue-100/50">
+                  <div className="bg-white/70 backdrop-blur-sm p-2 sm:p-3 rounded-lg text-xs sm:text-sm text-gray-600 border border-blue-100/50">
                     <div className="flex items-center gap-1 text-blue-600 font-medium mb-1">
-                      <InformationCircleIcon className="w-4 h-4" />
+                      <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>Primera sesión (cada cliente)</span>
                     </div>
                     <p>Comisión plataforma (50%): {formatCurrency(suggestedPrice * 0.5)}</p>
                     <p>Tu ganancia: {formatCurrency(suggestedPrice * 0.5)}</p>
                   </div>
                 ) : (
-                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm text-blue-600">
+                  <div className="bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 text-xs sm:text-sm text-blue-600">
                     Haz clic en "Editar" para sugerir un precio para tus sesiones
                   </div>
                 )}
@@ -272,36 +272,36 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
 
               {/* Precio aprobado */}
               <motion.div 
-                className="bg-gradient-to-br from-green-50 to-green-100/50 p-5 rounded-xl border border-green-100 shadow-sm"
+                className="bg-gradient-to-br from-green-50 to-green-100/50 p-3 sm:p-5 rounded-xl border border-green-100 shadow-sm"
                 whileHover={{ y: -2 }}
               >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="p-2 bg-green-100/80 rounded-lg text-green-600">
-                    <CheckIcon className="w-5 h-5" />
+                <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="p-1.5 sm:p-2 bg-green-100/80 rounded-lg text-green-600">
+                    <CheckIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Precio aprobado</h3>
-                    <p className="text-sm text-gray-600">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Precio aprobado</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Precio actual aprobado por el administrador
                     </p>
                   </div>
                 </div>
                 
-                <div className="text-3xl font-bold text-green-700 mb-3">
+                <div className="text-xl sm:text-3xl font-bold text-green-700 mb-2 sm:mb-3">
                   {approvedPrice ? formatCurrency(approvedPrice) : 'Pendiente de aprobación'}
                 </div>
                 
                 {approvedPrice ? (
-                  <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg text-sm text-gray-600 border border-green-100/50">
+                  <div className="bg-white/70 backdrop-blur-sm p-2 sm:p-3 rounded-lg text-xs sm:text-sm text-gray-600 border border-green-100/50">
                     <div className="flex items-center gap-1 text-green-600 font-medium mb-1">
-                      <InformationCircleIcon className="w-4 h-4" />
+                      <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>Primera sesión (cada cliente)</span>
                     </div>
                     <p>Comisión plataforma (50%): {formatCurrency(approvedPrice * 0.5)}</p>
                     <p>Tu ganancia: {formatCurrency(approvedPrice * 0.5)}</p>
                   </div>
                 ) : (
-                  <div className="bg-green-50 p-3 rounded-lg border border-green-100 text-sm text-green-600">
+                  <div className="bg-green-50 p-2 sm:p-3 rounded-lg border border-green-100 text-xs sm:text-sm text-green-600">
                     {suggestedPrice ? 'Tu precio sugerido está pendiente de aprobación' : 'Sugiere un precio para comenzar el proceso de aprobación'}
                   </div>
                 )}
@@ -311,44 +311,44 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
             {/* Información adicional */}
             {priceConfig && (
               <motion.div 
-                className="mt-4 p-5 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 shadow-sm"
+                className="mt-3 sm:mt-4 p-3 sm:p-5 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 shadow-sm"
                 variants={itemVariants}
               >
-                <div className="flex items-center gap-2 text-[#2A6877] mb-3">
-                  <InformationCircleIcon className="w-5 h-5" />
-                  <h3 className="font-semibold">Información importante</h3>
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[#2A6877] mb-2 sm:mb-3">
+                  <InformationCircleIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <h3 className="font-semibold text-sm sm:text-base">Información importante</h3>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gray-50/80 p-3 rounded-lg border border-gray-100">
-                    <h4 className="font-medium text-gray-700 mb-1 text-sm">Rango de precios</h4>
-                    <p className="text-gray-600 text-sm">El precio debe estar entre:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="bg-gray-50/80 p-2 sm:p-3 rounded-lg border border-gray-100">
+                    <h4 className="font-medium text-gray-700 mb-1 text-xs sm:text-sm">Rango de precios</h4>
+                    <p className="text-gray-600 text-xs sm:text-sm">El precio debe estar entre:</p>
                     <div className="flex justify-between items-center mt-1">
-                      <span className="bg-[#2A6877]/10 text-[#2A6877] px-2 py-1 rounded text-sm font-medium">
+                      <span className="bg-[#2A6877]/10 text-[#2A6877] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm font-medium">
                         Mínimo: {formatCurrency(priceConfig.min_price)}
                       </span>
-                      <span className="bg-[#2A6877]/10 text-[#2A6877] px-2 py-1 rounded text-sm font-medium">
+                      <span className="bg-[#2A6877]/10 text-[#2A6877] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm font-medium">
                         Máximo: {formatCurrency(priceConfig.max_price)}
                       </span>
                     </div>
                   </div>
                   
-                  <div className="bg-gray-50/80 p-3 rounded-lg border border-gray-100">
-                    <h4 className="font-medium text-gray-700 mb-1 text-sm">Comisiones</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
+                  <div className="bg-gray-50/80 p-2 sm:p-3 rounded-lg border border-gray-100">
+                    <h4 className="font-medium text-gray-700 mb-1 text-xs sm:text-sm">Comisiones</h4>
+                    <ul className="text-xs sm:text-sm text-gray-600 space-y-1">
                       <li className="flex items-center gap-1">
-                        <CheckIcon className="w-4 h-4 text-green-500" />
+                        <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                         <span>50% <strong>solo</strong> en la primera sesión de cada cliente</span>
                       </li>
                       <li className="flex items-center gap-1">
-                        <CheckIcon className="w-4 h-4 text-green-500" />
+                        <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
                         <span>100% del valor a partir de la segunda sesión</span>
                       </li>
                     </ul>
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-500 mt-3 italic">
+                <p className="text-xs sm:text-sm text-gray-500 mt-2 sm:mt-3 italic">
                   Los cambios de precio están sujetos a aprobación por parte del administrador
                 </p>
               </motion.div>
@@ -362,50 +362,50 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
             onSubmit={handleSubmit}
-            className="space-y-6 mt-6"
+            className="space-y-4 sm:space-y-6 mt-3 sm:mt-6"
           >
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-5 shadow-sm">
-              <div className="mb-4">
-                <label htmlFor="suggestedPrice" className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 p-3 sm:p-5 shadow-sm">
+              <div className="mb-3 sm:mb-4">
+                <label htmlFor="suggestedPrice" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Precio sugerido (CLP)
                 </label>
                 <div className="relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">$</span>
+                    <span className="text-gray-500 text-xs sm:text-sm">$</span>
                   </div>
                   <input
                     type="text"
                     name="suggestedPrice"
                     id="suggestedPrice"
-                    className="focus:ring-[#2A6877] focus:border-[#2A6877] block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-lg bg-white/90"
+                    className="focus:ring-[#2A6877] focus:border-[#2A6877] block w-full pl-7 pr-12 text-xs sm:text-sm border-gray-300 rounded-lg bg-white/90"
                     placeholder="0"
                     value={formatNumber(newSuggestedPrice)}
                     onChange={handlePriceChange}
                     required
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">CLP</span>
+                    <span className="text-gray-500 text-xs sm:text-sm">CLP</span>
                   </div>
                 </div>
                 {priceConfig && (
-                  <p className="mt-2 text-sm text-gray-500 flex items-center gap-1">
-                    <InformationCircleIcon className="w-4 h-4" />
+                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-500 flex items-center gap-1">
+                    <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                     El precio debe estar entre {formatCurrency(priceConfig.min_price)} y {formatCurrency(priceConfig.max_price)}
                   </p>
                 )}
               </div>
 
               {newSuggestedPrice ? (
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-4 rounded-xl border border-blue-100">
-                  <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                    <CurrencyDollarIcon className="w-5 h-5 text-blue-600" />
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 p-3 sm:p-4 rounded-xl border border-blue-100">
+                  <h4 className="font-medium text-gray-800 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+                    <CurrencyDollarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                     <span>Simulación de ganancias</span>
                   </h4>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg border border-blue-100">
-                      <h5 className="text-sm font-medium text-blue-700 mb-1">Primera sesión (cada cliente nuevo)</h5>
-                      <div className="space-y-1 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="bg-white/80 backdrop-blur-sm p-2 sm:p-3 rounded-lg border border-blue-100">
+                      <h5 className="text-xs sm:text-sm font-medium text-blue-700 mb-1">Primera sesión (cada cliente nuevo)</h5>
+                      <div className="space-y-1 text-xs sm:text-sm">
                         <div className="flex justify-between text-gray-600">
                           <span>Precio total:</span>
                           <span className="font-medium">{formatCurrency(newSuggestedPrice)}</span>
@@ -421,9 +421,9 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                       </div>
                     </div>
                     
-                    <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg border border-green-100">
-                      <h5 className="text-sm font-medium text-green-700 mb-1">Segunda sesión en adelante</h5>
-                      <div className="space-y-1 text-sm">
+                    <div className="bg-white/80 backdrop-blur-sm p-2 sm:p-3 rounded-lg border border-green-100">
+                      <h5 className="text-xs sm:text-sm font-medium text-green-700 mb-1">Segunda sesión en adelante</h5>
+                      <div className="space-y-1 text-xs sm:text-sm">
                         <div className="flex justify-between text-gray-600">
                           <span>Precio total:</span>
                           <span className="font-medium">{formatCurrency(newSuggestedPrice)}</span>
@@ -441,14 +441,14 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                   </div>
                 </div>
               ) : (
-                <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 text-sm text-yellow-700">
+                <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3 sm:p-4 text-xs sm:text-sm text-yellow-700">
                   Ingresa un precio para ver la simulación de ganancias
                 </div>
               )}
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 pt-2">
+            <div className="flex justify-end space-x-2 sm:space-x-4 pt-1 sm:pt-2">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -457,7 +457,7 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                   setIsEditing(false);
                   setNewSuggestedPrice(suggestedPrice);
                 }}
-                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] transition-all"
+                className="inline-flex justify-center py-1.5 sm:py-2 px-3 sm:px-4 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] transition-all"
                 disabled={localLoading || isLoading}
               >
                 Cancelar
@@ -467,11 +467,11 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={localLoading || isLoading}
-                className="inline-flex justify-center py-2 px-5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-[#2A6877] to-[#235A67] hover:from-[#235A67] hover:to-[#1A4652] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] disabled:opacity-50 transition-all"
+                className="inline-flex justify-center py-1.5 sm:py-2 px-3 sm:px-5 border border-transparent shadow-sm text-xs sm:text-sm font-medium rounded-md text-white bg-gradient-to-r from-[#2A6877] to-[#235A67] hover:from-[#235A67] hover:to-[#1A4652] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] disabled:opacity-50 transition-all"
               >
                 {(localLoading || isLoading) ? (
                   <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin -ml-0.5 sm:-ml-1 mr-1.5 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -480,7 +480,7 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                 ) : (
                   <span className="flex items-center">
                     Guardar cambios
-                    <CheckIcon className="ml-2 h-4 w-4" />
+                    <CheckIcon className="ml-1.5 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                   </span>
                 )}
               </motion.button>
