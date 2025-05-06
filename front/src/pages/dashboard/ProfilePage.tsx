@@ -119,7 +119,7 @@ const ProfilePage = () => {
             {tabs.length > 1 && (
               <>
                 {/* Mobile Dropdown */}
-                <div className="md:hidden mb-3">
+                <div className="md:hidden mb-3 relative">
                   <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className="w-full flex items-center justify-between px-3 py-2 bg-white rounded-lg shadow"
@@ -136,7 +136,7 @@ const ProfilePage = () => {
                   </button>
                   
                   {isMenuOpen && (
-                    <div className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg">
+                    <div className="absolute z-50 mt-1 left-0 right-0 bg-white rounded-lg shadow-lg overflow-hidden">
                       {tabs.map(tab => (
                         <button
                           key={tab.id}
