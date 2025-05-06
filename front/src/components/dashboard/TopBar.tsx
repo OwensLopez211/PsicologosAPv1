@@ -6,7 +6,7 @@ import {
   UserGroupIcon, MagnifyingGlassIcon, ArrowRightOnRectangleIcon,
   ArrowLeftIcon, CreditCardIcon,
 } from '@heroicons/react/24/outline';
-import { motion, AnimatePresence } from 'framer-motion';
+import {  AnimatePresence } from 'framer-motion';
 
 const TopBar = () => {
   const { user, logout } = useAuth();
@@ -95,29 +95,6 @@ const TopBar = () => {
     const firstInitial = user.first_name ? user.first_name.charAt(0) : '';
     const lastInitial = user.last_name ? user.last_name.charAt(0) : '';
     return (firstInitial + lastInitial).toUpperCase();
-  };
-
-  // Variantes de animación para menús
-  const menuVariants = {
-    hidden: { opacity: 0, scale: 0.95, y: -10 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
-      y: 0,
-      transition: { 
-        type: "spring", 
-        damping: 15, 
-        stiffness: 300 
-      }
-    },
-    exit: { 
-      opacity: 0, 
-      scale: 0.95, 
-      y: -10,
-      transition: { 
-        duration: 0.15 
-      }
-    }
   };
 
   return (
