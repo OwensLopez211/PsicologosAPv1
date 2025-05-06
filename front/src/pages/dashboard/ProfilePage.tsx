@@ -103,13 +103,13 @@ const ProfilePage = () => {
 
   return (
     <PageTransition>
-      <div className="container mx-auto px-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-[#2A6877] mb-6">
+      <div className="container mx-auto px-2 sm:px-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#2A6877] mb-4 md:mb-6">
           Mi Perfil
         </h1>
         
         {isLoading ? (
-          <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-4 md:p-8 flex flex-col items-center justify-center">
             <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#2A6877]"></div>
             <p className="mt-4 text-gray-600">Cargando tu perfil...</p>
           </div>
@@ -119,10 +119,10 @@ const ProfilePage = () => {
             {tabs.length > 1 && (
               <>
                 {/* Mobile Dropdown */}
-                <div className="md:hidden mb-4">
+                <div className="md:hidden mb-3">
                   <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="w-full flex items-center justify-between px-4 py-2 bg-white rounded-lg shadow"
+                    className="w-full flex items-center justify-between px-3 py-2 bg-white rounded-lg shadow"
                   >
                     <span>{tabs.find(tab => tab.id === activeTab)?.label}</span>
                     <svg
@@ -136,7 +136,7 @@ const ProfilePage = () => {
                   </button>
                   
                   {isMenuOpen && (
-                    <div className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg">
+                    <div className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg">
                       {tabs.map(tab => (
                         <button
                           key={tab.id}
@@ -144,7 +144,7 @@ const ProfilePage = () => {
                             setActiveTab(tab.id);
                             setIsMenuOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${
+                          className={`w-full text-left px-3 py-3 hover:bg-gray-50 ${
                             activeTab === tab.id ? 'text-[#2A6877] bg-gray-50' : 'text-gray-700'
                           }`}
                         >
@@ -177,7 +177,7 @@ const ProfilePage = () => {
             )}
 
             {/* Content Sections */}
-            <div className="bg-white rounded-lg shadow-lg p-4 md:p-6">
+            <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 md:p-6">
               {activeTab === 'basic' && (
                 <BasicInfo
                   profile={profile}
