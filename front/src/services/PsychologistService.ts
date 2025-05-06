@@ -11,6 +11,44 @@ export interface Document {
   uploaded_at: string;
 }
 
+// Interfaz para el timeBlock del horario
+export interface TimeBlock {
+  startTime: string;
+  endTime: string;
+  [key: string]: any; // Permitir otras propiedades que puedan venir del API
+}
+
+// Interfaz para el día de la semana en el horario
+export interface DaySchedule {
+  enabled: boolean;
+  timeBlocks: TimeBlock[];
+  [key: string]: any; // Permitir otras propiedades que puedan venir del API
+}
+
+// Interfaz para el horario completo (schedule_config)
+export interface ScheduleConfig {
+  monday?: DaySchedule;
+  tuesday?: DaySchedule;
+  wednesday?: DaySchedule;
+  thursday?: DaySchedule;
+  friday?: DaySchedule;
+  saturday?: DaySchedule;
+  sunday?: DaySchedule;
+  [key: string]: DaySchedule | undefined | any; // Permitir acceso dinámico a las propiedades
+}
+
+// Interfaz para el horario (schedule)
+export interface Schedule {
+  id: number;
+  psychologist: number;
+  day_of_week: string;
+  day_of_week_display?: string;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Experience {
   id: number;
   position: string;
@@ -431,6 +469,75 @@ class PsychologistService {
     const lastInitial = lastName.length > 0 ? lastName.charAt(0).toUpperCase() : '';
     
     return (firstInitial + lastInitial) || '??';
+  }
+
+  /**
+   * Get psychologist schedule
+   * @param id Psychologist ID
+   * @returns Promise with schedule data
+   */
+  async getPsychologistSchedule(id: number): Promise<ScheduleConfig> {
+    this.logDebug(`Fetching schedule for psychologist ${id}`);
+    try {
+      const response = await api.get(`/schedules/psychologist/${id}/`);
+      this.logDebug(`Received schedule for psychologist ${id}`, response.data);
+      
+      // Si la respuesta contiene schedule_config, lo devolvemos
+      if (response.data && response.data.schedule_config) {
+        return response.data.schedule_config;
+      }
+      
+      // Si la respuesta es un array, convertimos al nuevo formato
+      if (Array.isArray(response.data)) {
+        // Convertir del formato antiguo al nuevo
+        const scheduleConfig: ScheduleConfig = {};
+        response.data.forEach((slot: Schedule) => {
+          const day = slot.day_of_week.toLowerCase();
+          if (!scheduleConfig[day]) {
+            scheduleConfig[day] = {
+              enabled: true,
+              timeBlocks: []
+            };
+          }
+          
+          scheduleConfig[day]?.timeBlocks.push({
+            startTime: slot.start_time,
+            endTime: slot.end_time
+          });
+        });
+        
+        return scheduleConfig;
+      }
+      
+      // En caso de que no se pueda determinar el formato, devolvemos un objeto vacío
+      return response.data || {};
+    } catch (error) {
+      this.logError(`Error fetching schedule for psychologist ${id}`, error);
+      
+      // Intentar un endpoint alternativo si el primero falla
+      try {
+        const psychologist = await this.getPsychologistById(id);
+        if (!psychologist || !psychologist.user) {
+          throw new Error(`Could not find psychologist with ID ${id}`);
+        }
+        
+        const userId = psychologist.user.id;
+        this.logDebug(`Using alternative endpoint with user ID ${userId}`);
+        
+        const response = await api.get(`/schedules/psychologist-schedule/?user_id=${userId}`);
+        this.logDebug(`Received schedule from alternative endpoint`, response.data);
+        
+        // Intentar extraer schedule_config
+        if (response.data && response.data.schedule_config) {
+          return response.data.schedule_config;
+        }
+        
+        return response.data || {};
+      } catch (fallbackError) {
+        this.logError(`Fallback strategy also failed for schedule`, fallbackError);
+        return {}; // Devolver objeto vacío en caso de error
+      }
+    }
   }
 }
 

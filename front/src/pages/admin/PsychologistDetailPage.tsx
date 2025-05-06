@@ -14,6 +14,8 @@ import SpecialtiesAndPopulations from './components/psychologist-detail/Specialt
 import DocumentsSection from './components/psychologist-detail/DocumentsSection';
 import PricingManagement from './components/psychologist-detail/PricingManagement';
 import ProfessionalExperiences from './components/psychologist-detail/ProfessionalExperiences';
+import PsychologistSchedule from './components/psychologist-detail/PsychologistSchedule';
+import BankingInfo from './components/psychologist-detail/BankingInfo';
 
 const PsychologistDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -236,7 +238,8 @@ const { } = useAuth();
 
           {/* Content */}
           <div className="p-3 sm:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+            {/* Información personal y profesional en grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Personal Information */}
               <PersonalInfo 
                 user={psychologist.user}
@@ -254,34 +257,47 @@ const { } = useAuth();
               />
             </div>
 
-            {/* Pricing Management - Make sure this is included */}
-            <PricingManagement
-              psychologistId={id ? parseInt(id) : 0}
-              suggestedPrice={suggestedPrice}
-              approvedPrice={approvedPrice}
-              onUpdateApprovedPrice={handleUpdateApprovedPrice}
-              onRefreshPrices={handleRefreshPrices}
-            />
+            {/* Bloques de información con fondo gris entre ellos */}
+            <div className="my-6 md:my-8 space-y-6 md:space-y-8">
+              {/* Pricing Management */}
+              <PricingManagement
+                psychologistId={id ? parseInt(id) : 0}
+                suggestedPrice={suggestedPrice}
+                approvedPrice={approvedPrice}
+                onUpdateApprovedPrice={handleUpdateApprovedPrice}
+                onRefreshPrices={handleRefreshPrices}
+              />
 
-            {/* Professional Experiences - Nuevo componente */}
-            <div className="mt-6 md:mt-8">
+              {/* Banking Information */}
+              <BankingInfo 
+                bankAccountNumber={psychologist.bank_account_number}
+                bankAccountOwner={psychologist.bank_account_owner}
+                bankAccountOwnerRut={psychologist.bank_account_owner_rut}
+                bankAccountOwnerEmail={psychologist.bank_account_owner_email}
+                bankAccountType={psychologist.bank_account_type}
+                bankAccountTypeDisplay={psychologist.bank_account_type_display}
+                bankName={psychologist.bank_name}
+              />
+
+              {/* Professional Experiences */}
               <ProfessionalExperiences 
                 experiences={psychologist.experiences || psychologist.professional_experiences || []}
               />
-            </div>
 
-            {/* Specialties and Target Populations */}
-            <div className="mt-6 md:mt-8">
+              {/* Horario del Psicólogo */}
+              <PsychologistSchedule 
+                psychologistId={id ? parseInt(id) : 0}
+              />
+
+              {/* Specialties and Target Populations */}
               <SpecialtiesAndPopulations 
                 specialties={psychologist.specialties}
                 target_populations={psychologist.target_populations}
                 intervention_areas={psychologist.intervention_areas}
                 experience_description={psychologist.experience_description}
               />
-            </div>
 
-            {/* Documents Section */}
-            <div className="mt-6 md:mt-8">
+              {/* Documents Section */}
               <DocumentsSection 
                 documents={psychologist.verification_documents}
                 onVerifyDocument={handleDocumentVerification}
