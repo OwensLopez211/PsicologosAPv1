@@ -118,7 +118,7 @@ const ScheduleAndFees = ({ profile, onSave, isLoading, onLoadingChange }: Schedu
 
   return (
     <motion.div 
-      className="space-y-8"
+      className="space-y-6 sm:space-y-8"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
