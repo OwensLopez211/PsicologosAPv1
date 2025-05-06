@@ -171,27 +171,27 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
 
   return (
     <motion.div 
-      className="p-5 bg-white/90 backdrop-blur-sm rounded-xl border border-gray-100 shadow-sm"
+      className="p-3 sm:p-5 bg-white/90 backdrop-blur-sm rounded-xl border border-gray-100 shadow-sm"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       <motion.div
-        className="mb-4 flex items-center gap-3"
+        className="mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3"
         variants={fieldVariants}
         custom={0}
       >
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-[#2A6877]/10 to-[#B4E4D3]/20 text-[#2A6877]">
-          <span className="text-xl">📋</span>
+        <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-[#2A6877]/10 to-[#B4E4D3]/20 text-[#2A6877]">
+          <span className="text-base sm:text-xl">📋</span>
         </div>
-        <h3 className="text-lg font-semibold text-gray-800">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-800">
           Datos Profesionales
         </h3>
       </motion.div>
 
-      <div className="h-px w-full bg-gradient-to-r from-[#2A6877]/20 via-[#B4E4D3]/20 to-transparent mb-5"></div>
+      <div className="h-px w-full bg-gradient-to-r from-[#2A6877]/20 via-[#B4E4D3]/20 to-transparent mb-3 sm:mb-5"></div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {/* Campos regulares del formulario */}
         {formFields.map((field, index) => (
           <motion.div 
@@ -199,9 +199,9 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
             variants={fieldVariants}
             custom={index + 1}
           >
-            <label htmlFor={field.id} className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#2A6877]/10 text-[#2A6877]">
-                <span className="text-sm">{field.icon}</span>
+            <label htmlFor={field.id} className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-700 mb-1">
+              <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#2A6877]/10 text-[#2A6877]">
+                <span className="text-xs sm:text-sm">{field.icon}</span>
               </div>
               {field.label}
             </label>
@@ -216,7 +216,7 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
                 min={field.min}
                 max={field.max}
                 className={`
-                  block w-full rounded-lg border-gray-300 shadow-sm 
+                  block w-full rounded-lg border-gray-300 shadow-sm text-sm
                   focus:border-[#2A6877] focus:ring-[#2A6877] transition-all duration-200
                   ${isFieldDisabled(field.id) 
                     ? 'bg-gray-50/80 cursor-not-allowed' 
@@ -231,7 +231,7 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
                   animate={{ opacity: 0.5 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <svg className="h-4 w-4 text-[#2A6877]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-3 w-3 sm:h-4 sm:w-4 text-[#2A6877]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                   </svg>
                 </motion.div>
@@ -241,12 +241,12 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
             {/* Nota para título profesional cuando está deshabilitado pero en modo edición */}
             {isEditing && field.id === 'professional_title' && disabledFields.includes('professional_title') && (
               <motion.p 
-                className="mt-1 text-xs text-amber-600 flex items-center gap-1"
+                className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-amber-600 flex items-center gap-0.5 sm:gap-1"
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 sm:h-3 sm:w-3" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
                 Este campo se actualiza automáticamente según tu género
@@ -262,9 +262,9 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
           className="sm:col-span-2"
           ref={dropdownRef}
         >
-          <label htmlFor="university" className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#2A6877]/10 text-[#2A6877]">
-              <span className="text-sm">🏛️</span>
+          <label htmlFor="university" className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-700 mb-1">
+            <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#2A6877]/10 text-[#2A6877]">
+              <span className="text-xs sm:text-sm">🏛️</span>
             </div>
             Universidad de Egreso
           </label>
@@ -286,7 +286,7 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
                 disabled={isFieldDisabled('university')}
                 placeholder="Selecciona tu universidad"
                 className={`
-                  block w-full rounded-lg border-gray-300 shadow-sm 
+                  block w-full rounded-lg border-gray-300 shadow-sm text-sm
                   focus:border-[#2A6877] focus:ring-[#2A6877] transition-all duration-200
                   ${isFieldDisabled('university') 
                     ? 'bg-gray-50/80 cursor-not-allowed' 
@@ -296,7 +296,7 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
               />
               {isEditing && !disabledFields.includes('university') && (
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <svg className={`h-4 w-4 transition-transform duration-200 text-[#2A6877] ${showUniversityDropdown ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-200 text-[#2A6877] ${showUniversityDropdown ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -314,17 +314,17 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
                   animate="visible"
                   exit="exit"
                 >
-                  <div className="sticky top-0 z-10 bg-white p-2 border-b">
+                  <div className="sticky top-0 z-10 bg-white p-1.5 sm:p-2 border-b">
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                        <svg className="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <div className="absolute inset-y-0 left-2 sm:left-3 flex items-center pointer-events-none">
+                        <svg className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                         </svg>
                       </div>
                       <input
                         ref={searchInputRef}
                         type="text"
-                        className="w-full pl-10 pr-3 py-2 border-gray-300 rounded-lg text-sm focus:border-[#2A6877] focus:ring-[#2A6877]"
+                        className="w-full pl-8 sm:pl-10 pr-3 py-1.5 sm:py-2 border-gray-300 rounded-lg text-xs sm:text-sm focus:border-[#2A6877] focus:ring-[#2A6877]"
                         placeholder="Buscar universidad..."
                         value={universitySearch}
                         onChange={(e) => setUniversitySearch(e.target.value)}
@@ -338,7 +338,7 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
                         <motion.div
                           key={index}
                           className={`
-                            cursor-pointer select-none relative py-2.5 px-4 hover:bg-[#2A6877]/5 transition-colors
+                            cursor-pointer select-none relative py-2 sm:py-2.5 px-3 sm:px-4 hover:bg-[#2A6877]/5 transition-colors text-xs sm:text-sm
                             ${formData.university === university ? 'bg-[#2A6877]/10' : ''}
                           `}
                           onClick={() => {
@@ -354,12 +354,12 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
                           <div className="flex items-center">
                             {formData.university === university && (
                               <motion.span 
-                                className="mr-2 text-[#2A6877]"
+                                className="mr-1.5 sm:mr-2 text-[#2A6877]"
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ type: "spring", stiffness: 500, damping: 15 }}
                               >
-                                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <svg className="h-3 w-3 sm:h-4 sm:w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                               </motion.span>
@@ -371,7 +371,7 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
                         </motion.div>
                       ))
                     ) : (
-                      <div className="py-4 px-3 text-gray-500 text-sm text-center">
+                      <div className="py-3 sm:py-4 px-3 text-gray-500 text-xs sm:text-sm text-center">
                         No se encontraron resultados
                       </div>
                     )}
@@ -384,12 +384,12 @@ const ProfessionalFormFields = ({ formData, isEditing, onChange, disabledFields 
           {/* Texto de ayuda en modo edición */}
           {isEditing && !disabledFields.includes('university') && (
             <motion.p 
-              className="mt-1 text-xs text-gray-500 flex items-center gap-1"
+              className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-gray-500 flex items-center gap-0.5 sm:gap-1"
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 sm:h-3 sm:w-3" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
               Haz clic para seleccionar tu universidad de egreso
