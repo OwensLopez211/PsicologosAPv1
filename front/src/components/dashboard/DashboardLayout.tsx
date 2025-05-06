@@ -19,7 +19,11 @@ const DashboardLayout = () => {
     return () => clearTimeout(timer);
   }, []);
 
+<<<<<<< HEAD
   // Improved scroll detection effect
+=======
+  // Improved scroll detection effect - solo para cambios visuales
+>>>>>>> devs
   useEffect(() => {
     const handleScroll = () => {
       // Detect scrolling for UI adjustments
@@ -73,7 +77,11 @@ const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 overflow-x-hidden">
+<<<<<<< HEAD
       {/* TopBar is fixed in its own component */}
+=======
+      {/* TopBar component es ya fijo en su propia implementación */}
+>>>>>>> devs
       <TopBar />
       
       {/* Loading overlay */}
@@ -101,9 +109,21 @@ const DashboardLayout = () => {
         )}
       </AnimatePresence>
       
+<<<<<<< HEAD
       {/* Main content area with proper top padding to account for fixed header */}
       <div className="flex flex-col flex-grow pt-16">
         {/* Subtle background decorations */}
+=======
+      {/* Main content area with proper spacing for fixed headers/footers */}
+      <div 
+        className="flex flex-col flex-grow" 
+        style={{ 
+          paddingTop: '64px', /* Espacio para la barra superior */
+          paddingBottom: '80px' /* Espacio para la barra inferior en móvil */
+        }}
+      >
+        {/* Sutile background decorations */}
+>>>>>>> devs
         <div className="fixed top-0 right-0 -z-10 w-1/2 h-1/2 bg-[#B4E4D3]/10 blur-3xl rounded-full transform translate-x-1/3 -translate-y-1/4"></div>
         <div className="fixed bottom-0 left-0 -z-10 w-1/2 h-1/2 bg-[#2A6877]/5 blur-3xl rounded-full transform -translate-x-1/3 translate-y-1/4"></div>
         
@@ -127,8 +147,13 @@ const DashboardLayout = () => {
           </motion.div>
         </motion.main>
         
+<<<<<<< HEAD
         {/* Footer with adjusted padding for mobile navigation */}
         <footer className="mt-auto text-center text-sm text-gray-500 py-4 md:py-6 pb-20 md:pb-6">
+=======
+        {/* Footer con espacio ajustado para móvil */}
+        <footer className="mt-auto text-center text-sm text-gray-500 py-4 md:py-6">
+>>>>>>> devs
           <p>© {new Date().getFullYear()} Bienestar - Plataforma de Salud Mental</p>
         </footer>
       </div>
