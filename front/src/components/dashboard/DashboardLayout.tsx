@@ -115,7 +115,7 @@ const DashboardLayout = () => {
         
         {/* Main content with animations for route transitions */}
         <motion.main 
-          className="flex-grow p-4 md:p-6 lg:p-8 mx-auto w-full max-w-full"
+          className="flex-grow px-2 sm:px-4 md:px-6 lg:px-8 mx-auto w-full max-w-full"
           variants={containerVariants}
           initial="initial"
           animate="animate"

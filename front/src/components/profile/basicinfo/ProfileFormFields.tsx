@@ -48,20 +48,20 @@ const FormField = ({
     transition={{ duration: 0.3 }}
   >
     {disabled ? (
-      <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-gray-100 hover:border-gray-200 transition-all duration-300 h-full">
+      <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100 hover:border-gray-200 transition-all duration-300 h-full">
         <div className="flex items-start">
-          {icon && <div className="mt-0.5 mr-3 text-[#2A6877]">{icon}</div>}
+          {icon && <div className="mt-0.5 mr-2 sm:mr-3 text-[#2A6877]">{icon}</div>}
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
-            <p className="text-gray-900 font-medium">
-              {value || <span className="text-gray-400 italic text-sm">No especificado</span>}
+            <p className="text-xs font-medium text-gray-500 mb-0.5 sm:mb-1">{label}</p>
+            <p className="text-gray-900 font-medium text-sm sm:text-base">
+              {value || <span className="text-gray-400 italic text-xs sm:text-sm">No especificado</span>}
             </p>
           </div>
         </div>
       </div>
     ) : (
       <div className="space-y-1">
-        <label htmlFor={id} className="flex items-center text-sm font-medium text-gray-700">
+        <label htmlFor={id} className="flex items-center text-xs sm:text-sm font-medium text-gray-700">
           {icon && <span className="mr-2 text-[#2A6877]">{icon}</span>}
           {label} {optional && <span className="text-gray-500 text-xs ml-1">(opcional)</span>}
         </label>
@@ -72,7 +72,7 @@ const FormField = ({
             value={value}
             onChange={onChange}
             disabled={disabled}
-            className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2A6877] focus:ring-[#2A6877] transition-all duration-200 hover:border-[#2A6877]"
+            className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2A6877] focus:ring-[#2A6877] transition-all duration-200 hover:border-[#2A6877] text-sm py-1.5 sm:py-2"
             placeholder={`Ingrese ${label.toLowerCase()}`}
           />
         </div>
@@ -102,15 +102,15 @@ const GenderDropdown = ({ value, onChange, isEditing }: { value: string, onChang
 
   if (!isEditing) {
     return (
-      <div className="bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-gray-100 hover:border-gray-200 transition-all duration-300 h-full">
+      <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100 hover:border-gray-200 transition-all duration-300 h-full">
         <div className="flex items-start">
-          <div className="mt-0.5 mr-3 text-[#2A6877]">
+          <div className="mt-0.5 mr-2 sm:mr-3 text-[#2A6877]">
             <UserIcon className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-1">Género</p>
-            <p className="text-gray-900 font-medium">
-              {value ? getGenderLabel(value) : <span className="text-gray-400 italic text-sm">No especificado</span>}
+            <p className="text-xs font-medium text-gray-500 mb-0.5 sm:mb-1">Género</p>
+            <p className="text-gray-900 font-medium text-sm sm:text-base">
+              {value ? getGenderLabel(value) : <span className="text-gray-400 italic text-xs sm:text-sm">No especificado</span>}
             </p>
           </div>
         </div>
@@ -120,14 +120,14 @@ const GenderDropdown = ({ value, onChange, isEditing }: { value: string, onChang
 
   return (
     <div className="space-y-1">
-      <label className="flex items-center text-sm font-medium text-gray-700">
+      <label className="flex items-center text-xs sm:text-sm font-medium text-gray-700">
         <span className="mr-2 text-[#2A6877]"><UserIcon className="w-4 h-4" /></span>
         Género
       </label>
       <select
         value={value}
         onChange={handleSelectChange}
-        className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2A6877] focus:ring-[#2A6877] transition-all duration-200 hover:border-[#2A6877]"
+        className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-[#2A6877] focus:ring-[#2A6877] transition-all duration-200 hover:border-[#2A6877] text-sm py-1.5 sm:py-2"
       >
         <option value="">Seleccione su género</option>
         {genderOptions.map(option => (
@@ -170,19 +170,19 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
 
   return (
     <motion.div 
-      className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 p-5 sm:p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-50"
+      className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 md:grid-cols-2 p-3 sm:p-5 md:p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-50"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
       layout
     >
       {/* Sección Información Personal */}
-      <motion.div className="col-span-1 md:col-span-2 mb-3">
-        <div className="flex items-center mb-2">
-          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#2A6877]/10 text-[#2A6877] mr-3">
-            <UserIcon className="w-4 h-4" />
+      <motion.div className="col-span-1 md:col-span-2 mb-2 sm:mb-3">
+        <div className="flex items-center mb-1 sm:mb-2">
+          <div className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#2A6877]/10 text-[#2A6877] mr-2 sm:mr-3">
+            <UserIcon className="w-3 h-3 sm:w-4 sm:h-4" />
           </div>
-          <h3 className="text-md font-semibold text-gray-700">
+          <h3 className="text-sm sm:text-md font-semibold text-gray-700">
             Información Personal
           </h3>
         </div>
@@ -251,12 +251,12 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
       />
 
       {/* Sección Ubicación */}
-      <motion.div className="col-span-1 md:col-span-2 mt-4 mb-3">
-        <div className="flex items-center mb-2">
-          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[#B4E4D3]/30 text-[#2A6877] mr-3">
-            <MapPinIcon className="w-4 h-4" />
+      <motion.div className="col-span-1 md:col-span-2 mt-2 sm:mt-4 mb-2 sm:mb-3">
+        <div className="flex items-center mb-1 sm:mb-2">
+          <div className="flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#B4E4D3]/30 text-[#2A6877] mr-2 sm:mr-3">
+            <MapPinIcon className="w-3 h-3 sm:w-4 sm:h-4" />
           </div>
-          <h3 className="text-md font-semibold text-gray-700">
+          <h3 className="text-sm sm:text-md font-semibold text-gray-700">
             Ubicación
           </h3>
         </div>
