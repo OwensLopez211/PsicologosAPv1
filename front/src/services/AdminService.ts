@@ -30,15 +30,15 @@ class AdminService {
   private statsUrls = [
     '/profiles/admin/stats/dashboard/',
     '/admin/stats/dashboard/',
-    '/api/profiles/admin/stats/dashboard/',
-    '/api/admin/stats/dashboard/'
+    '/profiles/admin/stats/dashboard/',
+    '/admin/stats/dashboard/'
   ];
   
   private psychologistsUrls = [
     '/profiles/admin/psychologists/',
     '/admin/psychologists/',
-    '/api/profiles/admin/psychologists/',
-    '/api/admin/psychologists/'
+    '/profiles/admin/psychologists/',
+    '/admin/psychologists/'
   ];
   
   /**
