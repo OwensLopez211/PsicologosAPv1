@@ -45,21 +45,21 @@ const TopBar = () => {
     const roleSpecificItems = {
       CLIENT: [
         { path: '/dashboard', label: 'Inicio', icon: HomeIcon },
-        { path: '/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
-        { path: '/dashboard/appointments', label: 'Mis Citas', icon: CalendarIcon },
-        { path: '/dashboard/psychologists', label: 'Buscar Psicólogos', icon: MagnifyingGlassIcon },
+        { path: '/dashboard/profile', label: 'Perfil', icon: UserIcon },
+        { path: '/dashboard/appointments', label: 'Citas', icon: CalendarIcon },
+        { path: '/dashboard/psychologists', label: 'Buscar', icon: MagnifyingGlassIcon },
       ],
       PSYCHOLOGIST: [
         { path: '/psicologo/dashboard', label: 'Inicio', icon: HomeIcon },
-        { path: '/psicologo/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
-        { path: '/psicologo/dashboard/schedule', label: 'Mi Agenda', icon: CalendarIcon },
-        { path: '/psicologo/dashboard/patients', label: 'Mis Pacientes', icon: UsersIcon },
-        { path: '/psicologo/dashboard/payments', label: 'Verificar Pagos', icon: CreditCardIcon },
+        { path: '/psicologo/dashboard/profile', label: 'Perfil', icon: UserIcon },
+        { path: '/psicologo/dashboard/schedule', label: 'Agenda', icon: CalendarIcon },
+        { path: '/psicologo/dashboard/patients', label: 'Pacientes', icon: UsersIcon },
+        { path: '/psicologo/dashboard/payments', label: 'Pagos', icon: CreditCardIcon },
       ],
       ADMIN: [
         { path: '/admin/dashboard', label: 'Inicio', icon: HomeIcon },
-        { path: '/admin/dashboard/profile', label: 'Mi Perfil', icon: UserIcon },
-        { path: '/admin/dashboard/payments', label: 'Verificar Pagos', icon: CreditCardIcon },
+        { path: '/admin/dashboard/profile', label: 'Perfil', icon: UserIcon },
+        { path: '/admin/dashboard/payments', label: 'Pagos', icon: CreditCardIcon },
         { path: '/admin/dashboard/pacients', label: 'Pacientes', icon: UsersIcon },
         { path: '/admin/dashboard/psychologists', label: 'Psicólogos', icon: UserGroupIcon },
       ],
@@ -292,7 +292,7 @@ const TopBar = () => {
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           <UserIcon className="h-5 w-5 mr-3 text-gray-500" />
-                          Mi Perfil
+                          Perfil
                         </Link>
                       </div>
                       
@@ -334,14 +334,14 @@ const TopBar = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          height: '64px',
+          height: '60px',
           zIndex: 9999,
           willChange: 'transform',
           transform: 'translateZ(0)', /* Fuerza GPU rendering */
         }}
         className="md:hidden bg-white border-t border-gray-200 flex justify-between shadow-lg"
       >
-        {getMenuItems().slice(0, 4).map((item) => {
+        {getMenuItems().map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
           
@@ -349,15 +349,15 @@ const TopBar = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-1 flex-col items-center justify-center py-2 text-xs ${
+              className={`flex flex-1 flex-col items-center justify-center px-1 py-1.5 text-[9px] ${
                 isActive ? 'text-[#2A6877]' : 'text-gray-600'
               }`}
             >
-              <Icon className={`h-6 w-6 mb-1 ${isActive ? 'text-[#2A6877]' : 'text-gray-500'}`} />
-              <span>{item.label}</span>
+              <Icon className={`h-5 w-5 ${isActive ? 'text-[#2A6877]' : 'text-gray-500'}`} />
+              <span className="mt-0.5 text-center max-w-[60px] truncate">{item.label}</span>
               {isActive && (
                 <div 
-                  className="absolute bottom-0 h-0.5 w-12 bg-[#2A6877] rounded-t-full"
+                  className="absolute bottom-0 h-0.5 w-8 bg-[#2A6877] rounded-t-full"
                 />
               )}
             </Link>
