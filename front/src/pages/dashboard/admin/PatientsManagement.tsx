@@ -9,7 +9,6 @@ import {
   MagnifyingGlassIcon,
   UserCircleIcon,
   IdentificationIcon,
-  EnvelopeIcon,
   MapPinIcon,
   PhoneIcon,
   CheckCircleIcon,
@@ -538,13 +537,9 @@ const PatientsManagement = () => {
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-3 pb-1 border-b border-gray-100">Información del Perfil</h4>
                   <div>
-                    <p className="text-xs text-gray-500">Fecha de Registro</p>
+                    <p className="text-xs text-gray-500">ID de Usuario</p>
                     <p className="text-sm font-medium">
-                      {new Date(selectedPatient.created_at).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+                      {selectedPatient.user.id}
                     </p>
                   </div>
                 </div>
