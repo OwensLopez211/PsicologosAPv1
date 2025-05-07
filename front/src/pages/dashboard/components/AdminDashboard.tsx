@@ -355,10 +355,10 @@ const AdminDashboard: React.FC = () => {
               </>
             ) : (
               <div className="p-8 text-center text-gray-500">
-                <ClockIcon className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                <CheckCircleIcon className="h-12 w-12 text-green-300 mx-auto mb-2" />
                 <p className="font-medium text-gray-600 mb-1">No hay psicólogos pendientes de verificación</p>
                 <p className="text-sm text-gray-500 mb-3">
-                  Actualmente no hay psicólogos esperando ser verificados en el sistema.
+                  ¡Todos los psicólogos han sido revisados! No hay solicitudes pendientes en este momento.
                 </p>
                 <button 
                   onClick={async () => {
