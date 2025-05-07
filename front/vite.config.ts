@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import compression from 'vite-plugin-compression'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
   plugins: [
@@ -14,6 +15,12 @@ export default defineConfig({
         level: 9,
       },
     }),
+    visualizer({
+      filename: 'dist/stats.html', // ubicación del reporte
+      open: true,                  // abre automáticamente en el navegador
+      gzipSize: true,              // muestra tamaño gzip
+      brotliSize: true             // muestra tamaño brotli
+    })
   ],
   server: {
     host: true,
@@ -40,5 +47,5 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 1000,
-  }  
+  }
 })
