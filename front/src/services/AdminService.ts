@@ -110,20 +110,26 @@ class AdminService {
       if (this.workingPsychologistsUrl) {
         try {
           const response = await api.get(this.workingPsychologistsUrl, {
-            params: { limit }
+            params: { 
+              limit,
+              verification_status__in: 'DOCUMENTS_SUBMITTED,VERIFICATION_IN_PROGRESS,PENDING'
+            }
           });
           
           if (response.data && response.data.length > 0) {
-            // Filtrar los que no estén verificados o rechazados
+            // Filtrar explícitamente para asegurarnos de que solo obtenemos psicólogos pendientes
             const pendingPsychologists = response.data.filter((psych: any) => 
-              psych.verification_status !== 'VERIFIED' && 
-              psych.verification_status !== 'REJECTED'
+              psych.verification_status === 'DOCUMENTS_SUBMITTED' || 
+              psych.verification_status === 'VERIFICATION_IN_PROGRESS' || 
+              psych.verification_status === 'PENDING'
             );
             
             if (pendingPsychologists.length > 0) {
               return pendingPsychologists.slice(0, limit);
             }
           }
+          // Si no hay psicólogos pendientes, retornar array vacío
+          return [];
         } catch (error) {
           this.workingPsychologistsUrl = null; // Reiniciar ya que no funciona
         }
@@ -132,29 +138,8 @@ class AdminService {
       // Probar las URLs conocidas
       for (const baseUrl of this.psychologistsUrls) {
         try {
-          // Primero intentar sin filtro
-          const response = await api.get(baseUrl, {
-            params: { limit }
-          });
-          
-          if (response.data && response.data.length > 0) {
-            this.workingPsychologistsUrl = baseUrl; // Guardar la URL que funcionó
-            
-            // Filtrar los que no estén verificados o rechazados
-            const pendingPsychologists = response.data.filter((psych: any) => 
-              psych.verification_status !== 'VERIFIED' && 
-              psych.verification_status !== 'REJECTED'
-            );
-            
-            if (pendingPsychologists.length > 0) {
-              return pendingPsychologists.slice(0, limit);
-            }
-          }
-        } catch (error) {
-          // Intentar con estados específicos si obtener todos falló
-          const statusesToTry = ['DOCUMENTS_SUBMITTED', 'VERIFICATION_IN_PROGRESS', 'PENDING'];
-          
-          for (const status of statusesToTry) {
+          // Intentar directamente con filtros de estados pendientes
+          for (const status of ['DOCUMENTS_SUBMITTED', 'VERIFICATION_IN_PROGRESS', 'PENDING']) {
             try {
               const response = await api.get(baseUrl, {
                 params: {
@@ -171,27 +156,40 @@ class AdminService {
               // Continuar con el siguiente estado
             }
           }
+          
+          // Si no encontramos con filtros específicos, intentar obtener todos y filtrar manualmente
+          const response = await api.get(baseUrl, {
+            params: { limit: 10 } // Obtenemos más para tener margen al filtrar
+          });
+          
+          if (response.data && response.data.length > 0) {
+            this.workingPsychologistsUrl = baseUrl; // Guardar la URL que funcionó
+            
+            // Filtrar explícitamente los pendientes
+            const pendingPsychologists = response.data.filter((psych: any) => 
+              psych.verification_status === 'DOCUMENTS_SUBMITTED' || 
+              psych.verification_status === 'VERIFICATION_IN_PROGRESS' || 
+              psych.verification_status === 'PENDING'
+            );
+            
+            if (pendingPsychologists.length > 0) {
+              return pendingPsychologists.slice(0, limit);
+            }
+          }
+          
+          // Si llegamos aquí sin encontrar psicólogos pendientes, retornar array vacío
+          return [];
+        } catch (error) {
+          // Continuar con la siguiente URL
         }
       }
       
-      throw new Error('No se pudo conectar con el servidor para obtener psicólogos pendientes');
+      // Si no encontramos psicólogos pendientes, retornar array vacío
+      return [];
     } catch (error) {
       console.error('Error al obtener psicólogos pendientes:', error);
-      // Devolver datos de ejemplo solo en caso de error total
-      return [
-        {
-          id: 1,
-          user: {
-            id: 101,
-            first_name: "Juan",
-            last_name: "Pérez",
-            email: "juan.perez@example.com"
-          },
-          profile_image: null,
-          verification_status: "DOCUMENTS_SUBMITTED",
-          created_at: new Date().toISOString()
-        }
-      ];
+      // Retornar array vacío en lugar de datos de ejemplo
+      return [];
     }
   }
 
