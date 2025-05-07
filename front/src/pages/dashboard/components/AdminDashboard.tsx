@@ -104,14 +104,14 @@ const AdminDashboard: React.FC = () => {
       initial="hidden"
       animate="visible"
     >
-      {/* Panel de depuración temporal - Solo en desarrollo */}
+      {/* Panel de depuración básico */}
       {(error || showDebug) && (
         <motion.div 
           variants={itemVariants}
           className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4"
         >
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-medium text-yellow-800">Información de depuración</h3>
+            <h3 className="font-medium text-yellow-800">Información del sistema</h3>
             <button 
               onClick={() => setShowDebug(!showDebug)}
               className="text-sm text-yellow-600 hover:text-yellow-800"
@@ -122,66 +122,52 @@ const AdminDashboard: React.FC = () => {
           
           {showDebug && (
             <div className="space-y-2 text-sm text-yellow-700">
-              <p><strong>URL Base de API:</strong> {apiBaseUrl}</p>
+              <p><strong>URL Base:</strong> {apiBaseUrl}</p>
               
-              {/* Datos recibidos del servidor */}
+              {/* Datos de estadísticas */}
               <div className="mt-2 pt-2 border-t border-yellow-200">
                 <div className="flex justify-between items-center">
-                  <p className="font-medium">Datos recibidos del servidor:</p>
+                  <p className="font-medium">Estadísticas:</p>
                   <button 
                     onClick={async () => {
                       setLoading(true);
                       try {
-                        // Forzar actualización ignorando cache
+                        // Forzar actualización
                         const freshStats = await AdminService.getDashboardStats();
                         setStats(freshStats);
+                        
+                        // Actualizar también psicólogos pendientes
+                        const pendingData = await AdminService.getPendingPsychologists(3);
+                        setPendingPsychologists(pendingData);
                       } catch (err) {
-                        console.error("Error al actualizar estadísticas:", err);
+                        console.error("Error al actualizar datos:", err);
                       } finally {
                         setLoading(false);
                       }
                     }}
-                    className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-md hover:bg-yellow-200 text-xs flex items-center"
+                    className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-xs flex items-center"
                   >
                     <svg className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0114 0V5a1 1 0 112 0v2.101a9.002 9.002 0 01-14.712 6.975 1 1 0 111.296-1.52A7.002 7.002 0 114 15.899V18a1 1 0 11-2 0v-2.101a7.002 7.002 0 010-13.798V2a1 1 0 011-1z" clipRule="evenodd" />
                     </svg>
-                    Actualizar
+                    Actualizar datos
                   </button>
                 </div>
-                <pre className="bg-yellow-100 p-2 rounded text-xs mt-1 overflow-auto">
-                  {JSON.stringify(stats, null, 2)}
-                </pre>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div className="bg-white p-2 rounded text-xs">
+                    <p><strong>Total Usuarios:</strong> {stats.totalUsers}</p>
+                    <p><strong>Pacientes:</strong> {stats.clientUsers}</p>
+                  </div>
+                  <div className="bg-white p-2 rounded text-xs">
+                    <p><strong>Psicólogos pendientes:</strong> {stats.pendingUsers}</p>
+                    <p><strong>Psicólogos verificados:</strong> {stats.verifiedUsers}</p>
+                  </div>
+                </div>
               </div>
               
               {error && (
-                <p><strong>Error:</strong> {error}</p>
+                <p className="mt-2 pt-2 border-t border-yellow-200 text-red-600"><strong>Error:</strong> {error}</p>
               )}
-              
-              {/* Botón para prueba de diagnóstico */}
-              <div className="mt-3 pt-3 border-t border-yellow-200">
-                <button 
-                  onClick={async () => {
-                    try {
-                      const diagnosticInfo = await AdminService.debugPendingPsychologists();
-                      console.log('Diagnóstico API:', diagnosticInfo);
-                      alert('Diagnóstico completado. Ver resultados en la consola del navegador (F12 > Console)');
-                    } catch (err) {
-                      console.error('Error al ejecutar diagnóstico:', err);
-                    }
-                  }}
-                  className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 text-xs"
-                >
-                  Ejecutar diagnóstico de API
-                </button>
-                <p className="mt-2 text-xs text-yellow-600">
-                  Este diagnóstico verificará las URLs del API y mostrará información detallada de los errores en la consola.
-                </p>
-              </div>
-              
-              <p className="mt-3 text-xs text-yellow-600">
-                Si las URLs no coinciden con la estructura del backend, ajusta el servicio AdminService.ts
-              </p>
             </div>
           )}
         </motion.div>
