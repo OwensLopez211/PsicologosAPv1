@@ -9,7 +9,7 @@ const AboutPage = () => {
     <PageTransition>
       <HeaderPage 
         title="Quienes somos"
-        description="Conectamos personas con psicólogos profesionales para una atención mental accesible y efectiva."
+        description="Conectamos personas con psicólogos profesionales para una atención accesible y efectiva."
       />
       <MissionSection />
       <VisionSection />

@@ -23,6 +23,7 @@ import PsychologistListPage from './pages/admin/PsychologistListPage';
 import PsychologistDetailPage from './pages/admin/PsychologistDetailPage';
 import VerificationsPage from './pages/dashboard/VerificationsPage';
 import ToastProvider from './components/toast/ToastProvider';
+import FAQPage from './pages/public-pages/FaqPage';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
               <Route path="/quienes-somos" element={<AboutPage />} />
               <Route path="/contacto" element={<ContactPage />} />
               <Route path="/terminos-y-condiciones" element={<TermsPage />} />
+              <Route path="/preguntas-frecuentes" element={<FAQPage />} />
             </Route>
 
             {/* Client Dashboard routes */}

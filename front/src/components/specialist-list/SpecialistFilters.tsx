@@ -71,9 +71,6 @@ const SpecialistFilters: FC<SpecialistFiltersProps> = ({
               <h2 className="text-xl font-bold text-gray-900">
                 {totalSpecialists} {totalSpecialists === 1 ? 'Especialista verificado' : 'Especialistas verificados'}
               </h2>
-              <p className="text-sm text-gray-500">
-                Profesionales con credenciales validadas
-              </p>
             </div>
           </div>
           

@@ -30,7 +30,7 @@ const MobileHero = () => {
 
         <p className="text-gray-600 text-lg mx-auto">
           Empieza a sentirte mejor con la ayuda de tu psicólogo en 
-          <span className="text-[#2A6877] font-medium"> Bienestar</span>
+          <span className="text-[#2A6877] font-medium"> E-mind</span>
         </p>
 
         <motion.div

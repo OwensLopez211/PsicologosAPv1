@@ -5,12 +5,12 @@ const TermsContent = () => {
     {
       id: 1,
       title: "Aceptación de los Términos",
-      content: "Al acceder y utilizar los servicios de Bienestar, aceptas estar legalmente obligado por estos términos y condiciones. Si no estás de acuerdo con alguno de estos términos, no debes utilizar nuestros servicios."
+      content: "Al acceder y utilizar los servicios de E-mind, aceptas estar legalmente obligado por estos términos y condiciones. Si no estás de acuerdo con alguno de estos términos, no debes utilizar nuestros servicios."
     },
     {
       id: 2,
       title: "Descripción del Servicio",
-      content: "Bienestar proporciona una plataforma que conecta a usuarios con profesionales de la salud mental. No somos proveedores directos de servicios de salud mental, sino un medio para facilitar estas conexiones."
+      content: "E-mind proporciona una plataforma que conecta a usuarios con profesionales de la salud mental. No somos proveedores directos de servicios de salud mental, sino un medio para facilitar estas conexiones."
     },
     {
       id: 3,
@@ -30,7 +30,7 @@ const TermsContent = () => {
     {
       id: 6,
       title: "Limitación de Responsabilidad",
-      content: "Bienestar no será responsable por daños directos, indirectos, incidentales, especiales o consecuentes que resulten del uso o la imposibilidad de usar nuestros servicios."
+      content: "E-mind no será responsable por daños directos, indirectos, incidentales, especiales o consecuentes que resulten del uso o la imposibilidad de usar nuestros servicios."
     },
     {
       id: 7,

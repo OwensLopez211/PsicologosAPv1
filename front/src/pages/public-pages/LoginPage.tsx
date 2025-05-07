@@ -116,7 +116,7 @@ const LoginPage = () => {
               <img
                 className="relative mx-auto h-24 w-24 rounded-xl shadow-lg transform group-hover:scale-105 transition duration-300"
                 src="/logo.jpeg"
-                alt="Bienestar"
+                alt="E-mind"
               />
             </Link>
           </motion.div>

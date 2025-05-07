@@ -1,0 +1,6 @@
+{
+  "appId": "com.emind.app",
+  "appName": "E-mind",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

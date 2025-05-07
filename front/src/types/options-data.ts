@@ -1,5 +1,5 @@
 // options-data.ts
-// Archivo con opciones para perfiles profesionales en la plataforma Bienestar
+// Archivo con opciones para perfiles profesionales en la plataforma E-mind
 
 /**
  * Opciones de especialidades y enfoques terapéuticos

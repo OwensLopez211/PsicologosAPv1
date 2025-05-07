@@ -45,98 +45,9 @@ const Hero = () => {
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#2A6877] opacity-5 rounded-full transform -translate-x-1/3 translate-y-1/4"></div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 items-center relative z-10">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={staggerContainer}
-          className="text-left space-y-8"
-        >
-          <motion.div 
-            variants={fadeInUp}
-            className="relative"
-          >
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "40%" }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="absolute -top-2 left-0 h-1 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3]"
-              aria-hidden="true"
-            />
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-gray-800">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-[#2A6877]">
-                El psicólogo online que estabas buscando
-              </span>
-            </h1>
-          </motion.div>
-          
-          <motion.h2 
-            variants={fadeInUp}
-            className="text-xl md:text-2xl font-semibold text-gray-700 relative pl-6 border-l-4 border-[#B4E4D3]"
-          >
-            Empieza a sentirte mejor con la ayuda de tu psicólogo en 
-            <span className="text-[#2A6877]"> Bienestar</span>
-          </motion.h2>
-          
-          <motion.div 
-            variants={fadeInUp}
-            className="space-y-4 relative"
-          >
-            <div 
-              className="absolute -left-4 top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#2A6877]/0 via-[#2A6877]/20 to-[#2A6877]/0"
-              aria-hidden="true"
-            />
-            <p className="text-gray-600 text-lg leading-relaxed pl-6">
-              Bienestar es un <span className="font-medium text-[#2A6877]">servicio de psicología online</span> que encuentra
-              el profesional más adecuado a tus necesidades entre una amplia variedad de
-              psicólogos y psicólogas.
-            </p>
-            
-            <p className="text-gray-600 text-lg leading-relaxed pl-6">
-              Facilitamos el acceso a terapia psicológica de calidad en todo Chile.
-            </p>
-          </motion.div>
-
-          {/* Feature Pills */}
-          <motion.div 
-            variants={fadeInUp}
-            className="flex flex-wrap gap-3 pl-6"
-          >
-            {featureItems.map((item, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: item.delay }}
-                className="bg-[#2A6877]/10 px-4 py-2 rounded-full flex items-center"
-              >
-                <div className="w-2 h-2 rounded-full bg-[#2A6877] mr-2"></div>
-                <span className="text-sm font-medium text-[#2A6877]">{item.text}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.button 
-            variants={fadeInUp}
-            onClick={handleSpecialistsClick}
-            whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(42, 104, 119, 0.5)" }}
-            whileTap={{ scale: 0.95 }}
-            className="mt-8 bg-gradient-to-r from-[#2A6877] to-[#235A67] text-white px-8 py-4 rounded-lg hover:from-[#235A67] hover:to-[#2A6877] transition-all flex items-center gap-3 text-lg font-medium shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:ring-offset-2"
-            aria-label="Agendar cita con psicólogo"
-          >
-            <span>Agenda con tu psicólogo</span>
-            <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />
-          </motion.button>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="relative"
-        >
-          {/* Decorative shape behind image */}
+        {/* Imagen primero para que sea el LCP */}
+        <div className="relative order-1 md:order-2">
           <div className="absolute top-8 right-8 w-full h-full rounded-2xl bg-[#B4E4D3]/30 -z-10 transform rotate-3"></div>
-          
           <div className="relative w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl">
             <img
               src="/hero-therapy.svg"
@@ -194,7 +105,85 @@ const Hero = () => {
               </svg>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
+
+        {/* Texto Hero */}
+        <div className="text-left space-y-8 order-2 md:order-1">
+          <div className="relative">
+            <div
+              className="absolute -top-2 left-0 h-1 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3]"
+              style={{ width: '40%' }}
+              aria-hidden="true"
+            />
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-gray-800">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-[#2A6877]">
+                El psicoterapeuta online que estabas buscando
+              </span>
+            </h1>
+          </div>
+          {/* El resto de los elementos sí pueden tener animación */}
+          <motion.h2 
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            className="text-xl md:text-2xl font-semibold text-gray-700 relative pl-6 border-l-4 border-[#B4E4D3]"
+          >
+            Empieza a sentirte mejor con la ayuda de tu psicólogo en 
+            <span className="text-[#2A6877]"> E-mind</span>
+          </motion.h2>
+          <motion.div 
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            className="space-y-4 relative"
+          >
+            <div 
+              className="absolute -left-4 top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#2A6877]/0 via-[#2A6877]/20 to-[#2A6877]/0"
+              aria-hidden="true"
+            />
+            <p className="text-gray-600 text-lg leading-relaxed pl-6">
+              E-mind es un <span className="font-medium text-[#2A6877]">servicio de psicoterapia online</span> que encuentra
+              el profesional más adecuado a tus necesidades entre una amplia variedad de
+              psicólogos y psicólogas.
+            </p>
+            <p className="text-gray-600 text-lg leading-relaxed pl-6">
+              Facilitamos el acceso a terapia psicológica de calidad en todo Chile.
+            </p>
+          </motion.div>
+          {/* Feature Pills */}
+          <motion.div 
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            className="flex flex-wrap gap-3 pl-6"
+          >
+            {featureItems.map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: item.delay }}
+                className="bg-[#2A6877]/10 px-4 py-2 rounded-full flex items-center"
+              >
+                <div className="w-2 h-2 rounded-full bg-[#2A6877] mr-2"></div>
+                <span className="text-sm font-medium text-[#2A6877]">{item.text}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+          <motion.button 
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            onClick={handleSpecialistsClick}
+            whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(42, 104, 119, 0.5)" }}
+            whileTap={{ scale: 0.95 }}
+            className="mt-8 bg-gradient-to-r from-[#2A6877] to-[#235A67] text-white px-8 py-4 rounded-lg hover:from-[#235A67] hover:to-[#2A6877] transition-all flex items-center gap-3 text-lg font-medium shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:ring-offset-2"
+            aria-label="Agendar cita con psicólogo"
+          >
+            <span>Agenda con tu psicólogo</span>
+            <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />
+          </motion.button>
+        </div>
       </div>
 
       {/* Curved divider at bottom */}
