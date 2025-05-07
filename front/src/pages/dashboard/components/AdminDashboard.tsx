@@ -9,8 +9,6 @@ import {
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import AdminService, { AdminStats, PendingPsychologist } from '../../../services/AdminService';
-import { formatDistanceToNow } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<AdminStats>({
@@ -97,16 +95,6 @@ const AdminDashboard: React.FC = () => {
 
   const getClientPercentage = () => {
     return stats.totalUsers > 0 ? Math.round((stats.clientUsers / stats.totalUsers) * 100) : 0;
-  };
-
-  // Formatear la fecha relativa
-  const formatRelativeTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return formatDistanceToNow(date, { addSuffix: true, locale: es });
-    } catch (error) {
-      return 'Fecha desconocida';
-    }
   };
 
   return (
