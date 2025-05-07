@@ -260,13 +260,13 @@ const { } = useAuth();
             {/* Bloques de información con fondo gris entre ellos */}
             <div className="my-6 md:my-8 space-y-6 md:space-y-8">
               {/* Pricing Management */}
-              <PricingManagement
-                psychologistId={id ? parseInt(id) : 0}
-                suggestedPrice={suggestedPrice}
-                approvedPrice={approvedPrice}
-                onUpdateApprovedPrice={handleUpdateApprovedPrice}
-                onRefreshPrices={handleRefreshPrices}
-              />
+            <PricingManagement
+              psychologistId={id ? parseInt(id) : 0}
+              suggestedPrice={suggestedPrice}
+              approvedPrice={approvedPrice}
+              onUpdateApprovedPrice={handleUpdateApprovedPrice}
+              onRefreshPrices={handleRefreshPrices}
+            />
 
               {/* Banking Information */}
               <BankingInfo 
@@ -289,7 +289,7 @@ const { } = useAuth();
                 psychologistId={id ? parseInt(id) : 0}
               />
 
-              {/* Specialties and Target Populations */}
+            {/* Specialties and Target Populations */}
               <SpecialtiesAndPopulations 
                 specialties={psychologist.specialties}
                 target_populations={psychologist.target_populations}
@@ -297,7 +297,7 @@ const { } = useAuth();
                 experience_description={psychologist.experience_description}
               />
 
-              {/* Documents Section */}
+            {/* Documents Section */}
               <DocumentsSection 
                 documents={psychologist.verification_documents}
                 onVerifyDocument={handleDocumentVerification}

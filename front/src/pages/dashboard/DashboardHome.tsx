@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
+import AdminDashboard from './components/AdminDashboard';
 
 // Componentes específicos para cada tipo de usuario (por implementar)
 const ClientDashboard = () => (
@@ -20,16 +21,6 @@ const PsychologistDashboard = () => (
       Aquí podrás gestionar tu agenda, ver tus pacientes y administrar tu perfil profesional.
     </p>
     {/* Aquí se añadirán más componentes específicos para psicólogos */}
-  </div>
-);
-
-const AdminDashboard = () => (
-  <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
-    <h2 className="text-xl font-semibold text-gray-800 mb-4">Bienvenido al Panel de Administración</h2>
-    <p className="text-gray-600">
-      Aquí podrás gestionar usuarios, verificar psicólogos y supervisar la plataforma.
-    </p>
-    {/* Aquí se añadirán más componentes específicos para administradores */}
   </div>
 );
 
@@ -105,7 +96,9 @@ const DashboardHome = () => {
   
   // Estadísticas de ejemplo (personalizar según tipo de usuario)
   const renderStats = () => {
-    if (!user) return null;
+    // No mostramos las estadísticas genéricas para el panel de admin
+    // ya que ahora usamos el componente AdminDashboard especializado
+    if (!user || user.user_type?.toLowerCase() === 'admin') return null;
     
     const statsItems = [];
     
@@ -122,13 +115,6 @@ const DashboardHome = () => {
           { title: 'Citas Hoy', value: '4', icon: '📅', color: 'bg-blue-100' },
           { title: 'Pacientes Activos', value: '12', icon: '👥', color: 'bg-green-100' },
           { title: 'Valoración', value: '4.8', icon: '⭐', color: 'bg-yellow-100' }
-        );
-        break;
-      case 'admin':
-        statsItems.push(
-          { title: 'Usuarios Activos', value: '128', icon: '👥', color: 'bg-blue-100' },
-          { title: 'Psicólogos Pendientes', value: '7', icon: '⏳', color: 'bg-yellow-100' },
-          { title: 'Reportes', value: '3', icon: '🚨', color: 'bg-red-100' }
         );
         break;
       default:
@@ -148,6 +134,11 @@ const DashboardHome = () => {
         ))}
       </div>
     );
+  };
+  
+  // No renderizamos las secciones adicionales para el administrador
+  const shouldShowAdditionalSections = () => {
+    return !user || user.user_type?.toLowerCase() !== 'admin';
   };
   
   return (
@@ -175,25 +166,9 @@ const DashboardHome = () => {
             })}
           </p>
         </div>
-        
-        {/* Botón de acción principal (personalizable según tipo de usuario) */}
-        <motion.button
-          className="mt-4 md:mt-0 px-4 py-2 bg-[#2A6877] text-white rounded-lg hover:bg-[#1d4e5a] transition-colors flex items-center"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <span className="mr-2">
-            {user?.user_type?.toLowerCase() === 'client' ? '🔍 Buscar Psicólogo' : 
-             user?.user_type?.toLowerCase() === 'psychologist' ? '📝 Nueva Cita' : 
-             '📊 Ver Reportes'}
-          </span>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </motion.button>
       </motion.div>
       
-      {/* Tarjetas de estadísticas */}
+      {/* Tarjetas de estadísticas (solo para cliente y psicólogo) */}
       <motion.div variants={itemVariants}>
         {renderStats()}
       </motion.div>
@@ -203,27 +178,29 @@ const DashboardHome = () => {
         {renderDashboardByUserType()}
       </motion.div>
       
-      {/* Sección adicional (personalizable) */}
-      <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8"
-        variants={itemVariants}
-      >
-        <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Actividad Reciente</h3>
-          <div className="space-y-4">
-            {/* Aquí se pueden añadir componentes de actividad reciente */}
-            <p className="text-gray-500 text-sm italic">No hay actividad reciente para mostrar.</p>
+      {/* Sección adicional (solo para cliente y psicólogo) */}
+      {shouldShowAdditionalSections() && (
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8"
+          variants={itemVariants}
+        >
+          <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Actividad Reciente</h3>
+            <div className="space-y-4">
+              {/* Aquí se pueden añadir componentes de actividad reciente */}
+              <p className="text-gray-500 text-sm italic">No hay actividad reciente para mostrar.</p>
+            </div>
           </div>
-        </div>
-        
-        <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Próximos Eventos</h3>
-          <div className="space-y-4">
-            {/* Aquí se pueden añadir componentes de próximos eventos */}
-            <p className="text-gray-500 text-sm italic">No hay eventos próximos para mostrar.</p>
+          
+          <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Próximos Eventos</h3>
+            <div className="space-y-4">
+              {/* Aquí se pueden añadir componentes de próximos eventos */}
+              <p className="text-gray-500 text-sm italic">No hay eventos próximos para mostrar.</p>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };
