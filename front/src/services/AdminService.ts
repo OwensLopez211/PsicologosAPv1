@@ -30,12 +30,12 @@ class AdminService {
   // URLs principales que sabemos que funcionan
   private statsUrls = [
     '/profiles/admin/stats/dashboard/',
-    '/api/profiles/admin/stats/dashboard/'
+    '/profiles/admin/stats/dashboard/'
   ];
   
   private psychologistsUrls = [
     '/profiles/admin/psychologists/',
-    '/api/profiles/admin/psychologists/'
+    '/profiles/admin/psychologists/'
   ];
   
   /**
