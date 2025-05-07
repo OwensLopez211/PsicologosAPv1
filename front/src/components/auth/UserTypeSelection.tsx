@@ -30,7 +30,7 @@ const UserTypeSelection = ({ onSelectUserType }: UserTypeSelectionProps) => {
           <img
             className="relative mx-auto h-24 w-24 rounded-xl shadow-lg transform group-hover:scale-105 transition duration-300"
             src="/logo.jpeg"
-            alt="Bienestar"
+            alt="E-mind"
           />
         </Link>
         <h2 className="mt-6 text-center text-4xl font-bold text-[#2A6877]">Crear una cuenta</h2>
@@ -50,7 +50,7 @@ const UserTypeSelection = ({ onSelectUserType }: UserTypeSelectionProps) => {
       >
         <div className="bg-white/90 backdrop-blur-md py-8 px-6 shadow-xl rounded-2xl sm:px-10 border border-white/50">
           <h3 className="text-xl font-semibold text-gray-800 mb-8 text-center">
-            ¿Cómo deseas utilizar Bienestar?
+            ¿Cómo deseas utilizar E-mind?
           </h3>
           
           <div className="space-y-5">

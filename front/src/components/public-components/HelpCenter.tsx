@@ -72,7 +72,7 @@ const preguntasFrecuentes = [
     icon: ChatBubbleLeftRightIcon,
     resumen: 'Aceptamos tarjetas de crédito, débito y transferencias bancarias.',
     contenido: `
-      <p>En Bienestar puedes pagar tus sesiones mediante:</p>
+      <p>En E-mind puedes pagar tus sesiones mediante:</p>
       <ul>
         <li>Tarjetas de crédito o débito (Visa, Mastercard, American Express)</li>
         <li>Transferencia bancaria directa</li>

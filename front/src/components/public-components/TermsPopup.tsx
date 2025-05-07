@@ -33,13 +33,13 @@ const TermsPopup = ({ isOpen, onClose, onAccept }: TermsPopupProps) => {
           <div className="prose prose-sm max-w-none">
             <h4>1. Aceptación de los Términos</h4>
             <p>
-              Al acceder y utilizar los servicios de Bienestar, aceptas estar legalmente obligado por estos términos y condiciones. 
+              Al acceder y utilizar los servicios de E-mind, aceptas estar legalmente obligado por estos términos y condiciones. 
               Si no estás de acuerdo con alguno de estos términos, no debes utilizar nuestros servicios.
             </p>
             
             <h4>2. Descripción del Servicio</h4>
             <p>
-              Bienestar proporciona una plataforma que conecta a usuarios con profesionales de la salud mental. 
+              E-mind proporciona una plataforma que conecta a usuarios con profesionales de la salud mental. 
               No somos proveedores directos de servicios de salud mental, sino un medio para facilitar estas conexiones.
             </p>
             

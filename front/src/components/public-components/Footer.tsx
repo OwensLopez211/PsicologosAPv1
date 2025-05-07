@@ -70,7 +70,8 @@ const Footer = () => {
     { name: "Especialistas", path: "/especialistas" },
     { name: "Quiénes Somos", path: "/quienes-somos" },
     { name: "Contacto", path: "/contacto" },
-    { name: "Términos y Condiciones", path: "/terminos-y-condiciones" }
+    { name: "Términos y Condiciones", path: "/terminos-y-condiciones" },
+    { name: "Preguntas frecuentes", path: "/preguntas-frecuentes" }
   ];
 
   // Services removed as requested
@@ -103,7 +104,7 @@ const Footer = () => {
               <div>
                 <Link to="/" className="inline-block">
                   <h3 className="text-3xl font-bold relative">
-                    Bienestar
+                    E-mind
                     <span className="absolute -bottom-1 left-0 w-12 h-1 bg-[#B4E4D3] rounded-full"></span>
                   </h3>
                 </Link>
@@ -127,23 +128,6 @@ const Footer = () => {
                     {social.icon}
                   </a>
                 ))}
-              </div>
-              
-              {/* Newsletter signup */}
-              <div className="pt-4">
-                <h4 className="text-sm font-semibold mb-3 uppercase tracking-wider">Suscríbete a nuestro newsletter</h4>
-                <div className="flex">
-                  <input 
-                    type="email" 
-                    placeholder="Tu email" 
-                    className="px-4 py-2.5 text-sm bg-white/10 hover:bg-white/20 focus:bg-white/20 border border-transparent rounded-l-lg focus:outline-none focus:border-[#B4E4D3] placeholder-gray-300 text-white w-full"
-                  />
-                  <button className="bg-[#B4E4D3] hover:bg-[#9CD3BE] text-[#235A67] font-medium px-4 py-2.5 rounded-r-lg transition-colors">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
               </div>
             </motion.div>
 
@@ -218,10 +202,10 @@ const Footer = () => {
 
             </div>
             
-            <p>© {currentYear} Bienestar. Todos los derechos reservados.</p>
+            <p>© {currentYear} E-mind. Todos los derechos reservados.</p>
             
 {/*             <div className="mt-4 text-xs opacity-70">
-              <p>Bienestar no reemplaza la atención médica profesional. En caso de emergencia, contacte a su médico o servicio de urgencia local.</p>
+              <p>E-mind no reemplaza la atención médica profesional. En caso de emergencia, contacte a su médico o servicio de urgencia local.</p>
             </div> */}
           </motion.div>
         </div>

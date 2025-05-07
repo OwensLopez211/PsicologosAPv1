@@ -90,7 +90,8 @@ const Navbar = () => {
     { path: '/', label: 'Inicio' },
     { path: '/especialistas', label: 'Especialistas' },
     { path: '/quienes-somos', label: 'Quiénes somos' },
-    { path: '/contacto', label: 'Contacto' }
+    { path: '/contacto', label: 'Contacto' },
+    { path: '/preguntas-frecuentes', label: 'Preguntas frecuentes' }
   ];
 
   const renderNavItems = () => {
@@ -259,14 +260,14 @@ const Navbar = () => {
             <div className="relative h-10 w-10">
               <img 
                 src="/logo.jpeg" 
-                alt="Bienestar" 
+                alt="E-mind" 
                 className="h-full w-full rounded-full object-cover border-2 border-[#2A6877] transition-all"
               />
               <div className="absolute inset-0 rounded-full border-2 border-[#2A6877]/30 -m-1 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
             <div className="flex flex-col">
-              <span className="text-[#2A6877] text-xl font-bold tracking-tight">Bienestar</span>
-              <span className="text-gray-500 text-xs">Psicología Online</span>
+              <span className="text-[#2A6877] text-xl font-bold tracking-tight">E-mind</span>
+              <span className="text-gray-500 text-xs">Psicoterapia Online</span>
             </div>
           </Link>
         </motion.div>
@@ -347,12 +348,12 @@ const Navbar = () => {
                   <Link to="/" className="flex items-center space-x-3" onClick={() => setIsMenuOpen(false)}>
                     <img 
                       src="/logo.jpeg" 
-                      alt="Bienestar" 
+                      alt="E-mind" 
                       className="h-9 w-9 rounded-full object-cover border-2 border-[#2A6877]" 
                     />
                     <div className="flex flex-col">
-                      <span className="text-[#2A6877] text-lg font-bold tracking-tight">Bienestar</span>
-                      <span className="text-gray-500 text-xs">Psicología Online</span>
+                      <span className="text-[#2A6877] text-lg font-bold tracking-tight">E-mind</span>
+                      <span className="text-gray-500 text-xs">Psicoterapia Online</span>
                     </div>
                   </Link>
                 </div>
@@ -368,7 +369,7 @@ const Navbar = () => {
                     </div>
                     
                     <div className="text-center text-xs text-gray-500 pb-4">
-                      © {new Date().getFullYear()} Bienestar - Psicología Online
+                      © {new Date().getFullYear()} E-mind - Psicoterapia Online
                     </div>
                   </div>
                 </div>

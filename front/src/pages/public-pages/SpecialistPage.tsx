@@ -95,7 +95,7 @@ const SpecialistPage = () => {
       <PageTransition>
         <HeaderPage 
           title="Nuestros Especialistas"
-          description="Encuentra el psicólogo ideal para ti entre nuestros profesionales certificados y con amplia experiencia"
+          description="Invierte en ti"
         />
         <div className="container mx-auto px-6 py-12 flex justify-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#2A6877]"></div>
@@ -109,7 +109,7 @@ const SpecialistPage = () => {
       <PageTransition>
         <HeaderPage 
           title="Nuestros Especialistas"
-          description="Encuentra el psicólogo ideal para ti entre nuestros profesionales certificados y con amplia experiencia"
+          description="Invierte en ti"
         />
         <div className="container mx-auto px-6 py-12 text-center">
           <p className="text-red-500">{error}</p>
@@ -122,7 +122,7 @@ const SpecialistPage = () => {
     <PageTransition>
       <HeaderPage 
         title="Nuestros Especialistas"
-        description="Encuentra el psicólogo ideal para ti entre nuestros profesionales certificados y con amplia experiencia"
+        description="Invierte en ti"
       />
       
       <section className="container mx-auto px-6 py-12">

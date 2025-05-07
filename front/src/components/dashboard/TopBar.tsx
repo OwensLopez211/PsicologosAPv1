@@ -130,12 +130,12 @@ const TopBar = () => {
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3] rounded-full opacity-40 group-hover:opacity-60 blur-sm transition duration-300"></div>
                   <img 
                     src="/logo.jpeg" 
-                    alt="Bienestar" 
+                    alt="E-mind" 
                     className="relative h-9 w-9 rounded-full border-2 border-white object-cover transform group-hover:scale-105 transition-transform duration-300" 
                   />
                 </div>
                 <span className="ml-2.5 text-xl font-semibold text-[#2A6877] hidden sm:block">
-                  Bienestar
+                E-mind
                 </span>
                 <div 
                   className="ml-2 hidden sm:flex"

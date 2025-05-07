@@ -117,7 +117,7 @@ const Hero = () => {
             />
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-gray-800">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-[#2A6877]">
-                El psicólogo online que estabas buscando
+                El psicoterapeuta online que estabas buscando
               </span>
             </h1>
           </div>
@@ -129,7 +129,7 @@ const Hero = () => {
             className="text-xl md:text-2xl font-semibold text-gray-700 relative pl-6 border-l-4 border-[#B4E4D3]"
           >
             Empieza a sentirte mejor con la ayuda de tu psicólogo en 
-            <span className="text-[#2A6877]"> Bienestar</span>
+            <span className="text-[#2A6877]"> E-mind</span>
           </motion.h2>
           <motion.div 
             variants={fadeInUp}
@@ -142,7 +142,7 @@ const Hero = () => {
               aria-hidden="true"
             />
             <p className="text-gray-600 text-lg leading-relaxed pl-6">
-              Bienestar es un <span className="font-medium text-[#2A6877]">servicio de psicología online</span> que encuentra
+              E-mind es un <span className="font-medium text-[#2A6877]">servicio de psicoterapia online</span> que encuentra
               el profesional más adecuado a tus necesidades entre una amplia variedad de
               psicólogos y psicólogas.
             </p>
