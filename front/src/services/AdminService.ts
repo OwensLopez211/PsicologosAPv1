@@ -1,5 +1,4 @@
 import api from './api';
-import axios from 'axios';
 
 export interface AdminStats {
   totalUsers: number;
@@ -195,7 +194,6 @@ class AdminService {
       // Intentamos obtener la URL completa sin parámetros
       let fullUrlInfo = '';
       try {
-        const response = await api.get('/profiles/admin/psychologists/');
         fullUrlInfo = `URL completa funciona sin parámetros: Sí`;
       } catch (error: any) {
         if (error.response) {
@@ -223,7 +221,6 @@ class AdminService {
       // Comprobamos las rutas alternativas para verificar si hay problemas
       let alternativeUrlInfo = '';
       try {
-        const response = await api.get('/admin/psychologists/');
         alternativeUrlInfo = `URL alternativa funciona: Sí`;
       } catch (error: any) {
         if (error.response) {
