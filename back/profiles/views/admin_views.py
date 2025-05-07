@@ -1,12 +1,100 @@
 import os
 from django.conf import settings
 from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
 
-from ..models import AdminProfile
+from ..models import AdminProfile, PsychologistProfile
 from ..serializers import AdminProfileSerializer, UserBasicSerializer
 from ..permissions import IsAdminUser, IsAdminOrClient
+
+# Obtener el modelo de usuario
+User = get_user_model()
+
+# Agregar esta clase con el endpoint para las estadísticas
+class AdminStatisticsView(APIView):
+    """API endpoint para obtener estadísticas del panel de administración"""
+    permission_classes = [permissions.IsAuthenticated, IsAdminUser]
+    
+    def get(self, request):
+        """Obtener estadísticas para el dashboard del administrador"""
+        try:
+            # Importar modelos necesarios
+            from ..models import ClientProfile, PsychologistProfile, AdminProfile
+            from django.db.models import Count
+            
+            # Análisis detallado de cada usuario
+            print("\n[DEBUG] ======= ANÁLISIS DETALLADO DE USUARIOS Y PERFILES =======")
+            all_users = User.objects.all()
+            
+            psychologist_ids = [] # IDs de usuarios que son psicólogos
+            client_ids = []       # IDs de usuarios que son clientes
+            
+            for user in all_users:
+                # Verificar si tienen perfiles asociados
+                has_psychologist_profile = PsychologistProfile.objects.filter(user=user).exists()
+                has_client_profile = ClientProfile.objects.filter(user=user).exists()
+                has_admin_profile = AdminProfile.objects.filter(user=user).exists()
+                
+                print(f"[DEBUG] Usuario ID: {user.id}, Email: {user.email}, Tipo: {user.user_type}")
+                print(f"[DEBUG]   - Perfiles: Psicólogo: {has_psychologist_profile}, Cliente: {has_client_profile}, Admin: {has_admin_profile}")
+                
+                # Recolectar IDs de psicólogos y clientes para el conteo
+                if user.user_type == 'psychologist' and has_psychologist_profile and user.is_active:
+                    psychologist_ids.append(user.id)
+                elif user.user_type == 'client' and has_client_profile and user.is_active:
+                    client_ids.append(user.id)
+            
+            print("[DEBUG] =========================================================\n")
+            
+            # Conteo final
+            print(f"[DEBUG] Conteo final de perfiles verificados:")
+            print(f"[DEBUG] - Total clientes con perfil: {len(client_ids)}")
+            print(f"[DEBUG] - Total psicólogos con perfil: {len(psychologist_ids)}")
+            
+            # Obtener estados de verificación
+            psychologist_profiles = PsychologistProfile.objects.filter(user_id__in=psychologist_ids)
+            verified_count = psychologist_profiles.filter(verification_status='VERIFIED').count()
+            pending_count = psychologist_profiles.filter(
+                verification_status__in=['PENDING', 'DOCUMENTS_SUBMITTED', 'VERIFICATION_IN_PROGRESS']
+            ).count()
+            rejected_count = psychologist_profiles.filter(verification_status='REJECTED').count()
+            
+            print(f"[DEBUG] Estados de verificación de psicólogos:")
+            print(f"[DEBUG] - Verificados: {verified_count}")
+            print(f"[DEBUG] - Pendientes: {pending_count}")
+            print(f"[DEBUG] - Rechazados: {rejected_count}")
+            print(f"[DEBUG] - Total: {verified_count + pending_count + rejected_count} (debe coincidir con {len(psychologist_ids)})")
+            
+            # Total de usuarios (suma de clientes y psicólogos con perfil)
+            total_active_users = len(client_ids) + len(psychologist_ids)
+            
+            # Total de clientes
+            client_count = len(client_ids)
+            
+            # Stats para el frontend
+            stats = {
+                'totalUsers': total_active_users,
+                'verifiedUsers': verified_count,
+                'pendingUsers': pending_count, 
+                'rejectedUsers': rejected_count,
+                'clientUsers': client_count  # Añadir conteo de clientes
+            }
+            
+            print(f"[DEBUG] Estadísticas finales: {stats}")
+            
+            return Response(stats)
+            
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] Error al obtener estadísticas: {str(e)}")
+            print(traceback.format_exc())
+            return Response(
+                {"detail": f"Error al obtener estadísticas: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class AdminProfileViewSet(viewsets.ModelViewSet):
     """API endpoint para perfil de administrador"""

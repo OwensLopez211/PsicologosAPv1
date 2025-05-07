@@ -6,6 +6,7 @@ from .views import (
     AdminProfileViewSet
 )
 from .views.public_views import PublicBankInfoView
+from .views.admin_views import AdminStatisticsView
 
 router = DefaultRouter()
 router.register(r'client-profiles', ClientProfileViewSet, basename='client-profile')
@@ -14,6 +15,9 @@ router.register(r'admin-profiles', AdminProfileViewSet, basename='admin-profile'
 
 urlpatterns = [
      path('', include(router.urls)),
+     
+     # Añadir el nuevo endpoint para estadísticas del dashboard de administrador
+     path('admin/stats/dashboard/', AdminStatisticsView.as_view(), name='admin-dashboard-stats'),
      
      # Añadir el nuevo endpoint público para información bancaria
      path('bank-info/', PublicBankInfoView.as_view(), name='public-bank-info'),

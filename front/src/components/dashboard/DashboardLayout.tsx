@@ -105,7 +105,7 @@ const DashboardLayout = () => {
       <div 
         className="flex flex-col flex-grow" 
         style={{ 
-          paddingTop: '64px', /* Espacio para la barra superior */
+          paddingTop: '80px', /* Espacio para la barra superior */
           paddingBottom: '80px' /* Espacio para la barra inferior en móvil */
         }}
       >

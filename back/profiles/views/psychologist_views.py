@@ -136,10 +136,56 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
             
-        # Obtener todos los perfiles de psicólogos con datos de usuario relacionados
-        profiles = PsychologistProfile.objects.filter(user__user_type='psychologist').select_related('user')
-        serializer = self.get_serializer(profiles, many=True)
-        return Response(serializer.data)
+        try:
+            # Información de depuración
+            print(f"[DEBUG] Request: {request.method} {request.path}")
+            print(f"[DEBUG] Query params: {request.query_params}")
+            
+            # Obtener todos los perfiles de psicólogos con datos de usuario relacionados
+            # Usamos una lista en lugar de queryset para evitar problemas con la evaluación tardía
+            profiles = list(PsychologistProfile.objects.filter(
+                user__user_type='psychologist'
+            ).select_related('user').order_by('-created_at'))
+            
+            print(f"[DEBUG] Perfiles encontrados inicialmente: {len(profiles)}")
+            
+            # Filtrar por estado de verificación si se proporciona
+            verification_status = request.query_params.get('verification_status', None)
+            if verification_status:
+                print(f"[DEBUG] Filtrando por estado: {verification_status}")
+                # Obtener los valores válidos del modelo
+                valid_statuses = [choice[0] for choice in PsychologistProfile._meta.get_field('verification_status').choices]
+                print(f"[DEBUG] Estados válidos: {valid_statuses}")
+                
+                # Filtrar solo si el estado es válido
+                if verification_status in valid_statuses:
+                    profiles = [p for p in profiles if p.verification_status == verification_status]
+                    print(f"[DEBUG] Perfiles después de filtrar por {verification_status}: {len(profiles)}")
+                else:
+                    print(f"[DEBUG] Estado de verificación no válido: {verification_status}")
+            
+            # Limitar resultados si se solicita
+            limit_param = request.query_params.get('limit', None)
+            if limit_param:
+                try:
+                    limit = int(limit_param)
+                    print(f"[DEBUG] Limitando a {limit} perfiles")
+                    profiles = profiles[:limit]
+                except ValueError:
+                    print(f"[DEBUG] Parámetro limit no válido: {limit_param}")
+            
+            # Serializar la lista de perfiles
+            serializer = self.get_serializer(profiles, many=True)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] Error en admin_list: {str(e)}")
+            print(traceback.format_exc())
+            return Response(
+                {"detail": f"Error al obtener listado de psicólogos: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     @action(detail=True, methods=['get'])
     def admin_detail(self, request, pk=None):
@@ -615,7 +661,8 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
             
-        document.verification_status = 'verified'
+        # Usamos el estado 'approved' en lugar de 'verified'
+        document.verification_status = 'approved'
         document.is_verified = True
         document.rejection_reason = None
         document.save()
@@ -688,7 +735,17 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
             )
             
         new_status = request.data['verification_status']
-        valid_statuses = ['pending', 'verified', 'rejected']
+        
+        # Obtener los estados válidos directamente del modelo
+        valid_statuses_tuples = ProfessionalDocument._meta.get_field('verification_status').choices
+        valid_statuses = [status_value for status_value, _ in valid_statuses_tuples]
+        
+        print(f"Estado solicitado: {new_status}")
+        print(f"Estados válidos para documentos: {valid_statuses}")
+        
+        # Convertir 'VERIFIED' a 'approved' para manejar la inconsistencia
+        if new_status == 'VERIFIED':
+            new_status = 'approved'
         
         if new_status not in valid_statuses:
             return Response(
@@ -701,7 +758,7 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         # Si se rechaza, guardar el motivo
         if new_status == 'rejected' and 'rejection_reason' in request.data:
             document.rejection_reason = request.data['rejection_reason']
-        elif new_status == 'verified':
+        elif new_status == 'approved':
             document.is_verified = True
             document.rejection_reason = None
         
