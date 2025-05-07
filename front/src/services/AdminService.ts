@@ -23,46 +23,109 @@ export interface PendingPsychologist {
 
 class AdminService {
   
+  // Almacenamos la URL que funciona para su reutilización
+  private workingBaseUrl: string | null = null;
+  
+  // URLs alternativas para intentar
+  private statsUrls = [
+    '/profiles/admin/stats/dashboard/',
+    '/admin/stats/dashboard/',
+    '/api/profiles/admin/stats/dashboard/',
+    '/api/admin/stats/dashboard/'
+  ];
+  
+  private psychologistsUrls = [
+    '/profiles/admin/psychologists/',
+    '/admin/psychologists/',
+    '/api/profiles/admin/psychologists/',
+    '/api/admin/psychologists/'
+  ];
+  
+  /**
+   * Obtiene las estadísticas del dashboard intentando múltiples URLs
+   */
   async getDashboardStats(): Promise<AdminStats> {
     try {
-      // Esta URL ya parece estar funcionando correctamente
-      const response = await api.get('/profiles/admin/stats/dashboard/');
-      console.log('[DEBUG] Datos recibidos del servidor:', response.data);
-      
-      // Verificar que los datos sean coherentes
-      const data = response.data;
-      
-      // Validación básica de los datos
-      if (typeof data.totalUsers === 'number' && 
-          typeof data.verifiedUsers === 'number' && 
-          typeof data.pendingUsers === 'number' && 
-          typeof data.rejectedUsers === 'number') {
-          
-        // Verificar que la suma de psicólogos sea menor o igual al total
-        const totalPsychologists = data.verifiedUsers + data.pendingUsers + data.rejectedUsers;
-        
-        if (totalPsychologists > data.totalUsers) {
-          console.warn('[ADVERTENCIA] Posible inconsistencia en los datos: la suma de psicólogos excede el total de usuarios');
+      // Si ya tenemos una URL que funciona, usamos esa primero
+      if (this.workingBaseUrl) {
+        try {
+          console.log(`Intentando con URL previamente exitosa: ${this.workingBaseUrl}`);
+          const response = await api.get(this.workingBaseUrl);
+          console.log('[DEBUG] Datos recibidos del servidor:', response.data);
+          return this.validateAndProcessStats(response.data);
+        } catch (error) {
+          console.warn('La URL guardada ya no funciona. Probando alternativas...');
+          this.workingBaseUrl = null; // Reiniciar ya que no funciona
         }
-        
-        return data;
-      } else {
-        console.error('[ERROR] Los datos recibidos no tienen el formato esperado:', data);
-        throw new Error('Formato de datos incorrecto');
       }
+      
+      // Probar todas las URLs posibles
+      let lastError;
+      for (const url of this.statsUrls) {
+        try {
+          console.log(`Intentando obtener estadísticas con URL: ${url}`);
+          const response = await api.get(url);
+          console.log('[DEBUG] Datos recibidos del servidor:', response.data);
+          
+          // Guardar la URL que funcionó para futuros usos
+          this.workingBaseUrl = url;
+          return this.validateAndProcessStats(response.data);
+        } catch (error) {
+          console.warn(`Error al obtener estadísticas con URL ${url}:`, error);
+          lastError = error;
+        }
+      }
+      
+      throw lastError || new Error('Todas las URLs fallaron');
     } catch (error) {
       console.error('Error en getDashboardStats:', error);
-      // Devolver datos simulados en caso de error, pero con valores más realistas
+      // Devolver datos simulados en caso de error
       return {
         totalUsers: 3, // 1 cliente + 2 psicólogos
         verifiedUsers: 1, 
         pendingUsers: 1,
         rejectedUsers: 0,
-        clientUsers: 0
+        clientUsers: 1
       };
     }
   }
   
+  /**
+   * Valida y procesa los datos recibidos
+   */
+  private validateAndProcessStats(data: any): AdminStats {
+    // Validación básica de los datos
+    if (typeof data.totalUsers === 'number' && 
+        typeof data.verifiedUsers === 'number' && 
+        typeof data.pendingUsers === 'number' && 
+        typeof data.rejectedUsers === 'number') {
+      
+      // Asegurarse de que clientUsers exista (para compatibilidad con versiones anteriores del API)
+      const clientUsers = typeof data.clientUsers === 'number' ? data.clientUsers : 
+                          (data.totalUsers - (data.verifiedUsers + data.pendingUsers + data.rejectedUsers));
+      
+      const stats: AdminStats = {
+        ...data,
+        clientUsers
+      };
+      
+      // Verificar que la suma de psicólogos sea coherente
+      const totalPsychologists = data.verifiedUsers + data.pendingUsers + data.rejectedUsers;
+      
+      if (totalPsychologists > data.totalUsers) {
+        console.warn('[ADVERTENCIA] Posible inconsistencia en los datos: la suma de psicólogos excede el total de usuarios');
+      }
+      
+      return stats;
+    } else {
+      console.error('[ERROR] Los datos recibidos no tienen el formato esperado:', data);
+      throw new Error('Formato de datos incorrecto');
+    }
+  }
+  
+  /**
+   * Obtiene los psicólogos pendientes intentando múltiples URLs y estados
+   */
   async getPendingPsychologists(limit: number = 3): Promise<PendingPsychologist[]> {
     try {
       console.log('Intentando obtener psicólogos pendientes con límite:', limit);
@@ -74,14 +137,8 @@ class AdminService {
         'PENDING'
       ];
       
-      // Array de posibles rutas a probar en orden de prioridad
-      const urlsToTry = [
-        '/profiles/admin/psychologists/',
-        '/admin/psychologists/'
-      ];
-      
       // Intentamos diferentes combinaciones de URLs y estados
-      for (const baseUrl of urlsToTry) {
+      for (const baseUrl of this.psychologistsUrls) {
         // Primero intentamos obtener todos los psicólogos sin filtrar
         try {
           console.log(`Intentando obtener psicólogos desde ${baseUrl} sin filtro`);
