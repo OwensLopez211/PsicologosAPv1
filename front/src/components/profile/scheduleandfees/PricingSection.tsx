@@ -260,8 +260,8 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                       <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>Primera sesión (cada cliente)</span>
                     </div>
-                    <p>Comisión plataforma (50%): {formatCurrency(suggestedPrice * 0.5)}</p>
-                    <p>Tu ganancia: {formatCurrency(suggestedPrice * 0.5)}</p>
+                    <p>Comisión E-mind (100%): {formatCurrency(suggestedPrice)}</p>
+                    <p>Tu ganancia: {formatCurrency(0)}</p>
                   </div>
                 ) : (
                   <div className="bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 text-xs sm:text-sm text-blue-600">
@@ -297,8 +297,8 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                       <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                       <span>Primera sesión (cada cliente)</span>
                     </div>
-                    <p>Comisión plataforma (50%): {formatCurrency(approvedPrice * 0.5)}</p>
-                    <p>Tu ganancia: {formatCurrency(approvedPrice * 0.5)}</p>
+                    <p>Comisión E-mind (100%): {formatCurrency(approvedPrice)}</p>
+                    <p>Tu ganancia: {formatCurrency(0)}</p>
                   </div>
                 ) : (
                   <div className="bg-green-50 p-2 sm:p-3 rounded-lg border border-green-100 text-xs sm:text-sm text-green-600">
@@ -338,11 +338,11 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                     <ul className="text-xs sm:text-sm text-gray-600 space-y-1">
                       <li className="flex items-center gap-1">
                         <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                        <span>50% <strong>solo</strong> en la primera sesión de cada cliente</span>
+                        <span>100% para E-mind <strong>solo</strong> en la primera sesión de cada cliente</span>
                       </li>
                       <li className="flex items-center gap-1">
                         <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                        <span>100% del valor a partir de la segunda sesión</span>
+                        <span>100% para ti a partir de la segunda sesión</span>
                       </li>
                     </ul>
                   </div>
@@ -401,7 +401,6 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                     <CurrencyDollarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                     <span>Simulación de ganancias</span>
                   </h4>
-                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <div className="bg-white/80 backdrop-blur-sm p-2 sm:p-3 rounded-lg border border-blue-100">
                       <h5 className="text-xs sm:text-sm font-medium text-blue-700 mb-1">Primera sesión (cada cliente nuevo)</h5>
@@ -411,12 +410,12 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                           <span className="font-medium">{formatCurrency(newSuggestedPrice)}</span>
                         </div>
                         <div className="flex justify-between text-gray-600">
-                          <span>Comisión (50%):</span>
-                          <span className="font-medium">{formatCurrency(newSuggestedPrice * 0.5)}</span>
+                          <span>Comisión E-mind (100%):</span>
+                          <span className="font-medium">{formatCurrency(newSuggestedPrice)}</span>
                         </div>
                         <div className="flex justify-between text-[#2A6877] font-semibold border-t border-blue-100 pt-1 mt-1">
                           <span>Tu ganancia:</span>
-                          <span>{formatCurrency(newSuggestedPrice * 0.5)}</span>
+                          <span>{formatCurrency(0)}</span>
                         </div>
                       </div>
                     </div>
@@ -429,7 +428,7 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                           <span className="font-medium">{formatCurrency(newSuggestedPrice)}</span>
                         </div>
                         <div className="flex justify-between text-gray-600">
-                          <span>Comisión (0%):</span>
+                          <span>Comisión E-mind (0%):</span>
                           <span className="font-medium">{formatCurrency(0)}</span>
                         </div>
                         <div className="flex justify-between text-green-700 font-semibold border-t border-green-100 pt-1 mt-1">

@@ -33,7 +33,7 @@ const MissionSection = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#FF6B6B] bg-opacity-5 rounded-bl-full"></div>
             
             <p className="text-lg text-gray-700 leading-relaxed relative z-10">
-               Bienestar surge como una iniciativa para beneficiar el acceso a la salud mental, desestigmatizar la atención psicológica en nuestra sociedad, y contribuir al desarrollo profesional de terapeutas emergentes en el campo de la psicología.
+               E-mind surge como una iniciativa para beneficiar el acceso a la salud mental, desestigmatizar la atención psicológica en nuestra sociedad, y contribuir al desarrollo profesional de terapeutas emergentes en el campo de la psicología.
             </p>
           </motion.div>
           

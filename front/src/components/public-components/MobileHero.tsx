@@ -1,104 +1,140 @@
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, useRef } from 'react';
+
+// Preload the hero image
+const preloadHeroImage = () => {
+  const img = new Image();
+  img.src = "/hero-therapy.svg";
+};
+
+// Feature items without animation delays for better performance
+const featureItems = [
+  { text: "Sesiones flexibles", icon: "💻" },
+  { text: "Psicólogos certificados", icon: "🔒" },
+  { text: "Precios accesibles", icon: "💸" }
+];
 
 const MobileHero = () => {
   const navigate = useNavigate();
+  const heroImgRef = useRef<HTMLImageElement | null>(null);
+  const [, setIsLoaded] = useState(false);
+
+  // Preload the hero image on component mount
+  useEffect(() => {
+    preloadHeroImage();
+    
+    // Mark image as loaded once it's visible in DOM
+    if (heroImgRef.current && heroImgRef.current.complete) {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  const handleImageLoad = () => {
+    setIsLoaded(true);
+  };
+
+  const handleButtonClick = () => {
+    navigate('/especialistas');
+  };
 
   return (
-    <section className="px-4 pt-20 pb-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-center space-y-6"
+    <section 
+      className="relative px-0 pt-12 pb-6 overflow-hidden bg-white"
+      aria-labelledby="hero-heading"
+    >
+      {/* Decorative backgrounds - simplified for performance */}
+      <div 
+        className="absolute top-0 right-0 w-40 h-40 bg-[#B4E4D3]/10 rounded-full -z-10" 
+        style={{ transform: 'translate(30%, -30%)' }}
+        aria-hidden="true"
+      />
+      
+      {/* Main hero image - optimized for LCP */}
+      <div className="relative w-full h-[220px] xs:h-[260px] sm:h-[300px] rounded-b-2xl overflow-hidden z-10">
+        <img
+          ref={heroImgRef}
+          src="/hero-therapy.svg"
+          alt="Sesión de terapia psicológica online"
+          className="w-full h-full object-cover"
+          width="600"
+          height="300"
+          fetchPriority="high"
+          onLoad={handleImageLoad}
+          style={{
+            // Pre-allocate space to prevent layout shift
+            aspectRatio: '2/1',
+            // Add a light background color before image loads
+            backgroundColor: '#f8f9fa'
+          }}
+        />
+        
+        {/* Simplified gradient overlay */}
+        <div 
+          className="absolute inset-0 bg-gradient-to-t from-[#2A6877]/30 to-transparent"
+          aria-hidden="true"
+        />
+      </div>
+
+      {/* Text content - simplified animations for better performance */}
+      <div
+        className="text-center space-y-5 px-4 pt-5 z-20 relative"
       >
         <div className="relative">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: "40%" }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="absolute -top-2 left-1/2 transform -translate-x-1/2 h-1 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3]"
+          <div
+            className="absolute -top-2 left-1/2 h-1 bg-[#2A6877] rounded-full"
+            style={{ width: '40%', transform: 'translateX(-50%)' }}
             aria-hidden="true"
           />
-          <h1 className="text-3xl font-bold leading-tight text-gray-800">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-[#2A6877]">
-              El psicólogo online que estabas buscando
-            </span>
+          <h1 
+            id="hero-heading"
+            className="text-2xl xs:text-3xl font-bold leading-tight text-gray-800"
+          >
+            El psicoterapeuta online que estabas buscando
           </h1>
         </div>
 
-        <p className="text-gray-600 text-lg mx-auto">
-          Empieza a sentirte mejor con la ayuda de tu psicólogo en 
+        <p className="text-gray-600 text-base xs:text-lg mx-auto leading-tight">
+          Empieza a sentirte mejor con la ayuda de tu psicólogo en
           <span className="text-[#2A6877] font-medium"> E-mind</span>
         </p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="relative w-full h-[250px] rounded-xl overflow-hidden shadow-xl"
-        >
-          <img
-            src="/hero-therapy.svg"
-            alt="Sesión de terapia psicológica online"
-            className="w-full h-full object-cover"
-            loading="eager"
-          />
-          <div 
-            className="absolute inset-0 bg-gradient-to-tr from-[#2A6877]/20 to-transparent"
-            aria-hidden="true"
-          />
-        </motion.div>
-
-        {/* Feature Pills */}
-        <div className="flex flex-wrap justify-center gap-2">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm text-gray-700 shadow-sm"
-          >
-            ⚡️ Atención inmediata
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm text-gray-700 shadow-sm"
-          >
-            🔒 100% Confidencial
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-            className="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm text-gray-700 shadow-sm"
-          >
-            💻 Sesiones online
-          </motion.div>
+        {/* Feature pills - simplified for performance */}
+        <div className="flex flex-wrap justify-center gap-2 py-1">
+          {featureItems.map((item, index) => (
+            <div
+              key={index}
+              className="bg-[#2A6877]/10 px-3 py-1.5 rounded-full flex items-center text-xs xs:text-sm font-medium text-[#2A6877]"
+            >
+              <span className="mr-2 text-base xs:text-lg" aria-hidden="true">{item.icon}</span>
+              {item.text}
+            </div>
+          ))}
         </div>
 
-        {/* CTA Button */}
-        <motion.button 
-          onClick={() => navigate('/especialistas')}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full bg-gradient-to-r from-[#2A6877] to-[#235A67] text-white py-3 px-6 rounded-lg font-medium shadow-lg flex items-center justify-center gap-2"
+        {/* Optimized CTA Button */}
+        <button 
+          onClick={handleButtonClick}
+          className="w-full bg-[#2A6877] text-white py-3 px-6 rounded-lg font-medium shadow-md flex items-center justify-center gap-2 text-base xs:text-lg mt-2 hover:bg-[#235A67] transition-colors"
+          aria-label="Agenda con tu psicólogo"
         >
           <span>Agenda con tu psicólogo</span>
-          <ArrowRightIcon className="w-5 h-5" />
-        </motion.button>
-
-        {/* Remove Trust Indicators section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="pt-4 space-y-2"
-        >
-        </motion.div>
-      </motion.div>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="w-5 h-5" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor" 
+            aria-hidden="true"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M14 5l7 7m0 0l-7 7m7-7H3" 
+            />
+          </svg>
+        </button>
+      </div>
     </section>
   );
 };
