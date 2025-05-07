@@ -13,40 +13,40 @@ interface DocumentsUploadProps {
   onLoadingChange?: (loading: boolean) => void;
 }
 
+// Define required documents - exportado para usarlo en otros componentes
+export const requiredDocumentTypes = [
+  {
+    type: 'presentation_video',
+    name: 'Video de presentación',
+    icon: <VideoCameraIcon className="h-6 w-6" />,
+    description: 'Un breve video donde te presentas y hablas de tu experiencia profesional (máx. 2 minutos)'
+  },
+  {
+    type: 'registration_certificate',
+    name: 'Certificado de inscripción en Registro Nacional',
+    icon: <ClipboardDocumentCheckIcon className="h-6 w-6" />,
+    description: 'Certificado de inscripción en Registro Nacional de Prestadores Individuales de Salud'
+  },
+  {
+    type: 'professional_id',
+    name: 'Carnet profesional',
+    icon: <IdentificationIcon className="h-6 w-6" />,
+    description: 'Fotos del carnet profesional por ambos lados'
+  },
+  {
+    type: 'specialty_document',
+    name: 'Documento de especialidad',
+    icon: <DocumentIcon className="h-6 w-6" />,
+    description: 'Documento que describa el tipo de terapia que realizas, trastornos que tratas e información relevante para justificar tu tarifa'
+  }
+];
+
 const DocumentsUpload = ({ isLoading, onLoadingChange }: DocumentsUploadProps) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [pendingUploads, setPendingUploads] = useState<Record<string, File>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [localLoading, setLocalLoading] = useState(false);
-
-  // Define required documents
-  const requiredDocumentTypes = [
-    {
-      type: 'presentation_video',
-      name: 'Video de presentación',
-      icon: <VideoCameraIcon className="h-6 w-6" />,
-      description: 'Un breve video donde te presentas y hablas de tu experiencia profesional (máx. 2 minutos)'
-    },
-    {
-      type: 'registration_certificate',
-      name: 'Certificado de inscripción en Registro Nacional',
-      icon: <ClipboardDocumentCheckIcon className="h-6 w-6" />,
-      description: 'Certificado de inscripción en Registro Nacional de Prestadores Individuales de Salud'
-    },
-    {
-      type: 'professional_id',
-      name: 'Carnet profesional',
-      icon: <IdentificationIcon className="h-6 w-6" />,
-      description: 'Fotos del carnet profesional por ambos lados'
-    },
-    {
-      type: 'specialty_document',
-      name: 'Documento de especialidad',
-      icon: <DocumentIcon className="h-6 w-6" />,
-      description: 'Documento que describa el tipo de terapia que realizas, trastornos que tratas e información relevante para justificar tu tarifa'
-    }
-  ];
 
   // Modify the useEffect to add a loading flag to prevent multiple requests
   useEffect(() => {
