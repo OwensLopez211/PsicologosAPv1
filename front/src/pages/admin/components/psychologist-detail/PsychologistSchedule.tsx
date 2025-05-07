@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ClockIcon, CalendarDaysIcon } from '@heroicons/react/24/solid';
-import PsychologistService, { ScheduleConfig, TimeBlock } from '../../../../services/PsychologistService';
+import PsychologistService from '../../../../services/PsychologistService';
 
 interface PsychologistScheduleProps {
   psychologistId: number;
