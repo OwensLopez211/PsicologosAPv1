@@ -13,6 +13,8 @@
     "expose": "concurrently \"npm run expose:dev\" \"npm run expose:tunnel\""
   },
   "dependencies": {
+    "@capacitor/cli": "^7.2.0",
+    "@capacitor/core": "^7.2.0",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
     "@phosphor-icons/react": "^2.1.7",
