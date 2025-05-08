@@ -38,6 +38,12 @@ const { } = useAuth();
     try {
       setLoading(true);
       const data = await PsychologistService.getPsychologistById(psychologistId);
+      
+      // Agregar un log para verificar los documentos recibidos
+      if (data && data.verification_documents) {
+        console.log("Documentos recibidos:", data.verification_documents);
+      }
+      
       setPsychologist(data);
       
       // Fetch pricing data
