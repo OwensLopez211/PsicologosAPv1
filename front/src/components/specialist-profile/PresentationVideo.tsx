@@ -20,6 +20,7 @@ const PresentationVideo: FC<PresentationVideoProps> = ({ videoUrl }) => {
 
   useEffect(() => {
     if (!videoUrl) {
+      console.log('PresentationVideo: No videoUrl provided');
       setIsLoading(false);
       return;
     }
@@ -32,13 +33,16 @@ const PresentationVideo: FC<PresentationVideoProps> = ({ videoUrl }) => {
       processedUrl = `${BASE_URL}${videoUrl}`;
     }
     
+    console.log('PresentationVideo: Processing video URL:', videoUrl);
+    console.log('PresentationVideo: Full processed URL:', processedUrl);
+    
     // Fetch the video as a blob to avoid CORS issues
     const fetchVideo = async () => {
       try {
         setIsLoading(true);
         setError(null);
         
-        console.log('Fetching video from:', processedUrl);
+        console.log('PresentationVideo: Fetching video from:', processedUrl);
         
         const response = await axios.get(processedUrl, {
           responseType: 'blob',
@@ -53,11 +57,14 @@ const PresentationVideo: FC<PresentationVideoProps> = ({ videoUrl }) => {
         });
         const blobUrl = URL.createObjectURL(blob);
         
-        console.log('Created blob URL:', blobUrl);
+        console.log('PresentationVideo: Created blob URL:', blobUrl);
+        console.log('PresentationVideo: Content type:', response.headers['content-type']);
+        console.log('PresentationVideo: Blob size:', response.data.size);
+        
         setVideoBlob(blobUrl);
         setIsLoading(false);
       } catch (err) {
-        console.error('Error fetching video:', err);
+        console.error('PresentationVideo: Error fetching video:', err);
         setError('No se pudo cargar el video');
         setIsLoading(false);
       }
@@ -134,8 +141,14 @@ const PresentationVideo: FC<PresentationVideoProps> = ({ videoUrl }) => {
               className="w-full h-full object-cover"
               controls={isPlaying}
               controlsList="nodownload"
-              onLoadedData={() => setIsLoading(false)}
-              onError={() => setError('Error al reproducir el video')}
+              onLoadedData={() => {
+                console.log('PresentationVideo: Video loaded successfully');
+                setIsLoading(false);
+              }}
+              onError={(e) => {
+                console.error('PresentationVideo: Video error event:', e);
+                setError('Error al reproducir el video');
+              }}
               autoPlay={false}
               playsInline
             >

@@ -37,7 +37,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
   const handleVerify = (e: React.MouseEvent) => {
     e.preventDefault();
     if (typeof onVerify === 'function') {
-      onVerify(document.id, 'verified');
+      onVerify(document.id, 'approved');
     } else {
       console.error('onVerify is not a function');
     }
@@ -56,7 +56,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
   const fileName = document.file.split('/').pop() || `documento_${document.id}`;
 
   // Determinar el estado real del documento para la lógica de UI
-  const isVerifiedOrApproved = document.verification_status === 'verified' || 
+  const isVerifiedOrApproved = document.verification_status === 'approved' || 
                              document.verification_status === 'approved';
   const isRejected = document.verification_status === 'rejected';
 
