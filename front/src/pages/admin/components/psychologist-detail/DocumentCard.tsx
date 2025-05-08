@@ -59,7 +59,6 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
   const isVerifiedOrApproved = document.verification_status === 'verified' || 
                              document.verification_status === 'approved';
   const isRejected = document.verification_status === 'rejected';
-  const isPending = document.verification_status === 'pending';
 
   // Estado para mostrar en la UI
   let displayStatus = '';
