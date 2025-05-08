@@ -55,6 +55,29 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
   // Get filename from URL
   const fileName = document.file.split('/').pop() || `documento_${document.id}`;
 
+  // Determinar el estado real del documento para la lógica de UI
+  const isVerifiedOrApproved = document.verification_status === 'verified' || 
+                             document.verification_status === 'approved';
+  const isRejected = document.verification_status === 'rejected';
+  const isPending = document.verification_status === 'pending';
+
+  // Estado para mostrar en la UI
+  let displayStatus = '';
+  let statusClass = '';
+
+  if (isVerifiedOrApproved) {
+    displayStatus = 'Verificado';
+    statusClass = 'bg-green-100 text-green-800';
+  } else if (isRejected) {
+    displayStatus = 'Rechazado';
+    statusClass = 'bg-red-100 text-red-800';
+  } else {
+    displayStatus = 'Pendiente';
+    statusClass = 'bg-yellow-100 text-yellow-800';
+  }
+
+  console.log(`Documento ID ${document.id}: Estado=${document.verification_status}, Mostrado=${displayStatus}`);
+
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <div className="bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 border-b flex justify-between items-center">
@@ -68,16 +91,8 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           {document.document_type === 'specialty_document' && 'Documento de Especialidad'}
           {document.document_type === 'other' && 'Otro Documento'}
         </h3>
-        <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-2xs sm:text-xs rounded-full ${
-          document.verification_status === 'verified' 
-            ? 'bg-green-100 text-green-800' 
-            : document.verification_status === 'rejected'
-            ? 'bg-red-100 text-red-800'
-            : 'bg-yellow-100 text-yellow-800'
-        }`}>
-          {document.verification_status === 'verified' && 'Verificado'}
-          {document.verification_status === 'rejected' && 'Rechazado'}
-          {document.verification_status === 'pending' && 'Pendiente'}
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}`}>
+          {displayStatus}
         </span>
       </div>
       
@@ -123,7 +138,8 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
             Descargar
           </button>
           
-          {document.verification_status !== 'verified' && (
+          {/* Solo mostrar botón de aprobar si está pendiente o rechazado */}
+          {!isVerifiedOrApproved && (
             <button 
               onClick={handleVerify}
               className="px-2 sm:px-3 py-1 bg-green-50 text-green-600 rounded border border-green-200 text-xs sm:text-sm hover:bg-green-100 transition-colors"
@@ -132,7 +148,8 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
             </button>
           )}
           
-          {document.verification_status !== 'rejected' && (
+          {/* Solo mostrar botón de rechazar si está pendiente o aprobado */}
+          {!isRejected && (
             <button 
               onClick={handleReject}
               className="px-2 sm:px-3 py-1 bg-red-50 text-red-600 rounded border border-red-200 text-xs sm:text-sm hover:bg-red-100 transition-colors"

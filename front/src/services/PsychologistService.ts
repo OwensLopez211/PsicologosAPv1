@@ -418,10 +418,23 @@ class PsychologistService {
   async updateDocumentStatus(documentId: number, status: string, rejectionReason?: string): Promise<any> {
     this.logDebug(`Updating document ${documentId} status to ${status}`);
     try {
-      const data: any = { verification_status: status };
+      // Convierto el estado al formato que espera el backend
+      // En el backend, ProfessionalDocument.VERIFICATION_STATUS = [
+      //   ('pending', 'Pendiente'),
+      //   ('approved', 'Aprobado'),
+      //   ('rejected', 'Rechazado')
+      // ]
+      let backendStatus = status;
+      if (status === 'verified') {
+        backendStatus = 'approved';
+      }
+      
+      const data: any = { verification_status: backendStatus };
       if (status === 'rejected' && rejectionReason) {
         data.rejection_reason = rejectionReason;
       }
+      
+      this.logDebug(`Sending data to backend:`, data);
       
       const response = await api.patch(`/profiles/admin/psychologists/documents/${documentId}/status/`, data);
       this.logDebug(`Successfully updated document ${documentId} status`, response.data);

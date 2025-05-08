@@ -50,6 +50,22 @@ const AppointmentDetails = ({
     }
   }, [appointment]);
 
+  // Control body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Disable scrolling on body when modal is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Re-enable scrolling when modal is closed
+      document.body.style.overflow = '';
+    }
+    
+    // Cleanup function to ensure scrolling is re-enabled
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   // Get status color
   const getStatusColor = (status: AppointmentStatus) => {
     switch (status) {
@@ -150,7 +166,12 @@ const AppointmentDetails = ({
 
   return (
     <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="fixed inset-0 overflow-hidden z-50" onClose={onClose}>
+      <Dialog 
+        as="div" 
+        className="fixed inset-0 overflow-hidden"
+        style={{ zIndex: 99999 }} 
+        onClose={onClose}
+      >
         <div className="absolute inset-0 overflow-hidden">
           <Transition.Child
             as={Fragment}
@@ -164,7 +185,7 @@ const AppointmentDetails = ({
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
           </Transition.Child>
 
-          <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex sm:pl-16">
+          <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex sm:pl-16" style={{ zIndex: 99999 }}>
             <Transition.Child
               as={Fragment}
               enter="transform transition ease-in-out duration-300"
