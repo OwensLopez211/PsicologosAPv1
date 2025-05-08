@@ -99,24 +99,34 @@ const SpecialistProfilePage = () => {
         
         // Handle presentation video URL
         if (specialistData.presentation_video_url) {
-          console.log('Found presentation video:', specialistData.presentation_video_url);
+          console.log('Found presentation video URL directly:', specialistData.presentation_video_url);
           setPresentationVideoUrl(specialistData.presentation_video_url);
         } else if (specialistData.verification_documents) {
           // Try to find presentation video in verification documents
           const videoDoc = specialistData.verification_documents.find(
-            (doc: Document) => doc.document_type === 'presentation_video' && doc.verification_status === 'verified'
+            (doc: Document) => 
+              doc.document_type === 'presentation_video' && 
+              (doc.verification_status === 'verified' || 
+               doc.verification_status === 'approved')
           );
           
           if (videoDoc && videoDoc.file) {
             console.log('Found presentation video in documents:', videoDoc.file);
             setPresentationVideoUrl(videoDoc.file);
             formattedSpecialist.presentation_video_url = videoDoc.file;
+          } else {
+            console.log('No verified presentation video found in documents');
+            setPresentationVideoUrl('');
           }
+        } else {
+          console.log('No presentation video URL or verification documents found');
+          setPresentationVideoUrl('');
         }
         
         // Add debug logging to clearly show the IDs
         console.log('Specialist profile ID:', specialistData.id);
         console.log('Specialist user ID:', specialistData.user.id);
+        console.log('Presentation video URL set to:', presentationVideoUrl);
         
         // Intentar obtener las experiencias profesionales desde la respuesta
         if (specialistData.experiences) {

@@ -84,13 +84,13 @@ class PsychologistDetailView(generics.RetrieveAPIView):
         presentation_video = ProfessionalDocument.objects.filter(
             psychologist=instance,
             document_type='presentation_video',
-            verification_status='verified'
+            verification_status__in=['verified', 'approved']
         ).first()
         
         # Add verification documents to the response
         documents = ProfessionalDocument.objects.filter(
             psychologist=instance,
-            verification_status='verified'
+            verification_status__in=['verified', 'approved']
         )
         document_serializer = ProfessionalDocumentSerializer(documents, many=True)
         data['verification_documents'] = document_serializer.data
@@ -98,8 +98,10 @@ class PsychologistDetailView(generics.RetrieveAPIView):
         # Add presentation video URL specifically
         if presentation_video:
             data['presentation_video_url'] = presentation_video.file.url if presentation_video.file else None
+            print(f"Found presentation video: {data['presentation_video_url']}")
         else:
             data['presentation_video_url'] = None
+            print("No presentation video found for psychologist", instance.id)
             
         return Response(data)
 
