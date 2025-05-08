@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'profiles.apps.ProfilesConfig',
     'schedules',  
     'pricing',
-    'comments',
 ]
 
 MIDDLEWARE = [
