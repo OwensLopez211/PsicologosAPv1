@@ -1,5 +1,3 @@
-import HeaderPage from '../../components/public-components/HeaderPage';
-import PageTransition from '../../components/animations/PageTransition';
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
@@ -119,7 +117,7 @@ const FAQ = () => {
       {
         question: "¿Cómo funciona e-mind?",
         answer:
-          "E-mind funciona en tres sencillos pasos: primero, te registras como paciente; segundo, buscar un psicológo que se adapte a tus necesidades y agendas la hora que te convenga; y tercero, te conectas el dia de la cita y comienza la terapia."
+          "E-mind funciona en tres sencillos pasos: primero, completas un breve cuestionario sobre tus necesidades; segundo, nuestro sistema te recomienda los profesionales más adecuados para tu caso; y tercero, eliges al psicólogo que prefieras y programas tu primera sesión online a través de nuestra plataforma segura."
       },
       {
         question: "¿Quiénes son los profesionales de e-mind?",
@@ -136,7 +134,7 @@ const FAQ = () => {
       {
         question: "¿Cómo se realizan las sesiones de terapia?",
         answer:
-          "Las sesiones se realizan a través de videollamada en una plataforma segura como Google Meet, Zoom o Microsoft Teams. Solo necesitas un dispositivo con conexión a internet, cámara y micrófono."
+          "Las sesiones se realizan a través de videollamada en nuestra plataforma segura. Solo necesitas un dispositivo con conexión a internet, cámara y micrófono. Nuestra interfaz es intuitiva y garantiza la privacidad de tus sesiones en todo momento."
       },
       {
         question: "¿Puedo cambiar de psicólogo si no me siento cómodo?",
@@ -148,29 +146,29 @@ const FAQ = () => {
       {
         question: "¿Cuánto cuesta una sesión de terapia en e-mind?",
         answer:
-          "Nuestras tarifas varían según el tipo de terapia y la experiencia del profesional, dado que nuestro enfoque es ofrecer un servicio a bajo costo. las tarifas son entre los 2000"
+          "Nuestras tarifas varían según el tipo de terapia y la experiencia del profesional, con precios que comienzan desde 40€ por sesión. También ofrecemos paquetes de sesiones con descuentos y planes mensuales para quienes buscan un seguimiento continuo."
       },
       {
         question: "¿Existe algún cargo por cancelar una sesión?",
         answer:
-          ""
+          "Puedes cancelar o reprogramar tu sesión sin cargo hasta 24 horas antes de la hora programada. Las cancelaciones con menos de 24 horas de antelación pueden generar un cargo del 50% del valor de la sesión, dependiendo de la política del profesional."
       },
       {
         question: "¿Ofrecen algún tipo de descuento o plan especial?",
         answer:
-          "No, de momento no ofrecemos ningún tipo de descuento o plan especial. Planeamos ofrecer descuentos de distitnos tipos en el futuro."
+          "Sí, contamos con varios planes especiales, como el paquete de 4 sesiones mensuales con un 15% de descuento, tarifas reducidas para estudiantes y planes familiares. También realizamos promociones especiales periódicamente para nuevos usuarios."
       }
     ],
     "Proceso": [
       {
         question: "¿Cómo me registro en e-mind?",
         answer:
-          "Puedes registrarte fácilmente en nuestra web haciendo clic en el botón 'Comenzar ahora'. Solo necesitas proporcionar tu nombre y apellido, correo electrónico y crear una contraseña."
+          "Puedes registrarte fácilmente en nuestra web haciendo clic en el botón 'Comenzar ahora'. Solo necesitas proporcionar tu correo electrónico y crear una contraseña. Luego completarás un breve cuestionario para que podamos entender mejor tus necesidades y recomendarte los profesionales más adecuados."
       },
       {
         question: "¿Cuánto tiempo dura cada sesión de terapia?",
         answer:
-          "Las sesiones tienen una duracion de 50 minutos, pero puede extenderse hasta 1 hora si el profesional lo considera necesario."
+          "Las sesiones estándar tienen una duración de 50-60 minutos, aunque algunos especialistas también ofrecen formatos de 30 minutos para seguimientos breves o de 90 minutos para terapias específicas que requieren más tiempo, como la terapia de pareja."
       },
       {
         question: "¿Con qué frecuencia debo tener sesiones?",
@@ -178,6 +176,40 @@ const FAQ = () => {
           "La frecuencia recomendada suele ser de una sesión semanal al inicio de la terapia, aunque esto puede variar según tus necesidades específicas y las recomendaciones de tu psicólogo. Con el tiempo, muchos pacientes pasan a sesiones quincenales o mensuales a medida que avanzan en su proceso."
       }
     ],
+    "Privacidad": [
+      {
+        question: "¿Cómo garantizan la confidencialidad de mis sesiones?",
+        answer:
+          "Utilizamos tecnología de encriptación de extremo a extremo para todas las videollamadas, asegurando que nadie pueda acceder al contenido de tus sesiones. Además, nuestros profesionales están obligados por el código deontológico a mantener la confidencialidad de todo lo tratado en terapia."
+      },
+      {
+        question: "¿Qué datos personales necesito proporcionar?",
+        answer:
+          "Solicitamos los datos básicos necesarios para facilitar el servicio: nombre, correo electrónico y método de pago. La información adicional que compartas en el cuestionario inicial nos ayuda a encontrar el profesional más adecuado, pero siempre puedes elegir el nivel de detalle que deseas proporcionar."
+      },
+      {
+        question: "¿Mis sesiones quedan grabadas?",
+        answer:
+          "No, en e-mind no grabamos ninguna sesión. Las videollamadas son en tiempo real y no se almacenan en nuestros servidores. Tu privacidad es nuestra prioridad absoluta y cumplimos con todas las normativas de protección de datos aplicables."
+      }
+    ],
+    "Técnico": [
+      {
+        question: "¿Qué dispositivos puedo usar para conectarme a las sesiones?",
+        answer:
+          "Puedes acceder a las sesiones desde cualquier dispositivo con conexión a internet: ordenadores, tablets o smartphones. Nuestra plataforma es compatible con Windows, Mac, iOS y Android. Recomendamos utilizar Google Chrome o Safari para una mejor experiencia."
+      },
+      {
+        question: "¿Qué hago si tengo problemas técnicos durante una sesión?",
+        answer:
+          "Si experimentas problemas técnicos, nuestra plataforma ofrece un chat de soporte técnico inmediato. También puedes intentar actualizar la página, verificar tu conexión a internet o cambiar a otro dispositivo. En caso de interrupción prolongada, podrás reprogramar el tiempo restante de tu sesión sin costo adicional."
+      },
+      {
+        question: "¿Necesito descargar algún programa o aplicación?",
+        answer:
+          "No es necesario descargar ningún programa especial. Nuestra plataforma funciona directamente desde el navegador web. Sin embargo, también contamos con aplicaciones móviles para iOS y Android que ofrecen funcionalidades adicionales y mayor comodidad para gestionar tus citas."
+      }
+    ]
   };
 
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -204,71 +236,60 @@ const FAQ = () => {
   };
 
   return (
-    <PageTransition>
-      <HeaderPage
-        title="Preguntas Frecuentes"
-        description="Encuentra respuestas a las dudas más comunes sobre e-mind bienestar y cómo podemos ayudarte en tu camino hacia el equilibrio mental."
-      />
-      
-      <section className="container mx-auto px-6 py-12">
-        <div className="mx-auto max-w-4xl">
-          
+    <div className="mx-auto max-w-4xl">
+      <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
-          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      {!searchQuery && (
+        <CategoryTabs
+          categories={categories}
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+        />
+      )}
 
-          {!searchQuery && (
-            <CategoryTabs
-              categories={categories}
-              activeCategory={activeCategory}
-              setActiveCategory={setActiveCategory}
-            />
-          )}
-
-          <div className="mt-8 rounded-xl bg-white p-6 shadow-lg">
-            {searchQuery && filteredQuestions.length === 0 ? (
-              <div className="py-8 text-center">
-                <p className="text-lg text-gray-600">
-                  No se encontraron resultados para "{searchQuery}"
-                </p>
-                <button
-                  className="mt-4 text-teal-600 hover:underline"
-                  onClick={() => setSearchQuery("")}
-                >
-                  Limpiar búsqueda
-                </button>
-              </div>
-            ) : searchQuery ? (
-              // Search results
-              filteredQuestions.map((item, index) => (
-                <div key={index}>
-                  {index > 0 && <hr className="my-2 border-gray-200" />}
-                  <div className="mb-2 text-sm font-medium text-teal-600">
-                    {item.category}
-                  </div>
-                  <FAQItem
-                    question={item.question}
-                    answer={item.answer}
-                    isOpen={openIndex === index}
-                    toggle={() => handleToggle(index)}
-                  />
-                </div>
-              ))
-            ) : (
-              // Category view
-              filteredQuestions.map((item, index) => (
-                <FAQItem
-                  key={index}
-                  question={item.question}
-                  answer={item.answer}
-                  isOpen={openIndex === index}
-                  toggle={() => handleToggle(index)}
-                />
-              ))
-            )}
+      <div className="mt-8 rounded-xl bg-white p-6 shadow-lg">
+        {searchQuery && filteredQuestions.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-lg text-gray-600">
+              No se encontraron resultados para "{searchQuery}"
+            </p>
+            <button
+              className="mt-4 text-teal-600 hover:underline"
+              onClick={() => setSearchQuery("")}
+            >
+              Limpiar búsqueda
+            </button>
           </div>
-        </div>
-      </section>
-    </PageTransition>
+        ) : searchQuery ? (
+          // Search results
+          filteredQuestions.map((item, index) => (
+            <div key={index}>
+              {index > 0 && <hr className="my-2 border-gray-200" />}
+              <div className="mb-2 text-sm font-medium text-teal-600">
+                {item.category}
+              </div>
+              <FAQItem
+                question={item.question}
+                answer={item.answer}
+                isOpen={openIndex === index}
+                toggle={() => handleToggle(index)}
+              />
+            </div>
+          ))
+        ) : (
+          // Category view
+          filteredQuestions.map((item, index) => (
+            <FAQItem
+              key={index}
+              question={item.question}
+              answer={item.answer}
+              isOpen={openIndex === index}
+              toggle={() => handleToggle(index)}
+            />
+          ))
+        )}
+      </div>
+    </div>
   );
 };
 
