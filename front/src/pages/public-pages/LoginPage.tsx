@@ -97,7 +97,7 @@ const LoginPage = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-br from-[#B4E4D3]/70 via-white to-[#B4E4D3]/30 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-[#B4E4D3]/70 via-white to-[#B4E4D3]/30 flex flex-col justify-center py-4 sm:py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         {/* Elementos decorativos de fondo */}
         <div className="absolute inset-0 z-0">
           <div className="absolute top-20 left-10 w-24 sm:w-32 h-24 sm:h-32 rounded-full bg-[#2A6877]/10 blur-3xl"></div>
@@ -126,10 +126,10 @@ const LoginPage = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <h2 className="mt-4 sm:mt-8 text-center text-2xl sm:text-4xl font-bold text-[#2A6877]">
+            <h2 className="mt-3 sm:mt-8 text-center text-2xl sm:text-4xl font-bold text-[#2A6877]">
               Bienvenido de nuevo
             </h2>
-            <p className="mt-2 sm:mt-3 text-center text-xs sm:text-sm text-gray-600">
+            <p className="mt-1 sm:mt-3 text-center text-xs sm:text-sm text-gray-600">
               ¿No tienes una cuenta?{' '}
               <Link to="/registro" className="font-semibold text-[#2A6877] hover:text-[#235A67] underline decoration-2 decoration-[#B4E4D3] underline-offset-2 transition-colors duration-300">
                 Regístrate aquí
@@ -142,15 +142,15 @@ const LoginPage = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
-          className="mt-4 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+          className="mt-3 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
         >
-          <div className="bg-white/90 backdrop-blur-md py-5 sm:py-8 px-4 sm:px-6 shadow-xl rounded-2xl sm:px-10 border border-white/50">
-            <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
+          <div className="bg-white/90 backdrop-blur-md py-4 sm:py-8 px-4 sm:px-6 shadow-xl rounded-2xl sm:px-10 border border-white/50">
+            <form className="space-y-3 sm:space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="email" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                <label htmlFor="email" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
                   Correo electrónico
                 </label>
-                <div className="mt-1 relative group">
+                <div className="mt-0.5 sm:mt-1 relative group">
                   <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-[#2A6877]/40 to-[#B4E4D3]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm -z-10"></div>
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -166,17 +166,17 @@ const LoginPage = () => {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="appearance-none block w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-200 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-300 text-sm"
+                    className="appearance-none block w-full pl-9 sm:pl-10 pr-4 py-1.5 sm:py-3 border border-gray-200 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-300 text-sm"
                     placeholder="tu@ejemplo.com"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                <label htmlFor="password" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
                   Contraseña
                 </label>
-                <div className="mt-1 relative group">
+                <div className="mt-0.5 sm:mt-1 relative group">
                   <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-[#2A6877]/40 to-[#B4E4D3]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm -z-10"></div>
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -191,7 +191,7 @@ const LoginPage = () => {
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="appearance-none block w-full pl-9 sm:pl-10 pr-9 sm:pr-10 py-2 sm:py-3 border border-gray-200 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-300 text-sm"
+                    className="appearance-none block w-full pl-9 sm:pl-10 pr-9 sm:pr-10 py-1.5 sm:py-3 border border-gray-200 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent transition-all duration-300 text-sm"
                     placeholder="••••••••"
                   />
                   <button 
@@ -239,11 +239,11 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="mt-2 sm:mt-4">
                 <motion.button
                   type="submit"
                   disabled={isLoading}
-                  className="relative w-full flex justify-center py-2 sm:py-3 px-4 border border-transparent rounded-xl shadow-lg text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-[#2A6877] to-[#235A67] hover:from-[#235A67] hover:to-[#1D4B56] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
+                  className="relative w-full flex justify-center py-1.5 sm:py-3 px-4 border border-transparent rounded-xl shadow-lg text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-[#2A6877] to-[#235A67] hover:from-[#235A67] hover:to-[#1D4B56] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -270,7 +270,7 @@ const LoginPage = () => {
             </form>
           </div>
 
-          <p className="mt-3 sm:mt-5 text-center text-[10px] sm:text-xs text-gray-500">
+          <p className="mt-2 sm:mt-5 text-center text-[10px] sm:text-xs text-gray-500">
             Al iniciar sesión, aceptas nuestros <Link to="/terminos" className="underline hover:text-gray-700 transition-colors">Términos y Condiciones</Link> y <Link to="/privacidad" className="underline hover:text-gray-700 transition-colors">Política de Privacidad</Link>.
           </p>
         </motion.div>
