@@ -19,6 +19,15 @@ const Hero = () => {
     }
   };
 
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2
+      }
+    }
+  };
 
   const featureItems = [
     { text: "Sesiones flexibles", delay: 0.3 },
