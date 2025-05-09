@@ -51,6 +51,7 @@ front/build/
 front/package.json
 front/package-lock.json
 front/dist
+
 # React environment variables
 front/.env
 front/.env.local
