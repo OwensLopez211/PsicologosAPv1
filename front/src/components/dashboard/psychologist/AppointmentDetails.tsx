@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
+import toastService from '../../../services/toastService';
 
 // Define appointment status types to match backend
 type AppointmentStatus = 'PENDING_PAYMENT' | 'PAYMENT_UPLOADED' | 'PAYMENT_VERIFIED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
@@ -41,8 +42,6 @@ const AppointmentDetails = ({
 }: AppointmentDetailsProps) => {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { user, token, refreshUserSession } = useAuth();
 
   // Log de debugging
@@ -94,18 +93,41 @@ const AppointmentDetails = ({
     }
   };
 
+  // Función para mostrar el texto del estado de forma legible
+  const getStatusDisplay = (status: AppointmentStatus): string => {
+    switch (status) {
+      case 'PENDING_PAYMENT':
+        return 'Pendiente de pago';
+      case 'PAYMENT_UPLOADED':
+        return 'Pago subido';
+      case 'PAYMENT_VERIFIED':
+        return 'Pago verificado';
+      case 'CONFIRMED':
+        return 'Confirmada';
+      case 'COMPLETED':
+        return 'Completada';
+      case 'CANCELLED':
+        return 'Cancelada';
+      case 'NO_SHOW':
+        return 'No asistió';
+      default:
+        return status;
+    }
+  };
+
   // Handle status change with API call
   const handleStatusChange = async (status: AppointmentStatus) => {
     if (!appointment) return;
     
     setIsSaving(true);
-    setError(null);
-    setSuccessMessage(null);
+    
+    // Mostrar toast de carga
+    toastService.loading('Actualizando estado...');
     
     try {
       // Obtener token del AuthContext en lugar de localStorage directamente
       if (!token) {
-        setError('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
+        toastService.error('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
         return;
       }
       
@@ -129,7 +151,8 @@ const AppointmentDetails = ({
         onStatusChange(appointment.id, status);
       }
       
-      setSuccessMessage('Estado actualizado correctamente');
+      // Mostrar notificación de éxito con toast
+      toastService.success(`Estado actualizado a: ${getStatusDisplay(status)}`);
       refreshAppointments();
     } catch (err: any) {
       console.error('Error completo al actualizar estado:', err);
@@ -148,16 +171,20 @@ const AppointmentDetails = ({
         }
       }
       
-      // Mostrar información más detallada del error
+      // Mostrar error con toast
+      let errorMsg = 'Error al actualizar el estado. Inténtalo de nuevo.';
+      if (err.response && err.response.data?.detail) {
+        errorMsg = `Error: ${err.response.data.detail}`;
+      }
+      toastService.error(errorMsg);
+      
+      // Mostrar información más detallada del error en consola
       if (err.response) {
         console.error('Detalles del error:', {
           status: err.response.status,
           data: err.response.data,
           headers: err.response.headers
         });
-        setError(`Error (${err.response.status}): ${err.response.data?.detail || 'Error al actualizar el estado'}`);
-      } else {
-        setError('Error al actualizar el estado. Inténtalo de nuevo.');
       }
     } finally {
       setIsSaving(false);
@@ -169,13 +196,14 @@ const AppointmentDetails = ({
     if (!appointment) return;
     
     setIsSaving(true);
-    setError(null);
-    setSuccessMessage(null);
+    
+    // Mostrar toast de carga
+    toastService.loading('Guardando notas...');
     
     try {
       // Obtener token del AuthContext
       if (!token) {
-        setError('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
+        toastService.error('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
         return;
       }
       
@@ -194,7 +222,8 @@ const AppointmentDetails = ({
         onNotesChange(appointment.id, notes);
       }
       
-      setSuccessMessage('Notas guardadas correctamente');
+      // Mostrar notificación de éxito con toast
+      toastService.success('Notas guardadas correctamente');
       refreshAppointments();
     } catch (err: any) {
       console.error('Error completo al guardar notas:', err);
@@ -213,16 +242,20 @@ const AppointmentDetails = ({
         }
       }
       
-      // Mostrar información más detallada del error
+      // Mostrar error con toast
+      let errorMsg = 'Error al guardar las notas. Inténtalo de nuevo.';
+      if (err.response && err.response.data?.detail) {
+        errorMsg = `Error: ${err.response.data.detail}`;
+      }
+      toastService.error(errorMsg);
+      
+      // Mostrar información más detallada del error en consola
       if (err.response) {
         console.error('Detalles del error:', {
           status: err.response.status,
           data: err.response.data,
           headers: err.response.headers
         });
-        setError(`Error (${err.response.status}): ${err.response.data?.detail || 'Error al guardar las notas'}`);
-      } else {
-        setError('Error al guardar las notas. Inténtalo de nuevo.');
       }
     } finally {
       setIsSaving(false);
@@ -302,19 +335,6 @@ const AppointmentDetails = ({
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Status messages */}
-                  {error && (
-                    <div className="mx-4 mb-4 p-2 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-600">{error}</p>
-                    </div>
-                  )}
-                  
-                  {successMessage && (
-                    <div className="mx-4 mb-4 p-2 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-sm text-green-600">{successMessage}</p>
-                    </div>
-                  )}
                   
                   <div className="flex-1 px-4 sm:px-6">
                     <div className="space-y-6">
