@@ -4,6 +4,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import api from '../../../services/api';
+import { useAuth } from '../../../context/AuthContext';
 
 // Define appointment status types to match backend
 type AppointmentStatus = 'PENDING_PAYMENT' | 'PAYMENT_UPLOADED' | 'PAYMENT_VERIFIED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
@@ -42,6 +43,14 @@ const AppointmentDetails = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { user, token } = useAuth();
+
+  // Log de debugging
+  useEffect(() => {
+    console.log('Usuario actual:', user);
+    console.log('¿Es psicólogo?:', user?.user_type === 'psychologist');
+    console.log('Token disponible:', token ? 'Sí' : 'No');
+  }, [user, token]);
 
   // Update notes when appointment changes
   useEffect(() => {
@@ -85,6 +94,33 @@ const AppointmentDetails = ({
     }
   };
 
+  // Función auxiliar para hacer peticiones con el token actualizado
+  const makeAuthorizedRequest = async (method: 'patch' | 'post' | 'get', endpoint: string, data?: any) => {
+    // Obtener token actualizado del localStorage (por si cambió después de la carga del componente)
+    const currentToken = localStorage.getItem('token');
+    
+    if (!currentToken) {
+      throw new Error('No hay token de autenticación disponible');
+    }
+    
+    // Configurar la petición con el token actualizado
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${currentToken}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    // Realizar la petición según el método
+    if (method === 'patch') {
+      return await api.patch(endpoint, data, config);
+    } else if (method === 'post') {
+      return await api.post(endpoint, data, config);
+    } else {
+      return await api.get(endpoint, config);
+    }
+  };
+
   // Handle status change with API call
   const handleStatusChange = async (status: AppointmentStatus) => {
     if (!appointment) return;
@@ -94,9 +130,25 @@ const AppointmentDetails = ({
     setSuccessMessage(null);
     
     try {
-      await api.patch(`/appointments/${appointment.id}/update-status/`, {
-        status
+      // Verificar token manualmente
+      const currentToken = localStorage.getItem('token');
+      console.log('Token al actualizar estado:', currentToken ? `${currentToken.substring(0, 15)}...` : 'No hay token');
+      
+      // Agregar logs detallados
+      console.log('Enviando actualización de estado:', {
+        appointmentId: appointment.id,
+        nuevoEstado: status,
+        estadoActual: appointment.status
       });
+      
+      // Usar la función auxiliar para hacer la petición con el token actualizado
+      const response = await makeAuthorizedRequest(
+        'patch', 
+        `/appointments/${appointment.id}/update-status/`, 
+        { status }
+      );
+      
+      console.log('Respuesta actualización:', response.data);
       
       // Call the parent component's handler if provided
       if (onStatusChange) {
@@ -105,9 +157,20 @@ const AppointmentDetails = ({
       
       setSuccessMessage('Estado actualizado correctamente');
       refreshAppointments();
-    } catch (err) {
-      console.error('Error updating appointment status:', err);
-      setError('Error al actualizar el estado. Inténtalo de nuevo.');
+    } catch (err: any) {
+      console.error('Error completo al actualizar estado:', err);
+      
+      // Mostrar información más detallada del error
+      if (err.response) {
+        console.error('Detalles del error:', {
+          status: err.response.status,
+          data: err.response.data,
+          headers: err.response.headers
+        });
+        setError(`Error (${err.response.status}): ${err.response.data?.detail || 'Error al actualizar el estado'}`);
+      } else {
+        setError('Error al actualizar el estado. Inténtalo de nuevo.');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -122,9 +185,18 @@ const AppointmentDetails = ({
     setSuccessMessage(null);
     
     try {
-      await api.patch(`/appointments/${appointment.id}/add-notes/`, {
-        psychologist_notes: notes
-      });
+      // Verificar token manualmente
+      const currentToken = localStorage.getItem('token');
+      console.log('Token al guardar notas:', currentToken ? `${currentToken.substring(0, 15)}...` : 'No hay token');
+      
+      // Usar la función auxiliar para hacer la petición con el token actualizado
+      const response = await makeAuthorizedRequest(
+        'patch',
+        `/appointments/${appointment.id}/add-notes/`,
+        { psychologist_notes: notes }
+      );
+      
+      console.log('Respuesta guardado de notas:', response.data);
       
       // Call the parent component's handler if provided
       if (onNotesChange) {
@@ -133,9 +205,20 @@ const AppointmentDetails = ({
       
       setSuccessMessage('Notas guardadas correctamente');
       refreshAppointments();
-    } catch (err) {
-      console.error('Error saving appointment notes:', err);
-      setError('Error al guardar las notas. Inténtalo de nuevo.');
+    } catch (err: any) {
+      console.error('Error completo al guardar notas:', err);
+      
+      // Mostrar información más detallada del error
+      if (err.response) {
+        console.error('Detalles del error:', {
+          status: err.response.status,
+          data: err.response.data,
+          headers: err.response.headers
+        });
+        setError(`Error (${err.response.status}): ${err.response.data?.detail || 'Error al guardar las notas'}`);
+      } else {
+        setError('Error al guardar las notas. Inténtalo de nuevo.');
+      }
     } finally {
       setIsSaving(false);
     }
