@@ -3,7 +3,7 @@ import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import axios from 'axios';
+import api from '../../../services/api';
 
 // Define appointment status types to match backend
 type AppointmentStatus = 'PENDING_PAYMENT' | 'PAYMENT_UPLOADED' | 'PAYMENT_VERIFIED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
@@ -94,7 +94,7 @@ const AppointmentDetails = ({
     setSuccessMessage(null);
     
     try {
-      await axios.patch(`/api/appointments/${appointment.id}/update-status/`, {
+      await api.patch(`/appointments/${appointment.id}/update-status/`, {
         status
       });
       
@@ -122,7 +122,7 @@ const AppointmentDetails = ({
     setSuccessMessage(null);
     
     try {
-      await axios.patch(`/api/appointments/${appointment.id}/add-notes/`, {
+      await api.patch(`/appointments/${appointment.id}/add-notes/`, {
         psychologist_notes: notes
       });
       
