@@ -118,7 +118,7 @@ const Hero = () => {
             animate="visible"
             className="text-xl md:text-2xl font-semibold text-gray-700 relative pl-6 border-l-4 border-[#B4E4D3]"
           >
-            Empieza a sentirte mejor con la ayuda de tu psicólogo en 
+            Empieza a sentirte mejor con la ayuda de tu psicoterapeuta en 
             <span className="text-[#2A6877]"> E-mind</span>
           </motion.h2>
           <motion.div 
