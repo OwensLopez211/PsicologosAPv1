@@ -5,6 +5,7 @@ import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Patient, FilterOptions } from '../../../types/patients';
 import PatientListFilters from '../../../components/patients/PatientListFilters';
 import PatientList from '../../../components/patients/PatientList';
+import { useLocation } from 'react-router-dom';
 
 // Función para debouncing
 const useDebounce = <T,>(value: T, delay: number): T => {
@@ -25,6 +26,7 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 
 const PatientsPage = () => {
   const { user, token } = useAuth();
+  const location = useLocation();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,13 +37,21 @@ const PatientsPage = () => {
     sortBy: 'nextAppointment',
     sortOrder: 'asc'
   });
+  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
 
   // Función para cargar los pacientes
-  const fetchPatients = useCallback(async () => {
+  const fetchPatients = useCallback(async (forceRefresh = false) => {
     if (!user || user.user_type !== 'psychologist' || !token) return;
+    
+    // Evitar múltiples cargas en sucesión rápida
+    const now = Date.now();
+    if (!forceRefresh && lastFetchTime && now - lastFetchTime < 2000) {
+      return; // Evitar refrescar si han pasado menos de 2 segundos desde la última solicitud
+    }
     
     setLoading(true);
     setError(null);
+    setLastFetchTime(now);
     
     // En modo desarrollo, podemos cargar siempre los datos de ejemplo
     if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === 'true') {
@@ -52,10 +62,9 @@ const PatientsPage = () => {
     // Evitar cargar datos nuevamente si ya tenemos pacientes y no han pasado 5 minutos desde la última carga
     const lastLoadTime = sessionStorage.getItem('patientsLastLoadTime');
     const cachedPatients = sessionStorage.getItem('cachedPatients');
-    const now = Date.now();
     const fiveMinutesMs = 5 * 60 * 1000;
     
-    if (lastLoadTime && cachedPatients && now - parseInt(lastLoadTime) < fiveMinutesMs) {
+    if (!forceRefresh && lastLoadTime && cachedPatients && now - parseInt(lastLoadTime) < fiveMinutesMs) {
       try {
         const parsedPatients = JSON.parse(cachedPatients);
         setPatients(parsedPatients);
@@ -111,7 +120,9 @@ const PatientsPage = () => {
       sessionStorage.setItem('patientsLastLoadTime', now.toString());
       
       setPatients(data);
-      toastService.success(`${data.length} pacientes cargados`);
+      if (forceRefresh) {
+        toastService.success(`${data.length} pacientes actualizados`);
+      }
     } catch (err) {
       console.error('Error al cargar pacientes:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
@@ -124,10 +135,10 @@ const PatientsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, token]);
+  }, [user?.id, token, lastFetchTime]);
 
   // Función para cargar datos mock
-  const loadMockPatients = () => {
+  const loadMockPatients = useCallback(() => {
     const mockPatients: Patient[] = [
       {
         id: 1,
@@ -241,12 +252,21 @@ const PatientsPage = () => {
     setPatients(mockPatients);
     toastService.success('Datos de ejemplo cargados (modo desarrollo)');
     setLoading(false);
-  };
+  }, []);
 
-  // Cargar pacientes al montar el componente
+  // Cargar pacientes al montar el componente y cuando cambie la ruta
   useEffect(() => {
-    fetchPatients();
-  }, [fetchPatients]);
+    // Cargar datos cuando la ruta sea exactamente /psicologo/dashboard/patients
+    // Esta comprobación asegura que los datos se cargan cuando se navega a la página
+    if (location.pathname.includes('/dashboard/patients')) {
+      fetchPatients(false);
+    }
+  }, [fetchPatients, location.pathname]);
+
+  // Manejar actualización manual
+  const handleRefresh = () => {
+    fetchPatients(true);
+  };
 
   // Función memoizada para filtrar por búsqueda
   const filteredBySearchPatients = useMemo(() => {
@@ -317,11 +337,11 @@ const PatientsPage = () => {
         <h1 className="text-2xl sm:text-3xl font-bold text-[#2A6877]">Mis Pacientes</h1>
         
         <button
-          onClick={fetchPatients}
+          onClick={handleRefresh}
           className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-[#2A6877] hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877]"
         >
-          <ArrowPathIcon className="h-4 w-4 mr-1" />
-          Actualizar
+          <ArrowPathIcon className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? 'Cargando...' : 'Actualizar'}
         </button>
       </div>
       
@@ -330,7 +350,7 @@ const PatientsPage = () => {
           <p className="font-medium">Error al cargar pacientes</p>
           <p className="text-sm">{error}</p>
           <button 
-            onClick={fetchPatients}
+            onClick={handleRefresh}
             className="mt-2 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded-md text-sm transition-colors"
           >
             Reintentar
