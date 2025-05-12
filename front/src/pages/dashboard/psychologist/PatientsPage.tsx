@@ -17,11 +17,13 @@ interface User {
 interface Patient {
   id: number;
   user: User;
-  profile_image?: string;
+  profile_image?: string | null;
   rut?: string;
   region?: string;
-  last_appointment_date?: string;
-  next_appointment_date?: string;
+  last_appointment_date?: string | null;
+  last_appointment_status?: string | null;
+  next_appointment_date?: string | null;
+  next_appointment_status?: string | null;
   total_appointments: number;
 }
 
@@ -117,7 +119,9 @@ const PatientsPage = () => {
             rut: '12.345.678-9',
             region: 'Metropolitana',
             last_appointment_date: '2024-05-05',
+            last_appointment_status: 'COMPLETED',
             next_appointment_date: '2024-05-20',
+            next_appointment_status: 'CONFIRMED',
             total_appointments: 5
           },
           {
@@ -129,10 +133,13 @@ const PatientsPage = () => {
               email: 'juan.perez@example.com',
               is_active: true
             },
-            profile_image: '/default-avatar.png',
+            profile_image: null,
             rut: '9.876.543-2',
             region: 'Valparaíso',
             last_appointment_date: '2024-04-28',
+            last_appointment_status: 'COMPLETED',
+            next_appointment_date: null,
+            next_appointment_status: null,
             total_appointments: 3
           },
           {
@@ -144,10 +151,13 @@ const PatientsPage = () => {
               email: 'ana.martinez@example.com',
               is_active: true
             },
-            profile_image: '/default-avatar.png',
+            profile_image: null,
             rut: '15.432.987-6',
             region: 'Biobío',
+            last_appointment_date: null,
+            last_appointment_status: null,
             next_appointment_date: '2024-05-15',
+            next_appointment_status: 'PAYMENT_VERIFIED',
             total_appointments: 1
           }
         ];
@@ -213,9 +223,70 @@ const PatientsPage = () => {
     return result;
   }, [patients, searchTerm, filters]);
 
+  // Función para obtener las iniciales de un nombre
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
+  // Función para obtener el color de fondo para las iniciales
+  const getInitialsBackgroundColor = (name: string) => {
+    const colors = [
+      'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 
+      'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 
+      'bg-red-500', 'bg-teal-500'
+    ];
+    // Generar un índice basado en el nombre
+    const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+    return colors[index];
+  };
+
+  // Función para obtener el color del badge según el estado de la cita
+  const getAppointmentStatusColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'PENDING_PAYMENT':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'PAYMENT_UPLOADED':
+        return 'bg-blue-100 text-blue-800';
+      case 'PAYMENT_VERIFIED':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'CONFIRMED':
+        return 'bg-green-100 text-green-800';
+      case 'COMPLETED':
+        return 'bg-purple-100 text-purple-800';
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800';
+      case 'NO_SHOW':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-500';
+    }
+  };
+
+  // Función para obtener el texto a mostrar para el estado de la cita
+  const getAppointmentStatusText = (status: string) => {
+    switch (status?.toUpperCase()) {
+      case 'PENDING_PAYMENT':
+        return 'Pago pendiente';
+      case 'PAYMENT_UPLOADED':
+        return 'Pago subido';
+      case 'PAYMENT_VERIFIED':
+        return 'Pago verificado';
+      case 'CONFIRMED':
+        return 'Confirmada';
+      case 'COMPLETED':
+        return 'Completada';
+      case 'CANCELLED':
+        return 'Cancelada';
+      case 'NO_SHOW':
+        return 'No asistió';
+      default:
+        return status || 'Desconocido';
+    }
+  };
+
   // Formatear fecha para mostrar
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'No programada';
+  const formatDate = (dateString?: string | null, status?: string | null) => {
+    if (!dateString) return 'No hay cita programada';
     try {
       const date = new Date(dateString);
       return format(date, "d 'de' MMMM, yyyy", { locale: es });
@@ -375,12 +446,21 @@ const PatientsPage = () => {
                 <div key={patient.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                   <div className="flex items-center mb-3">
                     <div className="h-12 w-12 flex-shrink-0">
-                      <img
-                        className="h-12 w-12 rounded-full object-cover"
-                        src={patient.profile_image || '/default-avatar.png'}
-                        alt={`Foto de perfil de ${patient.user.first_name} ${patient.user.last_name}`}
-                        loading="lazy"
-                      />
+                      {patient.profile_image ? (
+                        <img
+                          className="h-12 w-12 rounded-full object-cover"
+                          src={patient.profile_image}
+                          alt={`Foto de perfil de ${patient.user.first_name} ${patient.user.last_name}`}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div 
+                          className={`h-12 w-12 rounded-full flex items-center justify-center text-white ${getInitialsBackgroundColor(`${patient.user.first_name} ${patient.user.last_name}`)}`}
+                          aria-label={`Iniciales de ${patient.user.first_name} ${patient.user.last_name}`}
+                        >
+                          {getInitials(patient.user.first_name, patient.user.last_name)}
+                        </div>
+                      )}
                     </div>
                     <div className="ml-3 flex-grow">
                       <div className="text-sm font-medium text-gray-900">
@@ -401,13 +481,27 @@ const PatientsPage = () => {
                     )}
                     <div className="text-xs text-gray-500 flex">
                       <span className="font-medium w-28">Última cita:</span>
-                      <span>{formatDate(patient.last_appointment_date)}</span>
+                      <div className="flex flex-col">
+                        <span>{formatDate(patient.last_appointment_date, patient.last_appointment_status)}</span>
+                        {patient.last_appointment_date && patient.last_appointment_status && (
+                          <span className={`mt-1 px-2 py-0.5 inline-flex text-xs leading-4 rounded-full ${getAppointmentStatusColor(patient.last_appointment_status)}`}>
+                            {getAppointmentStatusText(patient.last_appointment_status)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="text-xs text-gray-500 flex">
                       <span className="font-medium w-28">Próxima cita:</span>
-                      <span className={patient.next_appointment_date ? "font-medium text-[#2A6877]" : ""}>
-                        {formatDate(patient.next_appointment_date)}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className={patient.next_appointment_date ? "text-[#2A6877]" : ""}>
+                          {formatDate(patient.next_appointment_date, patient.next_appointment_status)}
+                        </span>
+                        {patient.next_appointment_date && patient.next_appointment_status && (
+                          <span className={`mt-1 px-2 py-0.5 inline-flex text-xs leading-4 rounded-full ${getAppointmentStatusColor(patient.next_appointment_status)}`}>
+                            {getAppointmentStatusText(patient.next_appointment_status)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="text-xs text-gray-500 flex">
                       <span className="font-medium w-28">Total de citas:</span>
@@ -456,12 +550,21 @@ const PatientsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
-                            <img
-                              className="h-10 w-10 rounded-full object-cover"
-                              src={patient.profile_image || '/default-avatar.png'}
-                              alt={`Foto de perfil de ${patient.user.first_name} ${patient.user.last_name}`}
-                              loading="lazy"
-                            />
+                            {patient.profile_image ? (
+                              <img
+                                className="h-10 w-10 rounded-full object-cover"
+                                src={patient.profile_image}
+                                alt={`Foto de perfil de ${patient.user.first_name} ${patient.user.last_name}`}
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div 
+                                className={`h-10 w-10 rounded-full flex items-center justify-center text-white ${getInitialsBackgroundColor(`${patient.user.first_name} ${patient.user.last_name}`)}`}
+                                aria-label={`Iniciales de ${patient.user.first_name} ${patient.user.last_name}`}
+                              >
+                                {getInitials(patient.user.first_name, patient.user.last_name)}
+                              </div>
+                            )}
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
@@ -480,12 +583,26 @@ const PatientsPage = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(patient.last_appointment_date)}
+                        <div className="flex flex-col space-y-1">
+                          <span>{formatDate(patient.last_appointment_date, patient.last_appointment_status)}</span>
+                          {patient.last_appointment_date && patient.last_appointment_status && (
+                            <span className={`px-2 py-0.5 inline-flex text-xs leading-4 rounded-full ${getAppointmentStatusColor(patient.last_appointment_status)}`}>
+                              {getAppointmentStatusText(patient.last_appointment_status)}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <span className={patient.next_appointment_date ? "text-[#2A6877]" : "text-gray-500"}>
-                          {formatDate(patient.next_appointment_date)}
-                        </span>
+                        <div className="flex flex-col space-y-1">
+                          <span className={patient.next_appointment_date ? "text-[#2A6877]" : "text-gray-500"}>
+                            {formatDate(patient.next_appointment_date, patient.next_appointment_status)}
+                          </span>
+                          {patient.next_appointment_date && patient.next_appointment_status && (
+                            <span className={`px-2 py-0.5 inline-flex text-xs leading-4 rounded-full ${getAppointmentStatusColor(patient.next_appointment_status)}`}>
+                              {getAppointmentStatusText(patient.next_appointment_status)}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {patient.total_appointments}
