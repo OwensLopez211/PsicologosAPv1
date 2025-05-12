@@ -10,7 +10,6 @@ import {
   formatDate 
 } from './scheduleUtils';
 import AppointmentService from '../../services/appointmentService';
-import { toast } from 'react-hot-toast';
 
 interface AppointmentModalProps {
   psychologistId: number;
