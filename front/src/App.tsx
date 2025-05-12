@@ -24,6 +24,7 @@ import PsychologistDetailPage from './pages/admin/PsychologistDetailPage';
 import VerificationsPage from './pages/dashboard/VerificationsPage';
 import ToastProvider from './components/toast/ToastProvider';
 import FAQPage from './pages/public-pages/FaqPage';
+import PatientsPage from './pages/dashboard/psychologist/PatientsPage';
 
 function App() {
   return (
@@ -75,6 +76,7 @@ function App() {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="schedule" element={<SchedulePage />} />
               <Route path="payments" element={<VerificationsPage />} />
+              <Route path="patients" element={<PatientsPage />} />
             </Route>
 
             {/* Admin Dashboard routes */}

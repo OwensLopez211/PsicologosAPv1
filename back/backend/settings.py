@@ -95,6 +95,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://186.64.113.186",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
     "http://192.168.0.6:5173",  # Add your local IP
     "http://localhost:3000",
     "http://127.0.0.1:3000",
