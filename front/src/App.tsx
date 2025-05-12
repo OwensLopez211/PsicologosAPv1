@@ -18,13 +18,12 @@ import DashboardHome from './pages/dashboard/DashboardHome';
 import ProfilePage from './pages/dashboard/ProfilePage';
 import SchedulePage from './pages/dashboard/psychologist/SchedulePage';
 import ClientAppointments from './pages/dashboard/client/ClientAppointments';
-import PatientsManagement from './pages/dashboard/admin/PatientsManagement';
 import PsychologistListPage from './pages/admin/PsychologistListPage';
 import PsychologistDetailPage from './pages/admin/PsychologistDetailPage';
 import VerificationsPage from './pages/dashboard/VerificationsPage';
 import ToastProvider from './components/toast/ToastProvider';
 import FAQPage from './pages/public-pages/FaqPage';
-import PatientsPage from './pages/dashboard/psychologist/PatientsPage';
+import UnifiedPatientsPage from './pages/dashboard/UnifiedPatientsPage';
 
 function App() {
   return (
@@ -76,7 +75,7 @@ function App() {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="schedule" element={<SchedulePage />} />
               <Route path="payments" element={<VerificationsPage />} />
-              <Route path="patients" element={<PatientsPage />} />
+              <Route path="patients" element={<UnifiedPatientsPage />} />
             </Route>
 
             {/* Admin Dashboard routes */}
@@ -87,7 +86,7 @@ function App() {
             }>
               <Route path="" element={<DashboardHome />} />
               <Route path="profile" element={<ProfilePage />} />
-              <Route path="pacients" element={<PatientsManagement />} />
+              <Route path="pacients" element={<UnifiedPatientsPage />} />
               <Route path="psychologists" element={<PsychologistListPage />} />
               <Route path="psychologists/:id" element={<PsychologistDetailPage />} />
               <Route path="payments" element={<VerificationsPage />} />

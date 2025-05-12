@@ -8,6 +8,12 @@ import {
 } from '@heroicons/react/24/outline';
 import {  AnimatePresence } from 'framer-motion';
 
+// Evento personalizado para recargar datos
+export const triggerDataRefresh = (module: string) => {
+  const event = new CustomEvent('refreshData', { detail: { module } });
+  window.dispatchEvent(event);
+};
+
 const TopBar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -39,6 +45,17 @@ const TopBar = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  // Manejador para clic en elementos de menú
+  const handleMenuItemClick = (path: string) => {
+    // Cerrar menú móvil si está abierto
+    if (isMenuOpen) setIsMenuOpen(false);
+    
+    // Si es el enlace de pacientes, disparar evento de recarga
+    if (path.includes('/patients')) {
+      triggerDataRefresh('patients');
+    }
   };
 
   const getMenuItems = () => {
@@ -164,6 +181,7 @@ const TopBar = () => {
                   <Link
                     key={item.path}
                     to={item.path}
+                    onClick={() => handleMenuItemClick(item.path)}
                     className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                       isActive 
                         ? 'text-[#2A6877] bg-[#2A6877]/10 shadow-sm' 
@@ -224,7 +242,7 @@ const TopBar = () => {
                           <Link
                             key={item.path}
                             to={item.path}
-                            onClick={() => setIsMenuOpen(false)}
+                            onClick={() => handleMenuItemClick(item.path)}
                             className={`flex items-center px-4 py-2.5 text-sm ${
                               isActive 
                                 ? 'text-[#2A6877] bg-[#2A6877]/10 font-medium' 
@@ -349,6 +367,7 @@ const TopBar = () => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => handleMenuItemClick(item.path)}
               className={`flex flex-1 flex-col items-center justify-center px-1 py-1.5 text-[9px] ${
                 isActive ? 'text-[#2A6877]' : 'text-gray-600'
               }`}

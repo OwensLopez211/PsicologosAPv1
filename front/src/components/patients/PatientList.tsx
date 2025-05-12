@@ -5,15 +5,25 @@ import PatientListItem from './PatientListItem';
 interface PatientListProps {
   patients: Patient[];
   loading: boolean;
-  searchTerm: string;
+  searchTerm?: string;
+  error?: string | null;
+  compact?: boolean;
 }
 
-const PatientList = memo(({ patients, loading, searchTerm }: PatientListProps) => {
+const PatientList = memo(({ patients, loading, searchTerm = '', error, compact = false }: PatientListProps) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-32">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#2A6877]"></div>
         <span className="sr-only">Cargando...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-4 text-red-500">
+        <p>{error}</p>
       </div>
     );
   }
@@ -24,6 +34,29 @@ const PatientList = memo(({ patients, loading, searchTerm }: PatientListProps) =
         {searchTerm ? 
           `No se encontraron pacientes que coincidan con "${searchTerm}"` : 
           "No se encontraron pacientes"}
+      </div>
+    );
+  }
+
+  // Si es compacto, mostrar vista simplificada
+  if (compact) {
+    return (
+      <div className="space-y-2">
+        {patients.map(patient => (
+          <div key={patient.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+            <div className="flex items-center">
+              <div className="h-8 w-8 rounded-full bg-[#2A6877]/10 flex items-center justify-center text-[#2A6877] font-medium">
+                {patient.user.first_name.charAt(0)}{patient.user.last_name.charAt(0)}
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium">{patient.user.first_name} {patient.user.last_name}</p>
+              </div>
+            </div>
+            <div className="text-xs text-gray-500">
+              {patient.total_appointments} citas
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
