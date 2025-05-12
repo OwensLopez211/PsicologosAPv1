@@ -285,7 +285,7 @@ const PatientsPage = () => {
   };
 
   // Formatear fecha para mostrar
-  const formatDate = (dateString?: string | null, status?: string | null) => {
+  const formatDate = (dateString?: string | null) => {
     if (!dateString) return 'No hay cita programada';
     try {
       const date = new Date(dateString);
@@ -482,7 +482,7 @@ const PatientsPage = () => {
                     <div className="text-xs text-gray-500 flex">
                       <span className="font-medium w-28">Última cita:</span>
                       <div className="flex flex-col">
-                        <span>{formatDate(patient.last_appointment_date, patient.last_appointment_status)}</span>
+                        <span>{formatDate(patient.last_appointment_date)}</span>
                         {patient.last_appointment_date && patient.last_appointment_status && (
                           <span className={`mt-1 px-2 py-0.5 inline-flex text-xs leading-4 rounded-full ${getAppointmentStatusColor(patient.last_appointment_status)}`}>
                             {getAppointmentStatusText(patient.last_appointment_status)}
@@ -494,7 +494,7 @@ const PatientsPage = () => {
                       <span className="font-medium w-28">Próxima cita:</span>
                       <div className="flex flex-col">
                         <span className={patient.next_appointment_date ? "text-[#2A6877]" : ""}>
-                          {formatDate(patient.next_appointment_date, patient.next_appointment_status)}
+                          {formatDate(patient.next_appointment_date)}
                         </span>
                         {patient.next_appointment_date && patient.next_appointment_status && (
                           <span className={`mt-1 px-2 py-0.5 inline-flex text-xs leading-4 rounded-full ${getAppointmentStatusColor(patient.next_appointment_status)}`}>
@@ -584,7 +584,7 @@ const PatientsPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex flex-col space-y-1">
-                          <span>{formatDate(patient.last_appointment_date, patient.last_appointment_status)}</span>
+                          <span>{formatDate(patient.last_appointment_date)}</span>
                           {patient.last_appointment_date && patient.last_appointment_status && (
                             <span className={`px-2 py-0.5 inline-flex text-xs leading-4 rounded-full ${getAppointmentStatusColor(patient.last_appointment_status)}`}>
                               {getAppointmentStatusText(patient.last_appointment_status)}
@@ -595,7 +595,7 @@ const PatientsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex flex-col space-y-1">
                           <span className={patient.next_appointment_date ? "text-[#2A6877]" : "text-gray-500"}>
-                            {formatDate(patient.next_appointment_date, patient.next_appointment_status)}
+                            {formatDate(patient.next_appointment_date)}
                           </span>
                           {patient.next_appointment_date && patient.next_appointment_status && (
                             <span className={`px-2 py-0.5 inline-flex text-xs leading-4 rounded-full ${getAppointmentStatusColor(patient.next_appointment_status)}`}>
