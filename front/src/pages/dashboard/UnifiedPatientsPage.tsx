@@ -35,7 +35,6 @@ const UnifiedPatientsPage = () => {
     sortBy: 'nextAppointment',
     sortOrder: 'asc'
   });
-  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   // Determinar el tipo de usuario
   const userType = user?.user_type || 'client';
@@ -47,28 +46,10 @@ const UnifiedPatientsPage = () => {
     useMocks: import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === 'true'
   });
 
-  // Forzar la carga inicial de datos inmediatamente al montar
-  useEffect(() => {
-    const fetchData = async () => {
-      console.log("Cargando datos iniciales de pacientes...");
-      try {
-        await refetch();
-        console.log("Datos de pacientes cargados correctamente");
-      } catch (err) {
-        console.error("Error al cargar datos iniciales", err);
-      } finally {
-        setInitialLoadDone(true);
-      }
-    };
-
-    fetchData();
-  }, [refetch]); // La dependencia es refetch, que ya es estable gracias a useCallback en usePatients
-
   // Escuchar eventos de recarga
   useEffect(() => {
     const handleDataRefresh = (event: CustomEvent) => {
       if (event.detail.module === 'patients') {
-        console.log("Recargando pacientes por evento de TopBar");
         refetch();
       }
     };
@@ -78,6 +59,16 @@ const UnifiedPatientsPage = () => {
       window.removeEventListener('refreshData', handleDataRefresh as EventListener);
     };
   }, [refetch]);
+
+  // Cargar datos solo al montar el componente, no cuando cambia la ruta
+  useEffect(() => {
+    // Este efecto solo se ejecutará al montar el componente
+    const initialLoad = () => {
+      refetch();
+    };
+    initialLoad();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Quitamos refetch y location.pathname para evitar bucles
 
   // Función memoizada para filtrar por búsqueda
   const filteredBySearchPatients = useMemo(() => {
@@ -142,13 +133,6 @@ const UnifiedPatientsPage = () => {
     });
   }, []);
 
-  // Función para manejar recarga manual
-  const handleRefresh = useCallback(() => {
-    console.log("Recargando pacientes manualmente...");
-    refetch();
-    toastService.info("Actualizando lista de pacientes...");
-  }, [refetch]);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -157,7 +141,7 @@ const UnifiedPatientsPage = () => {
         </h1>
         
         <button
-          onClick={handleRefresh}
+          onClick={refetch}
           className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-[#2A6877] hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877]"
         >
           <ArrowPathIcon className="h-4 w-4 mr-1" />
@@ -170,7 +154,7 @@ const UnifiedPatientsPage = () => {
           <p className="font-medium">Error al cargar pacientes</p>
           <p className="text-sm">{error}</p>
           <button 
-            onClick={handleRefresh}
+            onClick={refetch}
             className="mt-2 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded-md text-sm transition-colors"
           >
             Reintentar
@@ -197,23 +181,9 @@ const UnifiedPatientsPage = () => {
           searchTerm={debouncedSearchTerm}
           error={error}
         />
-        
-        {/* Mensaje cuando no hay datos y no está cargando */}
-        {!loading && patients.length === 0 && !error && initialLoadDone && (
-          <div className="text-center py-6 text-gray-500">
-            <p>No hay pacientes disponibles</p>
-            <button 
-              onClick={handleRefresh}
-              className="mt-2 text-sm text-[#2A6877] hover:underline"
-            >
-              Recargar datos
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
 };
 
 export default UnifiedPatientsPage; 
-

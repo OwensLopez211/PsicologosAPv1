@@ -34,14 +34,6 @@ const toastService = {
     return toast.loading(message, { id: TOAST_ID });
   },
   
-  info: (message: string) => {
-    toast.dismiss();
-    return toast(message, { 
-      id: TOAST_ID,
-      icon: 'ℹ️'
-    });
-  },
-  
   custom: (message: string) => {
     toast.dismiss();
     return toast.custom(message, { id: TOAST_ID });
