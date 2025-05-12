@@ -21,9 +21,6 @@ export interface Patient {
 }
 
 class PatientService {
-  private adminBaseUrl = '/api/profiles/admin/patients';
-  private psychologistBaseUrl = '/api/appointments/psychologist_patients';
-  
   /**
    * Get patient initials from first and last name
    * @param patient Patient object
@@ -40,26 +37,14 @@ class PatientService {
     
     return (firstInitial + lastInitial) || '??';
   }
-  
-  /**
-   * Get API base URL based on user role
-   */
-  private getBaseUrl(userType: string): string {
-    if (userType === 'admin') {
-      return this.adminBaseUrl;
-    } else if (userType === 'psychologist') {
-      return this.psychologistBaseUrl;
-    }
-    throw new Error(`Tipo de usuario no válido: ${userType}`);
-  }
 
   /**
    * Get backend URL based on environment
    */
   private getBackendUrl(): string {
     return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:8000/api'
-      : 'https://186.64.113.186/api';
+      ? 'http://localhost:8000'
+      : 'https://186.64.113.186';
   }
 
   /**
@@ -76,13 +61,16 @@ class PatientService {
       
       let endpoint = '';
       
+      // Determinar el endpoint basado en el tipo de usuario
       if (userType === 'psychologist') {
-        // Usar el endpoint específico para psicólogos con la URL completa
-        endpoint = `${this.getBackendUrl()}/appointments/psychologist_patients/`;
+        endpoint = `${this.getBackendUrl()}/api/appointments/psychologist_patients/`;
+      } else if (userType === 'admin') {
+        endpoint = `${this.getBackendUrl()}/api/profiles/admin/patients/`;
       } else {
-        // Para admin, usar el endpoint original
-        endpoint = this.adminBaseUrl;
+        throw new Error(`Tipo de usuario no válido: ${userType}`);
       }
+      
+      console.log(`Fetching patients from: ${endpoint}`);
       
       // Usar AbortController para cancelar la solicitud si tarda demasiado
       const controller = new AbortController();
@@ -153,10 +141,18 @@ class PatientService {
         throw new Error('No authentication token provided');
       }
       
-      const baseUrl = this.getBaseUrl(userType);
+      let endpoint = '';
+      
+      if (userType === 'psychologist') {
+        endpoint = `${this.getBackendUrl()}/api/appointments/psychologist_patients/${patientId}/status/`;
+      } else if (userType === 'admin') {
+        endpoint = `${this.getBackendUrl()}/api/profiles/admin/patients/${patientId}/status/`;
+      } else {
+        throw new Error(`Tipo de usuario no válido: ${userType}`);
+      }
       
       const response = await axios.patch(
-        `${baseUrl}/${patientId}/status/`,
+        endpoint,
         {},
         {
           headers: {
@@ -185,9 +181,17 @@ class PatientService {
         throw new Error('No authentication token provided');
       }
       
-      const baseUrl = this.getBaseUrl(userType);
+      let endpoint = '';
       
-      const response = await axios.get(`${baseUrl}/${patientId}/`, {
+      if (userType === 'psychologist') {
+        endpoint = `${this.getBackendUrl()}/api/appointments/psychologist_patients/${patientId}/`;
+      } else if (userType === 'admin') {
+        endpoint = `${this.getBackendUrl()}/api/profiles/admin/patients/${patientId}/`;
+      } else {
+        throw new Error(`Tipo de usuario no válido: ${userType}`);
+      }
+      
+      const response = await axios.get(endpoint, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`

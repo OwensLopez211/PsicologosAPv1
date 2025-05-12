@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import PatientService, { Patient as ServicePatient } from '../services/PatientService';
+import PatientService from '../services/PatientService';
 import { Patient as TypePatient } from '../types/patients';
+import toastService from '../services/toastService';
 
 interface UsePatientsResult {
   patients: TypePatient[];
@@ -15,19 +16,45 @@ interface UsePatientsOptions {
   useMocks?: boolean;
 }
 
+// Número máximo de intentos de carga
+const MAX_RETRIES = 3;
+
 export const usePatients = (options?: UsePatientsOptions): UsePatientsResult => {
   const { token, user } = useAuth();
   const [patients, setPatients] = useState<TypePatient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Determinar tipo de usuario
   const userType = options?.userType || user?.user_type || 'client';
   const useMocks = options?.useMocks || false;
 
-  const fetchPatients = useCallback(async () => {
+  // Verificamos manualmente si hay token en localStorage si no se proporciona por contexto
+  const getToken = useCallback(() => {
+    if (token) return token;
+    
+    // Si no hay token en contexto, intentamos obtenerlo de localStorage
+    const storedToken = localStorage.getItem('token');
+    console.log(`Token from localStorage: ${!!storedToken}`);
+    return storedToken;
+  }, [token]);
+
+  const fetchPatients = useCallback(async (showLoadingState = true) => {
+    const currentToken = getToken();
+    
+    // Si no hay token o el tipo de usuario no es válido, no hacemos nada
+    if (!currentToken || !userType || (userType !== 'admin' && userType !== 'psychologist')) {
+      console.error(`Cannot fetch patients: token=${!!currentToken}, userType=${userType}`);
+      setError('No se puede cargar la lista de pacientes: credenciales inválidas');
+      setLoading(false);
+      return;
+    }
+
     try {
-      setLoading(true);
+      if (showLoadingState) {
+        setLoading(true);
+      }
       setError(null);
       
       // Si estamos en desarrollo y se solicitan mocks, usar datos de ejemplo
@@ -36,21 +63,42 @@ export const usePatients = (options?: UsePatientsOptions): UsePatientsResult => 
         return;
       }
       
+      console.log(`Fetching patients with userType: ${userType}, token: ${currentToken.substring(0, 10)}...`);
+      
       // Determinar el tipo de usuario para la llamada al servicio
-      const data = await PatientService.getAllPatients(token, userType);
+      const data = await PatientService.getAllPatients(currentToken, userType);
+      
+      console.log(`Received ${data.length} patients`);
+      
       setPatients(data);
+      setRetryCount(0); // Resetear el contador de intentos después de un éxito
     } catch (err) {
       console.error('Error fetching patients:', err);
-      setError('Error al cargar los pacientes. Por favor, intente de nuevo más tarde.');
       
-      // Si estamos en modo desarrollo, cargar mocks como fallback
-      if (import.meta.env.DEV) {
-        await loadMockPatients();
+      // Si tenemos menos de MAX_RETRIES intentos, intentamos de nuevo automáticamente
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retry attempt ${retryCount + 1} of ${MAX_RETRIES}`);
+        setRetryCount(prev => prev + 1);
+        
+        // Esperar un poco antes de intentar de nuevo (tiempo exponencial)
+        const retryDelay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s...
+        setTimeout(() => fetchPatients(false), retryDelay);
+      } else {
+        const errorMessage = 'Error al cargar los pacientes. Por favor, intente de nuevo más tarde.';
+        setError(errorMessage);
+        toastService.error(errorMessage);
+        
+        // Si estamos en modo desarrollo, cargar mocks como fallback
+        if (import.meta.env.DEV) {
+          await loadMockPatients();
+        }
       }
     } finally {
-      setLoading(false);
+      if (showLoadingState) {
+        setLoading(false);
+      }
     }
-  }, [token, userType, useMocks]);
+  }, [token, userType, useMocks, retryCount, getToken]);
   
   const loadMockPatients = useCallback(async () => {
     // Mock data para testing
@@ -111,17 +159,42 @@ export const usePatients = (options?: UsePatientsOptions): UsePatientsResult => 
       },
     ];
     
+    console.log('Loading mock patients');
     setPatients(mockPatients);
     setLoading(false);
   }, []);
 
   // Cargar datos solo cuando cambian las dependencias relevantes
   useEffect(() => {
+    const currentToken = getToken();
+    console.log('usePatients effect running with token and userType', { token: !!currentToken, userType });
+    
     let isMounted = true;
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    // No intentar cargar si no hay token o tipo de usuario
+    if (!currentToken || !userType) {
+      console.log('Missing token or userType, skipping fetch');
+      if (isMounted) {
+        setLoading(false);
+      }
+      return;
+    }
     
     const load = async () => {
       if (isMounted) {
-        await fetchPatients();
+        try {
+          await fetchPatients();
+        } catch (err) {
+          console.error('Error during patient fetch in effect:', err);
+          // Si ocurre un error, intentamos una vez más después de un breve retraso
+          if (isMounted) {
+            timeoutId = setTimeout(() => {
+              console.log('Attempting one more fetch after delay');
+              fetchPatients(false);
+            }, 1500);
+          }
+        }
       }
     };
     
@@ -130,8 +203,11 @@ export const usePatients = (options?: UsePatientsOptions): UsePatientsResult => 
     // Cleanup function para evitar cambios de estado en componentes desmontados
     return () => {
       isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
-  }, [fetchPatients]); // fetchPatients ya incluye las dependencias token y userType
+  }, [fetchPatients, token, userType, getToken]); // Incluimos token, userType y getToken como dependencias
 
   return { patients, loading, error, refetch: fetchPatients };
 };

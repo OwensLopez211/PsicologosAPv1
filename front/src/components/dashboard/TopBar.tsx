@@ -10,6 +10,7 @@ import {  AnimatePresence } from 'framer-motion';
 
 // Evento personalizado para recargar datos
 export const triggerDataRefresh = (module: string) => {
+  console.log(`Triggering refresh event for module: ${module}`);
   const event = new CustomEvent('refreshData', { detail: { module } });
   window.dispatchEvent(event);
 };
@@ -25,6 +26,19 @@ const TopBar = () => {
   const profileRef = useRef<HTMLDivElement>(null);
   
   const normalizedUserType = user?.user_type?.toUpperCase() || 'CLIENT';
+
+  // Efecto para detectar cambios en la ruta y actualizar datos cuando corresponda
+  useEffect(() => {
+    // Verificar si estamos en una página de pacientes (con cualquier variante)
+    const isPatientsPage = location.pathname.includes('/patients') || 
+                          location.pathname.includes('/pacients');
+    
+    // Si estamos en la página de pacientes, disparar evento de recarga
+    if (isPatientsPage) {
+      console.log('Navigated to patients page, triggering refresh');
+      triggerDataRefresh('patients');
+    }
+  }, [location.pathname]);
 
   // Detectar scroll para cambios visuales, pero no para mover la barra
   useEffect(() => {
@@ -53,7 +67,9 @@ const TopBar = () => {
     if (isMenuOpen) setIsMenuOpen(false);
     
     // Si es el enlace de pacientes, disparar evento de recarga
-    if (path.includes('/patients')) {
+    // Nota: verificamos ambas variantes "patients" y "pacients"
+    if (path.includes('/patients') || path.includes('/pacients')) {
+      console.log('Patient module clicked, triggering refresh');
       triggerDataRefresh('patients');
     }
   };

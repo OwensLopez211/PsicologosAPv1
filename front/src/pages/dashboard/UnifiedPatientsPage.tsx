@@ -26,7 +26,7 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 };
 
 const UnifiedPatientsPage = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300); // 300ms debounce
@@ -35,40 +35,60 @@ const UnifiedPatientsPage = () => {
     sortBy: 'nextAppointment',
     sortOrder: 'asc'
   });
-
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  
   // Determinar el tipo de usuario
   const userType = user?.user_type || 'client';
   const isAdmin = userType === 'admin';
+  
+  // Para debugging
+  console.log('UnifiedPatientsPage rendering', { userType, token: !!token, path: location.pathname });
 
   // Obtener pacientes usando el hook unificado
   const { patients, loading, error, refetch } = usePatients({ 
-    userType, 
+    userType,
     useMocks: import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === 'true'
   });
+  
+  // Marcar cuando la carga inicial esté completa
+  useEffect(() => {
+    if (!loading && !initialLoadComplete) {
+      setInitialLoadComplete(true);
+    }
+  }, [loading, initialLoadComplete]);
+  
+  // Al montar el componente, verificar si tenemos el token y cargar los datos
+  useEffect(() => {
+    if (token && !initialLoadComplete) {
+      console.log('Initial page load - fetching patients data');
+      refetch();
+    }
+  }, [token, initialLoadComplete, refetch]);
 
   // Escuchar eventos de recarga
   useEffect(() => {
     const handleDataRefresh = (event: CustomEvent) => {
-      if (event.detail.module === 'patients') {
+      if (event.detail && event.detail.module === 'patients') {
+        console.log('Refresh event received - reloading patients');
+        // Añadir notificación visual del proceso de recarga
+        toastService.info('Actualizando lista de pacientes...');
         refetch();
       }
     };
 
+    // Asegurarse de que el tipo de evento es correcto
     window.addEventListener('refreshData', handleDataRefresh as EventListener);
+    
+    // Si tenemos token al montar el componente, cargar datos inmediatamente
+    if (token) {
+      console.log('Component mounted with valid token - loading patients');
+      refetch();
+    }
+    
     return () => {
       window.removeEventListener('refreshData', handleDataRefresh as EventListener);
     };
-  }, [refetch]);
-
-  // Cargar datos solo al montar el componente, no cuando cambia la ruta
-  useEffect(() => {
-    // Este efecto solo se ejecutará al montar el componente
-    const initialLoad = () => {
-      refetch();
-    };
-    initialLoad();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Quitamos refetch y location.pathname para evitar bucles
+  }, [refetch, token]);
 
   // Función memoizada para filtrar por búsqueda
   const filteredBySearchPatients = useMemo(() => {
@@ -132,6 +152,12 @@ const UnifiedPatientsPage = () => {
       sortOrder: 'asc'
     });
   }, []);
+  
+  // Función para manejar la actualización manual
+  const handleRefresh = useCallback(() => {
+    toastService.info('Actualizando lista de pacientes...');
+    refetch();
+  }, [refetch]);
 
   return (
     <div className="space-y-6">
@@ -141,10 +167,11 @@ const UnifiedPatientsPage = () => {
         </h1>
         
         <button
-          onClick={refetch}
-          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-[#2A6877] hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877]"
+          onClick={handleRefresh}
+          disabled={loading}
+          className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-[#2A6877] hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <ArrowPathIcon className="h-4 w-4 mr-1" />
+          <ArrowPathIcon className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
           Actualizar
         </button>
       </div>
@@ -154,8 +181,9 @@ const UnifiedPatientsPage = () => {
           <p className="font-medium">Error al cargar pacientes</p>
           <p className="text-sm">{error}</p>
           <button 
-            onClick={refetch}
-            className="mt-2 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded-md text-sm transition-colors"
+            onClick={handleRefresh}
+            disabled={loading}
+            className="mt-2 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded-md text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Reintentar
           </button>

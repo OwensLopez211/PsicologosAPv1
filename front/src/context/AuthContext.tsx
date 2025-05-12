@@ -27,10 +27,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(null); // Add token state
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token')); // Initialize from localStorage
 
   // En la función logout, añadir:
   const logout = () => {
+    console.log('Logging out, clearing auth data');
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
@@ -40,15 +41,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
   };
   
-  // En la función initAuth, asegurarse de que el profile_id se cargue correctamente:
+  // Nueva función para refrescar la sesión del usuario
+  const refreshUserSession = async (): Promise<boolean> => {
+    try {
+      const refreshed = await refreshToken();
+      // Update token state if refresh was successful
+      if (refreshed) {
+        const newToken = localStorage.getItem('token');
+        setToken(newToken);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
+    console.log('AuthContext initializing...');
     const initAuth = async () => {
       try {
         const savedUser = localStorage.getItem('user');
         const storedToken = localStorage.getItem('token');
         const refreshTokenValue = localStorage.getItem('refresh_token');
-  
+
+        console.log('Auth state from localStorage:', { 
+          hasUser: !!savedUser, 
+          hasToken: !!storedToken, 
+          hasRefreshToken: !!refreshTokenValue 
+        });
+
         if (savedUser && (storedToken || refreshTokenValue)) {
+          // Establecer el token de inmediato si existe
+          if (storedToken) {
+            setToken(storedToken);
+            console.log('Token set from localStorage');
+          }
+
           const parsedUser = JSON.parse(savedUser);
           
           // Normalizar el tipo de usuario a minúsculas
@@ -65,61 +95,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           setUser(normalizedUser);
           
-          // El resto del código permanece igual
-        }
-      } catch (error) {
-        // El manejo de errores permanece igual
-      }
-    };
-  
-    initAuth();
-  }, []);
-
-  // Nueva función para refrescar la sesión del usuario
-  const refreshUserSession = async (): Promise<boolean> => {
-    try {
-      const refreshed = await refreshToken();
-      // Update token state if refresh was successful
-      if (refreshed) {
-        const newToken = localStorage.getItem('token');
-        setToken(newToken);
-      }
-      return !!refreshed;
-    } catch (error) {
-      console.error('Error refreshing token:', error);
-      return false;
-    }
-  };
-
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const savedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
-        const refreshTokenValue = localStorage.getItem('refresh_token');
-
-        if (savedUser && (storedToken || refreshTokenValue)) {
-          const parsedUser = JSON.parse(savedUser);
-          
-          // Normalizar el tipo de usuario a minúsculas
-          const normalizedUser = {
-            ...parsedUser,
-            user_type: parsedUser.user_type?.toLowerCase() as 'client' | 'psychologist' | 'admin'
-          };
-          
-          setUser(normalizedUser);
-          
-          // Set token state
-          if (storedToken) {
-            setToken(storedToken);
-          }
-          // Solo intentar refrescar el token si existe un refresh token
-          else if (refreshTokenValue) {
+          // Si no hay token pero hay refresh token, intentar refrescar la sesión
+          if (!storedToken && refreshTokenValue) {
+            console.log('No token found, attempting to refresh session');
             const success = await refreshUserSession();
             if (!success) {
+              console.log('Failed to refresh session, logging out');
               logout();
             }
           }
+        } else {
+          console.log('No authentication data found, user is not logged in');
+          setToken(null);
+          setUser(null);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
@@ -152,5 +140,6 @@ export const useAuth = () => {
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+  console.log('useAuth called, token status:', !!context.token);
   return context;
 };
