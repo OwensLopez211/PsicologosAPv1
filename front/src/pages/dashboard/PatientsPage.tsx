@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import PatientService, { Patient } from '../../services/PatientService';
+import PatientService from '../../services/PatientService';
+import { Patient } from '../../types/patients';
 import { toast } from 'react-hot-toast';
 
 const PatientsPage = () => {
@@ -14,16 +15,8 @@ const PatientsPage = () => {
     const fetchPatients = async () => {
       try {
         setLoading(true);
-        const data = await PatientService.getAllPatients(token);
-        
-        // Filter to only include client users
-        // This assumes your backend includes user_type in the response
-        // If not, you'll need to make a separate API call to get user types
-        const clientPatients = data.filter(patient => 
-          patient.user.user_type === 'client' || !patient.user.user_type
-        );
-        
-        setPatients(clientPatients);
+        const data = await PatientService.getAllPatients(token, 'admin');
+        setPatients(data);
       } catch (err) {
         console.error('Error fetching patients:', err);
         setError('Error al cargar los pacientes');
