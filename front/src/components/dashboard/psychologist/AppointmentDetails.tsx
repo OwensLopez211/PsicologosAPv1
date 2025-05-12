@@ -43,8 +43,7 @@ const AppointmentDetails = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const { user, token } = useAuth();
-  const [useFetchFallback, setUseFetchFallback] = useState(false);
+  const { user, token, refreshUserSession } = useAuth();
 
   // Log de debugging
   useEffect(() => {
@@ -95,85 +94,6 @@ const AppointmentDetails = ({
     }
   };
 
-  // Función para hacer la petición usando fetch nativo como alternativa
-  const useFetchRequest = async (url: string, method: string, data: any): Promise<any> => {
-    // Obtener el token actualizado
-    const currentToken = localStorage.getItem('token');
-    
-    if (!currentToken) {
-      throw new Error('No hay token de autenticación disponible');
-    }
-    
-    // Construir URL completa
-    const baseUrl = process.env.VITE_API_URL || 'https://186.64.113.186/api';
-    const fullUrl = `${baseUrl}${url}`;
-    
-    console.log('Fetch: URL completa:', fullUrl);
-    console.log('Fetch: Método:', method);
-    console.log('Fetch: Datos:', data);
-    console.log('Fetch: Token (primeros 15 chars):', currentToken.substring(0, 15));
-    
-    const options: RequestInit = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${currentToken}`
-      },
-      body: data ? JSON.stringify(data) : undefined
-    };
-    
-    try {
-      const response = await fetch(fullUrl, options);
-      console.log('Fetch: Status code:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Fetch: Error response:', errorText);
-        throw new Error(`Error ${response.status}: ${errorText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Fetch error:', error);
-      throw error;
-    }
-  };
-
-  // Función auxiliar para hacer peticiones con el token actualizado
-  const makeAuthorizedRequest = async (method: 'patch' | 'post' | 'get', endpoint: string, data?: any) => {
-    // Obtener token actualizado del localStorage (por si cambió después de la carga del componente)
-    const currentToken = localStorage.getItem('token');
-    
-    if (!currentToken) {
-      throw new Error('No hay token de autenticación disponible');
-    }
-    
-    // Imprimir los headers y detalles para debugging
-    const apiUrl = api.defaults.baseURL || 'No hay baseURL configurado';
-    console.log('API URL base configurada:', apiUrl);
-    console.log('Endpoint completo:', `${apiUrl}${endpoint}`);
-    console.log('Token exacto usado:', currentToken);
-    console.log('Headers de autorización:', `Bearer ${currentToken}`);
-    
-    // Configurar la petición con el token actualizado
-    const config = {
-      headers: {
-        'Authorization': `Bearer ${currentToken}`,
-        'Content-Type': 'application/json'
-      }
-    };
-    
-    // Realizar la petición según el método
-    if (method === 'patch') {
-      return await api.patch(endpoint, data, config);
-    } else if (method === 'post') {
-      return await api.post(endpoint, data, config);
-    } else {
-      return await api.get(endpoint, config);
-    }
-  };
-
   // Handle status change with API call
   const handleStatusChange = async (status: AppointmentStatus) => {
     if (!appointment) return;
@@ -183,37 +103,26 @@ const AppointmentDetails = ({
     setSuccessMessage(null);
     
     try {
-      // Verificar token manualmente
-      const currentToken = localStorage.getItem('token');
-      console.log('Token al actualizar estado:', currentToken ? `${currentToken.substring(0, 15)}...` : 'No hay token');
+      // Obtener token del AuthContext en lugar de localStorage directamente
+      if (!token) {
+        setError('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
+        return;
+      }
       
-      // Agregar logs detallados
       console.log('Enviando actualización de estado:', {
         appointmentId: appointment.id,
         nuevoEstado: status,
-        estadoActual: appointment.status
+        estadoActual: appointment.status,
+        tokenDisponible: !!token
       });
       
-      let responseData;
+      // No necesitamos pasar config porque el interceptor de api ya agrega los headers
+      const response = await api.patch(
+        `/appointments/${appointment.id}/update-status/`, 
+        { status }
+      );
       
-      if (useFetchFallback) {
-        // Usar fetch como alternativa si axios está fallando
-        responseData = await useFetchRequest(
-          `/appointments/${appointment.id}/update-status/`, 
-          'PATCH', 
-          { status }
-        );
-        console.log('Respuesta fetch actualización:', responseData);
-      } else {
-        // Usar la función auxiliar para hacer la petición con el token actualizado
-        const response = await makeAuthorizedRequest(
-          'patch', 
-          `/appointments/${appointment.id}/update-status/`, 
-          { status }
-        );
-        responseData = response.data;
-        console.log('Respuesta axios actualización:', responseData);
-      }
+      console.log('Respuesta actualización:', response.data);
       
       // Call the parent component's handler if provided
       if (onStatusChange) {
@@ -225,12 +134,18 @@ const AppointmentDetails = ({
     } catch (err: any) {
       console.error('Error completo al actualizar estado:', err);
       
-      if (err.response && err.response.status === 401 && !useFetchFallback) {
-        // Si hay error 401 y no estamos usando fetch, intentar con fetch
-        console.log('Intentando con fetch como alternativa...');
-        setUseFetchFallback(true);
-        handleStatusChange(status);
-        return;
+      // Si recibimos un 401, intentar refrescar el token
+      if (err.response && err.response.status === 401) {
+        try {
+          const refreshed = await refreshUserSession();
+          if (refreshed) {
+            // Intentar nuevamente la petición con el token actualizado
+            handleStatusChange(status);
+            return;
+          }
+        } catch (refreshError) {
+          console.error('Error al refrescar token:', refreshError);
+        }
       }
       
       // Mostrar información más detallada del error
@@ -258,30 +173,21 @@ const AppointmentDetails = ({
     setSuccessMessage(null);
     
     try {
-      // Verificar token manualmente
-      const currentToken = localStorage.getItem('token');
-      console.log('Token al guardar notas:', currentToken ? `${currentToken.substring(0, 15)}...` : 'No hay token');
-      
-      let responseData;
-      
-      if (useFetchFallback) {
-        // Usar fetch como alternativa si axios está fallando
-        responseData = await useFetchRequest(
-          `/appointments/${appointment.id}/add-notes/`, 
-          'PATCH', 
-          { psychologist_notes: notes }
-        );
-        console.log('Respuesta fetch guardar notas:', responseData);
-      } else {
-        // Usar la función auxiliar para hacer la petición con el token actualizado
-        const response = await makeAuthorizedRequest(
-          'patch',
-          `/appointments/${appointment.id}/add-notes/`,
-          { psychologist_notes: notes }
-        );
-        responseData = response.data;
-        console.log('Respuesta axios guardar notas:', responseData);
+      // Obtener token del AuthContext
+      if (!token) {
+        setError('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
+        return;
       }
+      
+      console.log('Guardando notas para cita:', appointment.id);
+      
+      // No necesitamos pasar config porque el interceptor de api ya agrega los headers
+      const response = await api.patch(
+        `/appointments/${appointment.id}/add-notes/`,
+        { psychologist_notes: notes }
+      );
+      
+      console.log('Respuesta guardado de notas:', response.data);
       
       // Call the parent component's handler if provided
       if (onNotesChange) {
@@ -293,12 +199,18 @@ const AppointmentDetails = ({
     } catch (err: any) {
       console.error('Error completo al guardar notas:', err);
       
-      if (err.response && err.response.status === 401 && !useFetchFallback) {
-        // Si hay error 401 y no estamos usando fetch, intentar con fetch
-        console.log('Intentando con fetch como alternativa...');
-        setUseFetchFallback(true);
-        handleSaveNotes();
-        return;
+      // Si recibimos un 401, intentar refrescar el token
+      if (err.response && err.response.status === 401) {
+        try {
+          const refreshed = await refreshUserSession();
+          if (refreshed) {
+            // Intentar nuevamente la petición con el token actualizado
+            handleSaveNotes();
+            return;
+          }
+        } catch (refreshError) {
+          console.error('Error al refrescar token:', refreshError);
+        }
       }
       
       // Mostrar información más detallada del error
@@ -404,12 +316,6 @@ const AppointmentDetails = ({
                     </div>
                   )}
                   
-                  {useFetchFallback && (
-                    <div className="mx-4 mb-4 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                      <p className="text-sm text-blue-600">Usando método alternativo de conexión</p>
-                    </div>
-                  )}
-                  
                   <div className="flex-1 px-4 sm:px-6">
                     <div className="space-y-6">
                       <div>
@@ -484,21 +390,6 @@ const AppointmentDetails = ({
                         </div>
                       )}
                       
-                      {/* Debugging info - toggle fetch */}
-                      <div className="p-2 bg-gray-50 rounded-md">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="use-fetch"
-                            checked={useFetchFallback}
-                            onChange={(e) => setUseFetchFallback(e.target.checked)}
-                          />
-                          <label htmlFor="use-fetch" className="text-sm text-gray-600">
-                            Usar método alternativo (fetch)
-                          </label>
-                        </div>
-                      </div>
-                      
                       {/* Client notes (read-only) */}
                       {appointment.client_notes && (
                         <div>
@@ -543,7 +434,7 @@ const AppointmentDetails = ({
                       onClick={handleSaveNotes}
                       disabled={isSaving}
                     >
-                      {isSaving ? 'Guardando...' : 'Guardar Notass'}
+                      {isSaving ? 'Guardando...' : 'Guardar Notas'}
                     </button>
                   </div>
                 </div>
