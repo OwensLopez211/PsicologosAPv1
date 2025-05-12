@@ -56,6 +56,13 @@ const PatientsPage = () => {
     setError(null);
     toastService.loading('Cargando pacientes...');
     
+    // En modo desarrollo, podemos cargar siempre los datos de ejemplo
+    if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === 'true') {
+      console.log('Cargando datos de ejemplo para desarrollo (forzado)...');
+      loadMockPatients();
+      return;
+    }
+    
     try {
       // URL del backend - usamos una URL fija para mayor confiabilidad
       const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -105,69 +112,129 @@ const PatientsPage = () => {
       // Si no hay datos y estamos en desarrollo, mostrar ejemplos
       if (import.meta.env.DEV) {
         console.log('Cargando datos de ejemplo para desarrollo...');
-        const mockPatients: Patient[] = [
-          {
-            id: 1,
-            user: {
-              id: 101,
-              first_name: 'María',
-              last_name: 'González',
-              email: 'maria.gonzalez@example.com',
-              is_active: true
-            },
-            profile_image: '/default-avatar.png',
-            rut: '12.345.678-9',
-            region: 'Metropolitana',
-            last_appointment_date: '2024-05-05',
-            last_appointment_status: 'COMPLETED',
-            next_appointment_date: '2024-05-20',
-            next_appointment_status: 'CONFIRMED',
-            total_appointments: 5
-          },
-          {
-            id: 2,
-            user: {
-              id: 102,
-              first_name: 'Juan',
-              last_name: 'Pérez',
-              email: 'juan.perez@example.com',
-              is_active: true
-            },
-            profile_image: null,
-            rut: '9.876.543-2',
-            region: 'Valparaíso',
-            last_appointment_date: '2024-04-28',
-            last_appointment_status: 'COMPLETED',
-            next_appointment_date: null,
-            next_appointment_status: null,
-            total_appointments: 3
-          },
-          {
-            id: 3,
-            user: {
-              id: 103,
-              first_name: 'Ana',
-              last_name: 'Martínez',
-              email: 'ana.martinez@example.com',
-              is_active: true
-            },
-            profile_image: null,
-            rut: '15.432.987-6',
-            region: 'Biobío',
-            last_appointment_date: null,
-            last_appointment_status: null,
-            next_appointment_date: '2024-05-15',
-            next_appointment_status: 'PAYMENT_VERIFIED',
-            total_appointments: 1
-          }
-        ];
-        setPatients(mockPatients);
-        toastService.success('Datos de ejemplo cargados (modo desarrollo)');
+        loadMockPatients();
       }
     } finally {
       setLoading(false);
     }
   }, [user, token]);
+
+  // Función para cargar datos mock
+  const loadMockPatients = () => {
+    const mockPatients: Patient[] = [
+      {
+        id: 1,
+        user: {
+          id: 101,
+          first_name: 'María',
+          last_name: 'González',
+          email: 'maria.gonzalez@example.com',
+          is_active: true
+        },
+        profile_image: '/default-avatar.png',
+        rut: '12.345.678-9',
+        region: 'Metropolitana',
+        last_appointment_date: '2024-05-05',
+        last_appointment_status: 'COMPLETED',
+        next_appointment_date: '2024-05-20',
+        next_appointment_status: 'CONFIRMED',
+        total_appointments: 5
+      },
+      {
+        id: 2,
+        user: {
+          id: 102,
+          first_name: 'Juan',
+          last_name: 'Pérez',
+          email: 'juan.perez@example.com',
+          is_active: true
+        },
+        profile_image: null,
+        rut: '9.876.543-2',
+        region: 'Valparaíso',
+        last_appointment_date: '2024-04-28',
+        last_appointment_status: 'COMPLETED',
+        next_appointment_date: null,
+        next_appointment_status: null,
+        total_appointments: 3
+      },
+      {
+        id: 3,
+        user: {
+          id: 103,
+          first_name: 'Ana',
+          last_name: 'Martínez',
+          email: 'ana.martinez@example.com',
+          is_active: true
+        },
+        profile_image: null,
+        rut: '15.432.987-6',
+        region: 'Biobío',
+        last_appointment_date: null,
+        last_appointment_status: null,
+        next_appointment_date: '2024-05-15',
+        next_appointment_status: 'PAYMENT_VERIFIED',
+        total_appointments: 1
+      },
+      {
+        id: 4,
+        user: {
+          id: 104,
+          first_name: 'Carlos',
+          last_name: 'Rodríguez',
+          email: 'carlos.rodriguez@example.com',
+          is_active: true
+        },
+        profile_image: null,
+        rut: '18.765.432-1',
+        region: 'Metropolitana',
+        last_appointment_date: '2024-05-12',
+        last_appointment_status: 'CANCELLED',
+        next_appointment_date: '2024-06-02',
+        next_appointment_status: 'PENDING_PAYMENT',
+        total_appointments: 8
+      },
+      {
+        id: 5,
+        user: {
+          id: 105,
+          first_name: 'Laura',
+          last_name: 'Sánchez',
+          email: 'laura.sanchez@example.com',
+          is_active: true
+        },
+        profile_image: null,
+        rut: '22.345.678-5',
+        region: 'O\'Higgins',
+        last_appointment_date: '2024-05-10',
+        last_appointment_status: 'NO_SHOW',
+        next_appointment_date: '2024-05-24',
+        next_appointment_status: 'PAYMENT_UPLOADED',
+        total_appointments: 2
+      },
+      {
+        id: 6,
+        user: {
+          id: 106,
+          first_name: 'Diego',
+          last_name: 'Muñoz',
+          email: 'diego.munoz@example.com',
+          is_active: true
+        },
+        profile_image: null,
+        rut: '17.234.567-8',
+        region: 'Maule',
+        last_appointment_date: '2024-05-08',
+        last_appointment_status: 'COMPLETED',
+        next_appointment_date: '2024-05-29',
+        next_appointment_status: 'CONFIRMED',
+        total_appointments: 4
+      }
+    ];
+    setPatients(mockPatients);
+    toastService.success('Datos de ejemplo cargados (modo desarrollo)');
+    setLoading(false);
+  };
 
   // Cargar pacientes al montar el componente
   useEffect(() => {
