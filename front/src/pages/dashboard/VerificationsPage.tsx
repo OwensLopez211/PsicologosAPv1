@@ -203,7 +203,7 @@ const VerificationsPage = () => {
       </div>
       
       <div className="space-y-6">
-        <AppointmentFilters onFilterChange={handleFilterChange} />
+        <AppointmentFilters onFilterChange={handleFilterChange} defaultExpanded={false} />
         
         {appointments.length > 0 && user?.user_type === 'admin' && (
           <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
