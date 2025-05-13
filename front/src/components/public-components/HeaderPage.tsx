@@ -12,7 +12,7 @@ const HeaderPage = ({
   accentColor = '#B4E4D3', // Color por defecto alineado con tu requisito
 }: HeaderPageProps) => {
   return (
-    <div className="relative w-full overflow-hidden mt-20 sm:mt-28">
+    <div className="relative w-full overflow-hidden mt-2 sm:mt-28">
       {/* Capa de fondo con efecto parallax */}
       <div 
         className="absolute inset-0 bg-gradient-to-br from-[#2A6877] to-[#235A67]"
