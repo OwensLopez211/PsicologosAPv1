@@ -153,11 +153,13 @@ const TopBar = () => {
               >
                 <div className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3] rounded-full opacity-40 group-hover:opacity-60 blur-sm transition duration-300"></div>
-                  <img 
-                    src="/logo.jpeg" 
-                    alt="E-mind" 
-                    className="relative h-9 w-9 rounded-full border-2 border-white object-cover transform group-hover:scale-105 transition-transform duration-300" 
-                  />
+                  <div className="relative h-9 w-9 rounded-full border-2 border-white overflow-hidden flex items-center justify-center bg-white">
+                    <img 
+                      src="/logo2.webp" 
+                      alt="E-mind" 
+                      className="h-7 w-7 object-contain transform group-hover:scale-105 transition-transform duration-300" 
+                    />
+                  </div>
                 </div>
                 <span className="ml-2.5 text-xl font-semibold text-[#2A6877]">
                 E-mind
@@ -188,11 +190,13 @@ const TopBar = () => {
               >
                 <div className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3] rounded-full opacity-40 group-hover:opacity-60 blur-sm transition duration-300"></div>
-                  <img 
-                    src="/logo.jpeg" 
-                    alt="E-mind" 
-                    className="relative h-9 w-9 rounded-full border-2 border-white object-cover transform group-hover:scale-105 transition-transform duration-300" 
-                  />
+                  <div className="relative h-9 w-9 rounded-full border-2 border-white overflow-hidden flex items-center justify-center bg-white">
+                    <img 
+                      src="/logo2.webp" 
+                      alt="E-mind" 
+                      className="h-7 w-7 object-contain transform group-hover:scale-105 transition-transform duration-300" 
+                    />
+                  </div>
                 </div>
               </Link>
             </div>

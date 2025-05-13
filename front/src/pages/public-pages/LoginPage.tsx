@@ -110,15 +110,26 @@ const LoginPage = () => {
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring", stiffness: 120 }}
+            className="flex flex-col items-center"
           >
             <Link to="/" className="block relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3] rounded-lg blur opacity-25 group-hover:opacity-60 transition duration-700"></div>
-              <img
-                className="relative mx-auto h-24 w-24 rounded-xl shadow-lg transform group-hover:scale-105 transition duration-300"
-                src="/logo.jpeg"
-                alt="E-mind"
-              />
+              <div className="absolute -inset-2 bg-gradient-to-r from-[#2A6877]/60 to-[#B4E4D3]/60 rounded-full blur-md opacity-20 group-hover:opacity-50 transition duration-700"></div>
+              <div className="relative mx-auto h-32 w-32 p-1 rounded-full bg-gradient-to-tr from-white via-[#B4E4D3]/20 to-[#2A6877]/20 shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:shadow-xl">
+                <div className="h-full w-full rounded-full bg-white overflow-hidden flex items-center justify-center">
+                  <img
+                    className="h-[85%] w-[85%] object-contain transform group-hover:scale-105 transition duration-300"
+                    src="/logo2.webp"
+                    alt="E-mind"
+                    width="128"
+                    height="128"
+                  />
+                </div>
+              </div>
             </Link>
+            <div className="flex flex-col items-center mt-4">
+              <span className="text-[#2A6877] text-2xl font-bold leading-tight">E-mind</span>
+              <span className="text-gray-500 text-sm leading-tight">Encuentra tu bienestar</span>
+            </div>
           </motion.div>
 
           <motion.div

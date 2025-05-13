@@ -274,7 +274,7 @@ const Navbar = () => {
               />
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-[#2A6877] text-2xl font-bold leading-tight">e-mind</span>
+              <span className="text-[#2A6877] text-2xl font-bold leading-tight">E-mind</span>
               <span className="text-gray-500 text-sm leading-tight">Encuentra tu bienestar</span>
             </div>
           </Link>
@@ -380,7 +380,7 @@ const Navbar = () => {
                       />
                     </div>
                     <div className="flex flex-col items-center justify-center">
-                      <span className="text-[#2A6877] text-xl font-bold leading-tight">e-mind</span>
+                      <span className="text-[#2A6877] text-xl font-bold leading-tight">E-mind</span>
                       <span className="text-gray-500 text-sm leading-tight">Encuentra tu bienestar</span>
                     </div>
                   </Link>
