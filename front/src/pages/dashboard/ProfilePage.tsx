@@ -104,7 +104,7 @@ const ProfilePage = () => {
   return (
     <PageTransition>
       <div className="container mx-auto px-2 sm:px-4">
-        <h1 className="text-2xl mt-12 md:text-3xl font-bold text-[#2A6877] mb-4 md:mb-6">
+        <h1 className="text-2xl mt-2 md:text-3xl font-bold text-[#2A6877] mb-4 md:mb-6">
           Mi Perfil
         </h1>
         

@@ -79,7 +79,7 @@ const PsychologistListPage = () => {
 
   return (
     <PageTransition>
-      <div className="container mx-auto px-2 sm:px-4 py-6 md:py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-2 md:py-2">
         {/* Header mejorado */}
         <motion.div 
           className="mb-4 md:mb-6"
