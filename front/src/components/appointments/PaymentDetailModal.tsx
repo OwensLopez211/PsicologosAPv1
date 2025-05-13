@@ -286,72 +286,78 @@ const PaymentDetailModal = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div className="flex items-end justify-center min-h-screen pt-20 px-4 pb-20 text-center sm:block sm:p-0">
         {/* Overlay */}
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={onClose}></div>
 
-        {/* Modal */}
-        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full sm:p-6">
+        {/* Modal - Ajustado para móviles */}
+        <div 
+          className="inline-block align-bottom bg-white rounded-lg px-3 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full sm:p-6 md:mt-0 mt-16 max-h-[85vh] overflow-y-auto"
+          style={{
+            marginTop: '80px' // Asegura espacio para la barra superior
+          }}
+        >
           {/* Header con botón de cierre */}
-          <div className="absolute top-0 right-0 pt-4 pr-4">
+          <div className="absolute top-0 right-0 pt-3 pr-3 sm:pt-4 sm:pr-4 z-10">
             <button
               type="button"
               className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877]"
               onClick={onClose}
             >
               <span className="sr-only">Cerrar</span>
-              <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+              <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
             </button>
           </div>
 
           {/* Título */}
-          <div className="sm:flex sm:items-start mb-4">
-            <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
+          <div className="sm:flex sm:items-start mb-2 sm:mb-4">
+            <div className="mt-2 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900">
                 Detalles del pago
               </h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-xs sm:text-sm text-gray-500">
                 Cita con {appointment.client_data?.name} para el {formatDate(appointment.date)} de {formatTime(appointment.start_time)} a {formatTime(appointment.end_time)}
               </p>
             </div>
           </div>
 
-          {/* Contenido */}
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Contenido - Ajustado el espaciado para móviles */}
+          <div className="mt-3 sm:mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
             {/* Información del cliente */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Información del cliente</h4>
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+              <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Información del cliente</h4>
               
-              <div className="flex items-center mb-4">
+              <div className="flex items-center mb-3 sm:mb-4">
                 {appointment.client_data?.profile_image ? (
                 <img
-                  className="h-12 w-12 rounded-full object-cover border-2 border-gray-200"
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover border-2 border-gray-200"
                     src={appointment.client_data.profile_image}
                     alt={appointment.client_data?.name || 'Cliente'}
                 />
                 ) : (
                   <AvatarInitials 
                     name={appointment.client_data?.name || 'Cliente'} 
-                    className="border-2 border-gray-200" 
+                    className="border-2 border-gray-200"
+                    size="sm"
                   />
                 )}
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">{appointment.client_data?.name}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-900">{appointment.client_data?.name}</p>
                   <p className="text-xs text-gray-500">{appointment.client_data?.email}</p>
                 </div>
               </div>
               
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                 <p><span className="font-medium">Teléfono:</span> {appointment.client_data?.phone || 'No disponible'}</p>
                 <p><span className="font-medium">Notas del cliente:</span> {appointment.client_notes || 'Sin notas'}</p>
               </div>
             </div>
 
             {/* Detalles del pago */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Información del pago</h4>
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+              <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Información del pago</h4>
               
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
                 <p><span className="font-medium">Estado:</span> <span className="ml-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{appointment.status_display}</span></p>
                 <p><span className="font-medium">Monto:</span> ${appointment.payment_amount?.toLocaleString() || 0}</p>
                 <p><span className="font-medium">Método de pago:</span> {appointment.payment_detail?.payment_method || 'No especificado'}</p>
@@ -364,12 +370,12 @@ const PaymentDetailModal = ({
               </div>
             </div>
 
-            {/* Comprobante de pago - Versión mejorada */}
-            <div className="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Comprobante de pago</h4>
+            {/* Comprobante de pago - Versión mejorada y ajustada para móviles */}
+            <div className="col-span-1 md:col-span-2 bg-gray-50 p-3 sm:p-4 rounded-lg">
+              <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Comprobante de pago</h4>
               
               {appointment.payment_proof_url ? (
-                <div className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-3 sm:space-y-4">
                   {/* Contenedor de imagen con manejo de errores */}
                   <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-gray-200 border border-gray-300">
                     {loading ? (
@@ -379,12 +385,12 @@ const PaymentDetailModal = ({
                       </div>
                     ) : imageError ? (
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-gray-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 md:h-12 w-8 md:w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <p className="text-center mb-2">No se puede mostrar la previsualización del comprobante.</p>
-                        <p className="text-sm">El formato del archivo no es compatible para previsualización.</p>
-                        <p className="text-sm mt-1">Utiliza el botón de descarga para ver el archivo completo.</p>
+                        <p className="text-center mb-2 text-xs md:text-sm">No se puede mostrar la previsualización del comprobante.</p>
+                        <p className="text-xs md:text-sm">El formato del archivo no es compatible para previsualización.</p>
+                        <p className="text-xs md:text-sm mt-1">Utiliza el botón de descarga para ver el archivo completo.</p>
                       </div>
                     ) : previewUrl && (
                       <div className="absolute inset-0 w-full h-full bg-white">
@@ -394,7 +400,7 @@ const PaymentDetailModal = ({
                           className="absolute inset-0 w-full h-full"
                           style={{ 
                             border: 'none', 
-                            minHeight: '300px', 
+                            minHeight: '200px', 
                             display: 'block',
                             overflow: 'hidden',
                             width: '100%',
@@ -409,9 +415,9 @@ const PaymentDetailModal = ({
                   <div className="flex justify-center">
                     <button
                       onClick={handleDownload}
-                      className="inline-flex items-center px-4 py-2 border border-[#2A6877] shadow-sm text-sm font-medium rounded-md text-white bg-[#2A6877] hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877]"
+                      className="inline-flex items-center px-3 py-2 md:px-4 md:py-2 border border-[#2A6877] shadow-sm text-sm font-medium rounded-md text-white bg-[#2A6877] hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877]"
                     >
-                      <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
+                      <ArrowDownTrayIcon className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                       Descargar comprobante
                     </button>
                   </div>
@@ -433,8 +439,8 @@ const PaymentDetailModal = ({
 
             {/* Notas para la verificación */}
             {appointment.status === 'PAYMENT_UPLOADED' && (
-              <div className="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Notas para la verificación</h4>
+              <div className="col-span-1 md:col-span-2 bg-gray-50 p-3 sm:p-4 rounded-lg">
+                <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Notas para la verificación</h4>
                 <textarea
                   rows={3}
                   className="shadow-sm focus:ring-[#2A6877] focus:border-[#2A6877] block w-full sm:text-sm border-gray-300 rounded-md"
@@ -447,22 +453,22 @@ const PaymentDetailModal = ({
 
             {/* Información del psicólogo (solo para admin) */}
             {user?.user_type === 'admin' && (
-              <div className="col-span-1 md:col-span-2 bg-gray-50 p-4 rounded-md">
-                <h4 className="text-md font-medium text-gray-900 mb-2">Información del psicólogo</h4>
+              <div className="col-span-1 md:col-span-2 bg-gray-50 p-3 sm:p-4 rounded-md">
+                <h4 className="text-xs sm:text-sm font-medium text-gray-900 mb-2 sm:mb-3">Información del psicólogo</h4>
                 <div className="flex items-center">
                   {appointment.psychologist_data?.profile_image ? (
                     <img
-                      className="h-10 w-10 rounded-full object-cover border border-gray-200"
+                      className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover border border-gray-200"
                       src={appointment.psychologist_data.profile_image}
                       alt={appointment.psychologist_data?.name || 'Psicólogo'}
                     />
                   ) : (
-                    <div className="h-10 w-10 rounded-full bg-[#2A6877] flex items-center justify-center text-white">
+                    <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-[#2A6877] flex items-center justify-center text-white">
                       {appointment.psychologist_data?.name?.charAt(0) || 'P'}
                     </div>
                   )}
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
                       {appointment.psychologist_data?.name}
                     </p>
                     <p className="text-xs text-gray-500">
@@ -478,22 +484,22 @@ const PaymentDetailModal = ({
           </div>
 
           {/* Botones de acción */}
-          <div className="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
+          <div className="mt-4 sm:mt-5 sm:flex sm:flex-row-reverse">
             {appointment.status === 'PAYMENT_UPLOADED' && canVerify && (
               <button
                 type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#2A6877] text-base font-medium text-white hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-3 py-1.5 sm:px-4 sm:py-2 bg-[#2A6877] text-xs sm:text-sm font-medium text-white hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleVerifyConfirmationOpen}
                 disabled={isVerifying}
               >
                 {isVerifying ? (
                   <>
-                    <div className="animate-spin h-5 w-5 mr-2 border-t-2 border-b-2 border-white rounded-full" />
+                    <div className="animate-spin h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 border-t-2 border-b-2 border-white rounded-full" />
                     Verificando...
                   </>
                 ) : (
                   <>
-                    <CheckCircleIcon className="h-5 w-5 mr-2" />
+                    <CheckCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
                     Verificar Pago
                   </>
                 )}
@@ -501,8 +507,8 @@ const PaymentDetailModal = ({
             )}
             
             {appointment.status === 'PAYMENT_UPLOADED' && isPsychologist && isFirstApp && (
-              <div className="w-full sm:w-auto bg-gray-100 rounded-md p-3 text-sm text-gray-700 flex items-start mb-3 sm:mb-0 sm:ml-3">
-                <InformationCircleIcon className="h-5 w-5 mr-2 text-blue-500 flex-shrink-0" />
+              <div className="w-full sm:w-auto bg-gray-100 rounded-md p-2 sm:p-3 text-xs sm:text-sm text-gray-700 flex items-start mb-3 sm:mb-0 sm:ml-3">
+                <InformationCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-blue-500 flex-shrink-0" />
                 <span>
                   Esta es la primera cita con este cliente. Solo un administrador puede verificar el pago para la primera cita.
                 </span>
@@ -512,17 +518,17 @@ const PaymentDetailModal = ({
             {appointment.status === 'PAYMENT_VERIFIED' && (
               <button
                 type="button"
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-3 py-1.5 sm:px-4 sm:py-2 bg-green-600 text-xs sm:text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto"
                 onClick={handleConfirmationOpen}
               >
-                <CheckCircleIcon className="h-5 w-5 mr-2" />
+                <CheckCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
                 Confirmar Cita
               </button>
             )}
             
             <button
               type="button"
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:mt-0 sm:w-auto sm:text-sm"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-1.5 sm:px-4 sm:py-2 bg-white text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:mt-0 sm:w-auto"
               onClick={onClose}
             >
               Cerrar
@@ -539,15 +545,15 @@ const PaymentDetailModal = ({
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bg-white rounded-lg px-3 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 mt-16 sm:mt-0">
               <div>
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
-                  <ExclamationCircleIcon className="h-6 w-6 text-yellow-600" aria-hidden="true" />
+                <div className="mx-auto flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-yellow-100">
+                  <ExclamationCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" aria-hidden="true" />
                 </div>
                 <div className="mt-3 text-center sm:mt-5">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Confirmar verificación de pago</h3>
+                  <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900">Confirmar verificación de pago</h3>
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       ¿Estás seguro que deseas verificar este pago? Esta acción confirmará que has revisado y validado el comprobante de pago.
                     </p>
                   </div>
@@ -556,14 +562,14 @@ const PaymentDetailModal = ({
               <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                 <button
                   type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#2A6877] text-base font-medium text-white hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:col-start-2 sm:text-sm"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-3 py-1.5 sm:px-4 sm:py-2 bg-[#2A6877] text-xs sm:text-sm font-medium text-white hover:bg-[#2A6877]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:col-start-2 sm:text-sm"
                   onClick={handleVerifyConfirmed}
                 >
                   Sí, verificar pago
                 </button>
                 <button
                   type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:mt-0 sm:col-start-1 sm:text-sm"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-1.5 sm:px-4 sm:py-2 bg-white text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:mt-0 sm:col-start-1 sm:text-sm"
                   onClick={handleCancelDialog}
                 >
                   Cancelar
@@ -582,15 +588,15 @@ const PaymentDetailModal = ({
               <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bg-white rounded-lg px-3 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 mt-16 sm:mt-0">
               <div>
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                  <CheckCircleIcon className="h-6 w-6 text-green-600" aria-hidden="true" />
+                <div className="mx-auto flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100">
+                  <CheckCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" aria-hidden="true" />
                 </div>
                 <div className="mt-3 text-center sm:mt-5">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Confirmar cita</h3>
+                  <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900">Confirmar cita</h3>
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       ¿Estás seguro que deseas confirmar esta cita? Se notificará al cliente y al psicólogo que la cita ha sido confirmada.
                     </p>
                   </div>
@@ -599,14 +605,14 @@ const PaymentDetailModal = ({
               <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                 <button
                   type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:col-start-2 sm:text-sm"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-3 py-1.5 sm:px-4 sm:py-2 bg-green-600 text-xs sm:text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:col-start-2 sm:text-sm"
                   onClick={handleConfirmAppointmentConfirmed}
                 >
                   Sí, confirmar cita
                 </button>
                 <button
                   type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-3 py-1.5 sm:px-4 sm:py-2 bg-white text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2A6877] sm:mt-0 sm:col-start-1 sm:text-sm"
                   onClick={handleCancelDialog}
                 >
                   Cancelar
