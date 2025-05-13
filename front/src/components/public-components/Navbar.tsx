@@ -268,7 +268,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-3">
             <div className="relative h-14 w-14 flex-shrink-0">
               <img 
-                src="/logo2.png" 
+                src="/logo2.webp" 
                 alt="E-mind" 
                 className="h-full w-full object-contain transition-all"
               />
@@ -371,7 +371,7 @@ const Navbar = () => {
                   >
                     <div className="relative h-20 w-20 flex-shrink-0">
                       <img 
-                        src="/logo2.png" 
+                        src="/logo2.webp" 
                         alt="E-mind" 
                         className="h-full w-full object-contain transition-all"
                         width="80"
