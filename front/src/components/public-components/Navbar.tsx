@@ -121,8 +121,10 @@ const Navbar = () => {
             ? 'text-[#2A6877] bg-[#2A6877]/10' 
             : 'text-gray-600 hover:text-[#2A6877] hover:bg-gray-50'
         }`}
-        whileHover={{ x: 4 }}
+        whileHover={{ x: 4, backgroundColor: location.pathname === item.path ? '#2A6877/10' : '#f9fafb' }}
         whileTap={{ scale: 0.98 }}
+        role="menuitem"
+        aria-current={location.pathname === item.path ? 'page' : undefined}
       >
         {item.label}
       </motion.a>
@@ -194,8 +196,10 @@ const Navbar = () => {
         <motion.a
           onClick={() => handleNavigation(getDashboardLink())}
           className="flex items-center justify-center gap-2 w-full px-4 py-3 text-white bg-gradient-to-r from-[#2A6877] to-[#1d4b56] rounded-lg hover:shadow-md transition-all duration-300 font-sans text-sm cursor-pointer"
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.02, boxShadow: "0 4px 12px -2px rgba(42, 104, 119, 0.3)" }}
           whileTap={{ scale: 0.98 }}
+          role="button"
+          aria-label="Ir a mi panel"
         >
           <span>Mi Panel</span>
           <svg 
@@ -203,6 +207,7 @@ const Navbar = () => {
             className="h-4 w-4" 
             viewBox="0 0 20 20" 
             fill="currentColor"
+            aria-hidden="true" 
           >
             <path 
               fillRule="evenodd" 
@@ -219,16 +224,20 @@ const Navbar = () => {
         <motion.a
           onClick={() => handleNavigation('/login')}
           className="flex justify-center items-center w-full px-4 py-3 text-center text-[#2A6877] border border-[#2A6877] rounded-lg hover:bg-gray-50 transition-colors font-sans text-sm cursor-pointer"
-          whileHover={{ scale: 1.02 }}
+          whileHover={{ scale: 1.02, backgroundColor: '#f9fafb' }}
           whileTap={{ scale: 0.98 }}
+          role="button"
+          aria-label="Iniciar sesión"
         >
           Iniciar sesión
         </motion.a>
         <motion.a
           onClick={() => handleNavigation('/registro')}
-          className="flex justify-center items-center w-full px-4 py-3 text-center text-white bg-[#2A6877] rounded-lg hover:bg-[#235A67] transition-colors font-sans text-sm cursor-pointer"
-          whileHover={{ scale: 1.02 }}
+          className="flex justify-center items-center w-full px-4 py-3 text-center text-white bg-[#2A6877] rounded-lg transition-colors font-sans text-sm cursor-pointer"
+          whileHover={{ scale: 1.02, backgroundColor: '#235A67' }}
           whileTap={{ scale: 0.98 }}
+          role="button"
+          aria-label="Comenzar registro"
         >
           Comenzar
         </motion.a>
@@ -256,18 +265,17 @@ const Navbar = () => {
           whileHover="hover"
           variants={logoVariants}
         >
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="relative h-10 w-10">
+          <Link to="/" className="flex items-center gap-3">
+            <div className="relative h-14 w-14 flex-shrink-0">
               <img 
-                src="/logo.jpeg" 
+                src="/logo2.png" 
                 alt="E-mind" 
-                className="h-full w-full rounded-full object-cover border-2 border-[#2A6877] transition-all"
+                className="h-full w-full object-contain transition-all"
               />
-              <div className="absolute inset-0 rounded-full border-2 border-[#2A6877]/30 -m-1 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[#2A6877] text-xl font-bold tracking-tight">E-mind</span>
-              <span className="text-gray-500 text-xs">Psicoterapia Online</span>
+            <div className="flex flex-col justify-center">
+              <span className="text-[#2A6877] text-2xl font-bold leading-tight">e-mind</span>
+              <span className="text-gray-500 text-sm leading-tight">Encuentra tu bienestar</span>
             </div>
           </Link>
         </motion.div>
@@ -327,8 +335,10 @@ const Navbar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
               className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30"
               onClick={() => setIsMenuOpen(false)}
+              aria-hidden="true"
             />
           )}
         </AnimatePresence>
@@ -337,39 +347,57 @@ const Navbar = () => {
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              className="lg:hidden fixed top-0 right-0 h-[100dvh] w-4/5 max-w-sm bg-white shadow-xl z-40 overflow-y-auto"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'tween', duration: 0.3 }}
+              className="lg:hidden fixed top-0 right-0 h-[100dvh] w-4/5 max-w-sm bg-white shadow-xl z-40 overflow-y-auto rounded-l-2xl"
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ 
+                type: 'spring', 
+                damping: 25, 
+                stiffness: 300,
+                duration: 0.4
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menú de navegación"
             >
               <div className="flex flex-col h-full">
-                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
-                  <Link to="/" className="flex items-center space-x-3" onClick={() => setIsMenuOpen(false)}>
-                    <img 
-                      src="/logo.jpeg" 
-                      alt="E-mind" 
-                      className="h-9 w-9 rounded-full object-cover border-2 border-[#2A6877]" 
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-[#2A6877] text-lg font-bold tracking-tight">E-mind</span>
-                      <span className="text-gray-500 text-xs">Psicoterapia Online</span>
+                <div className="p-4 border-b border-gray-100 flex justify-center items-center bg-white sticky top-0 z-10 rounded-tl-2xl relative">
+                  <Link 
+                    to="/" 
+                    className="flex flex-col items-center gap-1" 
+                    onClick={() => setIsMenuOpen(false)}
+                    aria-label="Ir a la página de inicio"
+                  >
+                    <div className="relative h-20 w-20 flex-shrink-0">
+                      <img 
+                        src="/logo2.png" 
+                        alt="E-mind" 
+                        className="h-full w-full object-contain transition-all"
+                        width="80"
+                        height="80"
+                        loading="eager"
+                      />
+                    </div>
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="text-[#2A6877] text-xl font-bold leading-tight">e-mind</span>
+                      <span className="text-gray-500 text-sm leading-tight">Encuentra tu bienestar</span>
                     </div>
                   </Link>
                 </div>
                 
                 <div className="p-4 flex flex-col flex-1 bg-white">
-                  <div className="space-y-1 mb-6">
+                  <nav className="space-y-1 mb-6">
                     {renderMobileNavItems()}
-                  </div>
+                  </nav>
                   
                   <div className="mt-auto space-y-4">
                     <div className="border-t border-gray-100 pt-4">
                       {renderMobileAuthButtons()}
                     </div>
                     
-                    <div className="text-center text-xs text-gray-500 pb-4">
-                      © {new Date().getFullYear()} E-mind - Psicoterapia Online
+                    <div className="text-center text-xs text-gray-500 pb-4 rounded-bl-2xl">
+                      © {new Date().getFullYear()} E-mind - Encuentra tu bienestar
                     </div>
                   </div>
                 </div>
