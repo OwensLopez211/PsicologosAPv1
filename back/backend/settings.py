@@ -92,6 +92,8 @@ USE_TZ = False
 # CORS settings
 # Update CORS settings for Vite's default port
 CORS_ALLOWED_ORIGINS = [
+    "https://emindapp.cl",
+    "https://www.emindapp.cl",
     "http://186.64.113.186",
     "http://localhost:5173",
     "http://127.0.0.1:5173",

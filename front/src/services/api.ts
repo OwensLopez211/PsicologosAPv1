@@ -2,7 +2,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // Usar la variable de entorno o una URL por defecto apuntando al servidor de producción
-const API_URL = import.meta.env.VITE_API_URL || 'https://186.64.113.186/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://www.emindapp.cl/api';
 
 // Log de la URL base para debugging
 console.log('API URL configurada:', API_URL);
