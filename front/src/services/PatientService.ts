@@ -44,7 +44,7 @@ class PatientService {
   private getBackendUrl(): string {
     return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:8000'
-      : 'https://186.64.113.186';
+      : 'https://www.emindapp.cl';
   }
 
   /**
