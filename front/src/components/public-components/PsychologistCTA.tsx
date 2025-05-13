@@ -94,7 +94,7 @@ const PsychologistCTA = () => {
               {/* Modern image container with subtle border */}
               <div className="relative rounded-xl overflow-hidden border border-white/20">
                 <img 
-                  src="https://placehold.co/600x400/2A6877/ffffff?text=Dashboard+Preview"
+                  src="/Online-review.svg"
                   alt="Vista previa del dashboard para psicólogos" 
                   className="w-full h-full object-cover"
                   loading="lazy"

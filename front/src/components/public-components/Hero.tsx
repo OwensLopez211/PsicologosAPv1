@@ -40,7 +40,7 @@ const Hero = () => {
           <div className="absolute top-8 right-8 w-full h-full rounded-2xl bg-[#B4E4D3]/30 -z-10 transform rotate-3"></div>
           <div className="relative w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl">
             <img
-              src="/hero-therapy.svg"
+              src="/Psychologist-bro.svg"
               alt="Sesión de terapia psicológica online"
               className="w-full h-full object-cover"
               loading="eager"
