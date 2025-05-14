@@ -345,6 +345,104 @@ export const getClientAppointments = async (): Promise<{
   }
 };
 
+// Function to update appointment status using explicit token
+export const updateAppointmentStatus = async (
+  appointmentId: number, 
+  status: string,
+  token?: string // Token explícito (opcional)
+): Promise<AppointmentData> => {
+  try {
+    // Usar el token proporcionado o intentar obtenerlo del localStorage
+    const authToken = token || localStorage.getItem('token');
+    
+    if (!authToken) {
+      toast.error('No hay token de autenticación disponible');
+      throw new Error('No authentication token available');
+    }
+    
+    // Configuración con token explícito
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    console.log(`Actualizando estado de cita ${appointmentId} a ${status} con token explícito`);
+
+    const response = await api.patch(
+      `/appointments/${appointmentId}/update-status/`, 
+      { status },
+      config
+    );
+    
+    console.log('Estado actualizado exitosamente:', response.data);
+    toast.success(`Estado actualizado a: ${status}`);
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('Error actualizando estado de cita:', error);
+    
+    // Si hay un mensaje específico del error, mostrarlo
+    if (error.response?.data?.detail) {
+      toast.error(`Error: ${error.response.data.detail}`);
+    } else {
+      toast.error('Error al actualizar el estado de la cita');
+    }
+    
+    throw error;
+  }
+};
+
+// Function to save psychologist notes with explicit token
+export const saveAppointmentNotes = async (
+  appointmentId: number,
+  notes: string,
+  token?: string // Token explícito (opcional)
+): Promise<AppointmentData> => {
+  try {
+    // Usar el token proporcionado o intentar obtenerlo del localStorage
+    const authToken = token || localStorage.getItem('token');
+    
+    if (!authToken) {
+      toast.error('No hay token de autenticación disponible');
+      throw new Error('No authentication token available');
+    }
+    
+    // Configuración con token explícito
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    console.log(`Guardando notas de cita ${appointmentId} con token explícito`);
+
+    const response = await api.patch(
+      `/appointments/${appointmentId}/add-notes/`,
+      { psychologist_notes: notes },
+      config
+    );
+    
+    console.log('Notas guardadas exitosamente:', response.data);
+    toast.success('Notas guardadas correctamente');
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('Error guardando notas de cita:', error);
+    
+    // Si hay un mensaje específico del error, mostrarlo
+    if (error.response?.data?.detail) {
+      toast.error(`Error: ${error.response.data.detail}`);
+    } else {
+      toast.error('Error al guardar las notas de la cita');
+    }
+    
+    throw error;
+  }
+};
+
 class AppointmentService {
   /**
    * Fetches available time slots for a psychologist

@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import toastService from '../../../services/toastService';
+import { updateAppointmentStatus, saveAppointmentNotes } from '../../../services/appointmentService';
 
 // Define appointment status types to match backend
 type AppointmentStatus = 'PENDING_PAYMENT' | 'PAYMENT_UPLOADED' | 'PAYMENT_VERIFIED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
@@ -144,96 +145,66 @@ const AppointmentDetails = ({
     }
   };
 
-  // Handle status change with API call
-  const handleStatusChange = async (status: AppointmentStatus) => {
+  // Map backend status to display buttons
+  const canChangeToStatus = (status: AppointmentStatus): boolean => {
+    // Si no hay cita, no se puede cambiar el estado
+    if (!appointment) return false;
+    
+    // Only allow changing status if current status is PAYMENT_VERIFIED or CONFIRMED
+    if (appointment.status !== 'PAYMENT_VERIFIED' && appointment.status !== 'CONFIRMED') {
+      return false;
+    }
+    
+    // Define allowed transitions
+    const allowedTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
+      'PAYMENT_VERIFIED': ['CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
+      'CONFIRMED': ['COMPLETED', 'CANCELLED', 'NO_SHOW'],
+      'PENDING_PAYMENT': [],
+      'PAYMENT_UPLOADED': [],
+      'COMPLETED': [],
+      'CANCELLED': [],
+      'NO_SHOW': []
+    };
+    
+    return allowedTransitions[appointment.status].includes(status);
+  };
+
+  // Función específica para cambiar estado usando token directo y el servicio dedicado
+  const changeAppointmentStatus = async (status: AppointmentStatus) => {
     if (!appointment) return;
     
-    // Sincronizar token antes de la operación
-    syncTokenFromLocalStorage();
+    // Obtener token directamente de localStorage para esta operación crítica
+    const currentToken = localStorage.getItem('token');
+    if (!currentToken) {
+      toastService.error('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
+      return;
+    }
     
     setIsSaving(true);
-    
-    // Mostrar toast de carga
-    toastService.loading('Actualizando estado...');
+    toastService.loading(`Cambiando estado a: ${getStatusDisplay(status)}...`);
     
     try {
-      // Asegurar que tenemos el token más reciente del localStorage
-      const currentToken = localStorage.getItem('token');
-      if (!currentToken) {
-        toastService.error('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
-        return;
-      }
+      // Sincronizar el token en el contexto
+      setToken(currentToken);
       
-      // Sincronizar con el contexto si es necesario
-      if (currentToken !== token) {
-        console.log('Actualizando token en contexto antes de cambiar estado');
-        setToken(currentToken);
-      }
-      
-      console.log('Enviando actualización de estado:', {
-        appointmentId: appointment.id,
-        nuevoEstado: status,
-        estadoActual: appointment.status,
-        tokenDisponible: !!currentToken
-      });
-      
-      // Configuración manual con el token
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${currentToken}`,
-          'Content-Type': 'application/json'
-        }
-      };
-      
-      // No necesitamos pasar config porque el interceptor de api ya agrega los headers
-      const response = await api.patch(
-        `/appointments/${appointment.id}/update-status/`, 
-        { status },
-        config // Usar la configuración manual con el token
+      // Usar el nuevo servicio dedicado con token explícito
+      await updateAppointmentStatus(
+        appointment.id,
+        status,
+        currentToken
       );
       
-      console.log('Respuesta actualización:', response.data);
-      
-      // Call the parent component's handler if provided
+      // Actualizar el estado localmente para evitar recargar
       if (onStatusChange) {
         onStatusChange(appointment.id, status);
       }
       
-      // Mostrar notificación de éxito con toast
-      toastService.success(`Estado actualizado a: ${getStatusDisplay(status)}`);
+      // Refrescar los datos
       refreshAppointments();
-    } catch (err: any) {
-      console.error('Error completo al actualizar estado:', err);
       
-      // Si recibimos un 401, intentar refrescar el token
-      if (err.response && err.response.status === 401) {
-        try {
-          const refreshed = await refreshUserSession();
-          if (refreshed) {
-            // Intentar nuevamente la petición con el token actualizado
-            handleStatusChange(status);
-            return;
-          }
-        } catch (refreshError) {
-          console.error('Error al refrescar token:', refreshError);
-        }
-      }
-      
-      // Mostrar error con toast
-      let errorMsg = 'Error al actualizar el estado. Inténtalo de nuevo.';
-      if (err.response && err.response.data?.detail) {
-        errorMsg = `Error: ${err.response.data.detail}`;
-      }
-      toastService.error(errorMsg);
-      
-      // Mostrar información más detallada del error en consola
-      if (err.response) {
-        console.error('Detalles del error:', {
-          status: err.response.status,
-          data: err.response.data,
-          headers: err.response.headers
-        });
-      }
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
+      // El servicio ya muestra los mensajes de error
     } finally {
       setIsSaving(false);
     }
@@ -259,98 +230,33 @@ const AppointmentDetails = ({
         return;
       }
       
-      // Sincronizar con el contexto si es necesario
-      if (currentToken !== token) {
-        console.log('Actualizando token en contexto antes de guardar notas');
-        setToken(currentToken);
-      }
+      // Sincronizar con el contexto
+      setToken(currentToken);
       
-      console.log('Guardando notas para cita:', appointment.id);
-      
-      // Configuración manual con el token
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${currentToken}`,
-          'Content-Type': 'application/json'
-        }
-      };
-      
-      // No necesitamos pasar config porque el interceptor de api ya agrega los headers
-      const response = await api.patch(
-        `/appointments/${appointment.id}/add-notes/`,
-        { psychologist_notes: notes },
-        config // Usar la configuración manual con el token
+      // Usar el nuevo servicio dedicado con token explícito
+      await saveAppointmentNotes(
+        appointment.id,
+        notes,
+        currentToken
       );
-      
-      console.log('Respuesta guardado de notas:', response.data);
       
       // Call the parent component's handler if provided
       if (onNotesChange) {
         onNotesChange(appointment.id, notes);
       }
       
-      // Mostrar notificación de éxito con toast
-      toastService.success('Notas guardadas correctamente');
+      // Refrescar citas
       refreshAppointments();
-    } catch (err: any) {
-      console.error('Error completo al guardar notas:', err);
       
-      // Si recibimos un 401, intentar refrescar el token
-      if (err.response && err.response.status === 401) {
-        try {
-          const refreshed = await refreshUserSession();
-          if (refreshed) {
-            // Intentar nuevamente la petición con el token actualizado
-            handleSaveNotes();
-            return;
-          }
-        } catch (refreshError) {
-          console.error('Error al refrescar token:', refreshError);
-        }
-      }
-      
-      // Mostrar error con toast
-      let errorMsg = 'Error al guardar las notas. Inténtalo de nuevo.';
-      if (err.response && err.response.data?.detail) {
-        errorMsg = `Error: ${err.response.data.detail}`;
-      }
-      toastService.error(errorMsg);
-      
-      // Mostrar información más detallada del error en consola
-      if (err.response) {
-        console.error('Detalles del error:', {
-          status: err.response.status,
-          data: err.response.data,
-          headers: err.response.headers
-        });
-      }
+    } catch (error) {
+      console.error('Error guardando notas:', error);
+      // El servicio ya muestra los mensajes de error
     } finally {
       setIsSaving(false);
     }
   };
 
   if (!appointment) return null;
-
-  // Map backend status to display buttons
-  const canChangeToStatus = (status: AppointmentStatus): boolean => {
-    // Only allow changing status if current status is PAYMENT_VERIFIED or CONFIRMED
-    if (appointment.status !== 'PAYMENT_VERIFIED' && appointment.status !== 'CONFIRMED') {
-      return false;
-    }
-    
-    // Define allowed transitions
-    const allowedTransitions: Record<AppointmentStatus, AppointmentStatus[]> = {
-      'PAYMENT_VERIFIED': ['CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'],
-      'CONFIRMED': ['COMPLETED', 'CANCELLED', 'NO_SHOW'],
-      'PENDING_PAYMENT': [],
-      'PAYMENT_UPLOADED': [],
-      'COMPLETED': [],
-      'CANCELLED': [],
-      'NO_SHOW': []
-    };
-    
-    return allowedTransitions[appointment.status].includes(status);
-  };
 
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -436,7 +342,7 @@ const AppointmentDetails = ({
                           <div className="mt-2 flex flex-wrap gap-2">
                             {canChangeToStatus('CONFIRMED') && (
                               <button
-                                onClick={() => handleStatusChange('CONFIRMED')}
+                                onClick={() => changeAppointmentStatus('CONFIRMED')}
                                 disabled={isSaving}
                                 className={`px-3 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
@@ -446,7 +352,7 @@ const AppointmentDetails = ({
                             
                             {canChangeToStatus('COMPLETED') && (
                               <button
-                                onClick={() => handleStatusChange('COMPLETED')}
+                                onClick={() => changeAppointmentStatus('COMPLETED')}
                                 disabled={isSaving}
                                 className={`px-3 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
@@ -456,7 +362,7 @@ const AppointmentDetails = ({
                             
                             {canChangeToStatus('CANCELLED') && (
                               <button
-                                onClick={() => handleStatusChange('CANCELLED')}
+                                onClick={() => changeAppointmentStatus('CANCELLED')}
                                 disabled={isSaving}
                                 className={`px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
@@ -466,7 +372,7 @@ const AppointmentDetails = ({
                             
                             {canChangeToStatus('NO_SHOW') && (
                               <button
-                                onClick={() => handleStatusChange('NO_SHOW')}
+                                onClick={() => changeAppointmentStatus('NO_SHOW')}
                                 disabled={isSaving}
                                 className={`px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
