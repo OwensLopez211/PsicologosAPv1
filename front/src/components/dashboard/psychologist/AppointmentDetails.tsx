@@ -3,7 +3,6 @@ import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
 import toastService from '../../../services/toastService';
 import { updateAppointmentStatus, saveAppointmentNotes } from '../../../services/appointmentService';
