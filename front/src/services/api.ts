@@ -22,19 +22,29 @@ let syncTokenFunction: ((token: string | null) => void) | null = null;
 // Función para configurar el sincronizador de token desde AuthContext
 export const setupTokenSync = (syncFn: (token: string | null) => void) => {
   syncTokenFunction = syncFn;
+  console.log('Token sync function configurada');
 };
 
 // Interceptor de solicitud
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Siempre obtener el token más reciente de localStorage
     const token = localStorage.getItem('token');
+    
     if (token) {
+      console.log('API usando token para solicitud:', config.url);
+      
+      // Asegurarse de que el Authorization header esté actualizado
       config.headers.Authorization = `Bearer ${token}`;
+      
       // Sincronizar token con el contexto si está disponible la función
       if (syncTokenFunction) {
         syncTokenFunction(token);
       }
+    } else {
+      console.log('API: No se encontró token para solicitud:', config.url);
     }
+    
     return config;
   },
   (error: AxiosError) => Promise.reject(error)
@@ -53,6 +63,11 @@ api.interceptors.response.use(
         headers: error.response.headers,
         url: error.config?.url
       });
+      
+      // Si es un error 401, puede ser por token expirado o inválido
+      if (error.response.status === 401) {
+        console.error('Error 401 detectado - posible problema de autenticación');
+      }
     } else if (error.request) {
       console.error('Error en petición (no respuesta):', error.request);
     } else {

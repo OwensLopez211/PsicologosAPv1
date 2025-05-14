@@ -35,6 +35,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     setupTokenSync(setToken);
   }, []);
+  
+  // Escuchar el evento personalizado tokenChange
+  useEffect(() => {
+    const handleTokenChange = (event: CustomEvent<{ token: string }>) => {
+      console.log('Evento tokenChange detectado:', !!event.detail.token);
+      setToken(event.detail.token);
+    };
+
+    // Añadir el listener
+    window.addEventListener('tokenChange', handleTokenChange as EventListener);
+    
+    // Eliminar el listener al desmontar
+    return () => {
+      window.removeEventListener('tokenChange', handleTokenChange as EventListener);
+    };
+  }, []);
 
   // En la función logout, añadir:
   const logout = () => {
@@ -148,6 +164,22 @@ export const useAuth = () => {
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+  
+  // Verificación proactiva: si hay token en localStorage pero no en el contexto, sincronizar
+  if (!context.token) {
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      console.log('useAuth: Token encontrado en localStorage pero no en contexto, sincronizando...');
+      context.setToken(storedToken);
+      // Forzar reporte del token ya presente (aunque el estado se actualizará en el próximo render)
+      console.log('useAuth called, token status: true (forzado desde localStorage)');
+      return {
+        ...context,
+        token: storedToken
+      };
+    }
+  }
+  
   console.log('useAuth called, token status:', !!context.token);
   return context;
 };

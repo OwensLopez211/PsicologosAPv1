@@ -46,6 +46,13 @@ export const login = async (email: string, password: string): Promise<AuthRespon
     localStorage.setItem('refresh_token', response.data.refresh);
     localStorage.setItem('user', JSON.stringify(response.data.user));
     
+    // Publicar un evento personalizado para notificar que el token ha cambiado
+    // Esto permitirá que otros componentes reaccionen al cambio
+    const tokenChangeEvent = new CustomEvent('tokenChange', { 
+      detail: { token: response.data.access }
+    });
+    window.dispatchEvent(tokenChangeEvent);
+    
     // Almacenar el profile_id por separado si existe
     if (response.data.user.profile_id) {
       localStorage.setItem('profile_id', response.data.user.profile_id.toString());

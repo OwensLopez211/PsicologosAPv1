@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useLayoutEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
@@ -44,19 +44,38 @@ const AppointmentDetails = ({
   const [isSaving, setIsSaving] = useState(false);
   const { user, token, setToken, refreshUserSession } = useAuth();
 
-  // Log de debugging
+  // Función para sincronizar el token desde localStorage
+  const syncTokenFromLocalStorage = () => {
+    const localStorageToken = localStorage.getItem('token');
+    if (localStorageToken && localStorageToken !== token) {
+      console.log('Sincronizando token desde localStorage en AppointmentDetails');
+      setToken(localStorageToken);
+      return true;
+    }
+    return false;
+  };
+
+  // useLayoutEffect se ejecuta siempre antes de que el componente se pinte en pantalla
+  useLayoutEffect(() => {
+    syncTokenFromLocalStorage();
+  }, []);
+
+  // Sincronizar el token inmediatamente cuando el componente se monta o se abre
+  useEffect(() => {
+    if (isOpen) {
+      syncTokenFromLocalStorage();
+    }
+  }, [isOpen]);
+  
+  // Log de debugging y segunda verificación de token
   useEffect(() => {
     console.log('Usuario actual:', user);
     console.log('¿Es psicólogo?:', user?.user_type === 'psychologist');
     console.log('Token disponible:', token ? 'Sí' : 'No');
     
     // Verificar si hay discrepancia entre token en localStorage y en el contexto
-    const localStorageToken = localStorage.getItem('token');
-    if (localStorageToken && !token) {
-      console.log('Token encontrado en localStorage pero no en contexto, actualizando...');
-      setToken(localStorageToken);
-    }
-  }, [user, token, setToken]);
+    syncTokenFromLocalStorage();
+  }, [user, token]);
 
   // Update notes when appointment changes
   useEffect(() => {
@@ -70,6 +89,9 @@ const AppointmentDetails = ({
     if (isOpen) {
       // Disable scrolling on body when modal is open
       document.body.style.overflow = 'hidden';
+      
+      // Sincronizar token cuando se abre el modal
+      syncTokenFromLocalStorage();
     } else {
       // Re-enable scrolling when modal is closed
       document.body.style.overflow = '';
@@ -126,29 +148,48 @@ const AppointmentDetails = ({
   const handleStatusChange = async (status: AppointmentStatus) => {
     if (!appointment) return;
     
+    // Sincronizar token antes de la operación
+    syncTokenFromLocalStorage();
+    
     setIsSaving(true);
     
     // Mostrar toast de carga
     toastService.loading('Actualizando estado...');
     
     try {
-      // Obtener token del AuthContext en lugar de localStorage directamente
-      if (!token) {
+      // Asegurar que tenemos el token más reciente del localStorage
+      const currentToken = localStorage.getItem('token');
+      if (!currentToken) {
         toastService.error('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
         return;
+      }
+      
+      // Sincronizar con el contexto si es necesario
+      if (currentToken !== token) {
+        console.log('Actualizando token en contexto antes de cambiar estado');
+        setToken(currentToken);
       }
       
       console.log('Enviando actualización de estado:', {
         appointmentId: appointment.id,
         nuevoEstado: status,
         estadoActual: appointment.status,
-        tokenDisponible: !!token
+        tokenDisponible: !!currentToken
       });
+      
+      // Configuración manual con el token
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+          'Content-Type': 'application/json'
+        }
+      };
       
       // No necesitamos pasar config porque el interceptor de api ya agrega los headers
       const response = await api.patch(
         `/appointments/${appointment.id}/update-status/`, 
-        { status }
+        { status },
+        config // Usar la configuración manual con el token
       );
       
       console.log('Respuesta actualización:', response.data);
@@ -202,24 +243,43 @@ const AppointmentDetails = ({
   const handleSaveNotes = async () => {
     if (!appointment) return;
     
+    // Sincronizar token antes de la operación
+    syncTokenFromLocalStorage();
+    
     setIsSaving(true);
     
     // Mostrar toast de carga
     toastService.loading('Guardando notas...');
     
     try {
-      // Obtener token del AuthContext
-      if (!token) {
+      // Asegurar que tenemos el token más reciente del localStorage
+      const currentToken = localStorage.getItem('token');
+      if (!currentToken) {
         toastService.error('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
         return;
       }
       
+      // Sincronizar con el contexto si es necesario
+      if (currentToken !== token) {
+        console.log('Actualizando token en contexto antes de guardar notas');
+        setToken(currentToken);
+      }
+      
       console.log('Guardando notas para cita:', appointment.id);
+      
+      // Configuración manual con el token
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+          'Content-Type': 'application/json'
+        }
+      };
       
       // No necesitamos pasar config porque el interceptor de api ya agrega los headers
       const response = await api.patch(
         `/appointments/${appointment.id}/add-notes/`,
-        { psychologist_notes: notes }
+        { psychologist_notes: notes },
+        config // Usar la configuración manual con el token
       );
       
       console.log('Respuesta guardado de notas:', response.data);

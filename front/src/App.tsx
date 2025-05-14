@@ -24,6 +24,22 @@ import VerificationsPage from './pages/dashboard/VerificationsPage';
 import ToastProvider from './components/toast/ToastProvider';
 import FAQPage from './pages/public-pages/FaqPage';
 import UnifiedPatientsPage from './pages/dashboard/UnifiedPatientsPage';
+import { useEffect } from 'react';
+import { setupTokenSync } from './services/api';
+
+// Componente para inicializar el token en localStorage
+function TokenInitializer() {
+  useEffect(() => {
+    // Forzar la sincronización del token al iniciar la aplicación
+    console.log('Inicializando sincronización de token en App.tsx');
+    const token = localStorage.getItem('token');
+    if (token) {
+      console.log('Token encontrado en localStorage durante inicialización de la app');
+    }
+  }, []);
+
+  return null;
+}
 
 function App() {
   return (
@@ -31,6 +47,7 @@ function App() {
       <ToastProvider />
       <Router>
         <AuthProvider>
+          <TokenInitializer />
           <TokenRefreshManager />
           <Routes>
             {/* Public routes */}

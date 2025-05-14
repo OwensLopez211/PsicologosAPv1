@@ -51,38 +51,53 @@ const LoginPage = () => {
           // Manejar otros errores...
         }
       } else {
-      // Gestionar "recordarme"
-      if (formData.remember) {
-        localStorage.setItem('rememberedEmail', formData.email);
-      } else {
-        localStorage.removeItem('rememberedEmail');
-      }
-      
-      // Normalizar el tipo de usuario
+        // Gestionar "recordarme"
+        if (formData.remember) {
+          localStorage.setItem('rememberedEmail', formData.email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+        
+        // Normalizar el tipo de usuario
         const normalizedUserType = result.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
-      
-      // Actualizar el token en el contexto de autenticación
-      setToken(localStorage.getItem('token'));
-      
-      setUser({
+        
+        // IMPORTANTE: Primero establecer el token, luego el usuario
+        // Esto asegura que el token esté disponible cuando los componentes se monten tras la navegación
+        const tokenFromStorage = localStorage.getItem('token');
+        if (tokenFromStorage) {
+          console.log('LoginPage: Estableciendo token desde localStorage:', !!tokenFromStorage);
+          setToken(tokenFromStorage);
+        } else {
+          console.error('LoginPage: Token no encontrado en localStorage después del login');
+        }
+        
+        // Pequeño retraso para asegurar que el token se propague
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Luego establecer el usuario 
+        setUser({
           ...result.user,
-        user_type: normalizedUserType
-      });
-      // Mostrar mensaje de bienvenida
-      toastService.success(`¡Bienvenido de nuevo, ${result.user.first_name || 'Usuario'}!`);
-      
-      // Navegar según el tipo de usuario
-      switch (normalizedUserType) {
-        case 'client':
-          navigate('/dashboard');
-          break;
-        case 'psychologist':
-          navigate('/psicologo/dashboard');
-          break;
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        default:
+          user_type: normalizedUserType
+        });
+        
+        // Mostrar mensaje de bienvenida
+        toastService.success(`¡Bienvenido de nuevo, ${result.user.first_name || 'Usuario'}!`);
+        
+        // Otro pequeño retraso antes de la navegación
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        // Navegar según el tipo de usuario
+        switch (normalizedUserType) {
+          case 'client':
+            navigate('/dashboard');
+            break;
+          case 'psychologist':
+            navigate('/psicologo/dashboard');
+            break;
+          case 'admin':
+            navigate('/admin/dashboard');
+            break;
+          default:
             console.error('Unknown user type:', result.user.user_type);
             toastService.error('Error en el tipo de usuario');
         }

@@ -5,10 +5,34 @@ import { jwtDecode } from 'jwt-decode';
 
 interface JwtPayload {
   exp: number;
+  [key: string]: any;
 }
 
 const TokenRefreshManager = () => {
-  const { refreshUserSession } = useAuth();
+  const { refreshUserSession, setToken } = useAuth();
+
+  // Verificar y sincronizar el token al montar el componente
+  useEffect(() => {
+    const syncStoredToken = () => {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        console.log('TokenRefreshManager: Sincronizando token al iniciar');
+        setToken(storedToken);
+        return true;
+      }
+      return false;
+    };
+
+    // Ejecutar sincronización inmediatamente
+    syncStoredToken();
+
+    // También configurar un intervalo para verificar regularmente
+    const syncInterval = setInterval(syncStoredToken, 10000);
+    
+    return () => {
+      clearInterval(syncInterval);
+    };
+  }, [setToken]);
 
   useEffect(() => {
     let refreshTimeout: number | null = null;
@@ -60,6 +84,8 @@ const TokenRefreshManager = () => {
       const token = localStorage.getItem('token');
       if (token) {
         setupRefreshTimer(token);
+        // Asegurar que el contexto tenga el token
+        setToken(token);
       }
     };
     
@@ -69,14 +95,29 @@ const TokenRefreshManager = () => {
     // Establecer un intervalo para verificar periódicamente (por si cambia externamente)
     checkInterval = window.setInterval(() => {
       checkToken();
-    }, 60000); // Verificar cada minuto
+    }, 60000);
     
-    // Limpieza en desmontaje
     return () => {
       clearTimers();
     };
-  }, [refreshUserSession]);
-  
+  }, [refreshUserSession, setToken]);
+
+  // Agregar un listener para detectar cambios en localStorage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token' && e.newValue) {
+        console.log('Token actualizado en localStorage, sincronizando...');
+        setToken(e.newValue);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [setToken]);
+
   return null;
 };
 
