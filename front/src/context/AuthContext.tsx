@@ -1,5 +1,5 @@
 // AuthContext.tsx (actualizado)
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { refreshToken } from '../services/authService';
 import { setupTokenSync } from '../services/api';
 // import toast from 'react-hot-toast';
@@ -22,6 +22,7 @@ interface AuthContextType {
   refreshUserSession: () => Promise<boolean>;
   token: string | null; // Add token to the context
   setToken: (token: string | null) => void; // Añadir setToken a la interfaz
+  forceTokenSync: () => boolean; // Nueva función para forzar sincronización - devuelve boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +31,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token')); // Initialize from localStorage
+  const initializeAttempts = useRef(0);
+
+  // Función para forzar la sincronización del token
+  const forceTokenSync = (): boolean => {
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      console.log('Forzando sincronización del token desde localStorage');
+      setToken(storedToken);
+      return true;
+    }
+    return false;
+  };
+
+  // Inicialización forzada del token cuando el contexto se monta
+  useEffect(() => {
+    // CRITICAL: Intentar forzar la sincronización varias veces al inicio
+    const forceSyncInterval = setInterval(() => {
+      const synced = forceTokenSync();
+      initializeAttempts.current += 1;
+      
+      console.log(`Intento #${initializeAttempts.current} de sincronización del token:`, synced ? 'Éxito' : 'No se encontró token');
+      
+      // Detener después de 5 intentos
+      if (initializeAttempts.current >= 5) {
+        clearInterval(forceSyncInterval);
+      }
+    }, 500); // Intentar cada 500ms
+
+    return () => clearInterval(forceSyncInterval);
+  }, []);
 
   // Configurar la sincronización del token con el API
   useEffect(() => {
@@ -46,9 +77,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Añadir el listener
     window.addEventListener('tokenChange', handleTokenChange as EventListener);
     
+    // También escuchar el nuevo evento tokenUpdated
+    const handleTokenUpdated = (event: CustomEvent<{ token: string }>) => {
+      console.log('Evento tokenUpdated detectado:', !!event.detail.token);
+      setToken(event.detail.token);
+    };
+    window.addEventListener('tokenUpdated', handleTokenUpdated as EventListener);
+    
     // Eliminar el listener al desmontar
     return () => {
       window.removeEventListener('tokenChange', handleTokenChange as EventListener);
+      window.removeEventListener('tokenUpdated', handleTokenUpdated as EventListener);
     };
   }, []);
 
@@ -152,7 +191,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout,
       refreshUserSession,
       token, // Include token in the context
-      setToken // Añadir setToken al contexto
+      setToken, // Añadir setToken al contexto
+      forceTokenSync // Nueva función para forzar sincronización
     }}>
       {children}
     </AuthContext.Provider>
@@ -170,7 +210,10 @@ export const useAuth = () => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       console.log('useAuth: Token encontrado en localStorage pero no en contexto, sincronizando...');
-      context.setToken(storedToken);
+      
+      // Forzamos la sincronización en lugar de solo llamar a setToken
+      context.forceTokenSync();
+      
       // Forzar reporte del token ya presente (aunque el estado se actualizará en el próximo render)
       console.log('useAuth called, token status: true (forzado desde localStorage)');
       return {
@@ -180,6 +223,14 @@ export const useAuth = () => {
     }
   }
   
-  console.log('useAuth called, token status:', !!context.token);
+  // Modo producción: verificación más agresiva
+  if (process.env.NODE_ENV === 'production' && !context.token) {
+    console.log('⚠️ useAuth en PRODUCCIÓN sin token, intentando resincronizar...');
+    setTimeout(() => {
+      context.forceTokenSync();
+    }, 100);
+  }
+  
+  console.log('useAuth called, token status:', !!context.token, 'ENV:', process.env.NODE_ENV || 'development');
   return context;
 };

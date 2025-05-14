@@ -61,18 +61,37 @@ const LoginPage = () => {
         // Normalizar el tipo de usuario
         const normalizedUserType = result.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
         
-        // IMPORTANTE: Primero establecer el token, luego el usuario
-        // Esto asegura que el token esté disponible cuando los componentes se monten tras la navegación
+        // ************* IMPORTANTE - MANEJO ESPECIAL DEL TOKEN *************
+        // Obtener token directamente después del login y asegurarse de que se establece
         const tokenFromStorage = localStorage.getItem('token');
-        if (tokenFromStorage) {
-          console.log('LoginPage: Estableciendo token desde localStorage:', !!tokenFromStorage);
-          setToken(tokenFromStorage);
-        } else {
-          console.error('LoginPage: Token no encontrado en localStorage después del login');
+        
+        // Verificación exhaustiva de token
+        if (!tokenFromStorage) {
+          console.error('⚠️ Token no encontrado en localStorage después del login. Guardando manualmente...');
+          if (result.access) {
+            // Si el token no está en localStorage pero está en la respuesta, guardarlo directamente
+            localStorage.setItem('token', result.access);
+            console.log('Token guardado manualmente en localStorage');
+          }
         }
         
-        // Pequeño retraso para asegurar que el token se propague
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Verificar nuevamente que el token esté disponible
+        const verifiedToken = localStorage.getItem('token');
+        console.log('LoginPage: Token verificado en localStorage:', !!verifiedToken);
+        
+        // Forzar la actualización del estado en el contexto
+        if (verifiedToken) {
+          console.log('⚠️ Estableciendo token forzosamente en el contexto de autenticación');
+          setToken(verifiedToken);
+          
+          // Crear evento personalizado para notificar el cambio de token
+          const event = new CustomEvent('tokenUpdated', { detail: { token: verifiedToken } });
+          window.dispatchEvent(event);
+        }
+        
+        // Pequeño retraso para asegurar que el token se propague - más largo en producción si es necesario
+        const propagationDelay = process.env.NODE_ENV === 'production' ? 150 : 50;
+        await new Promise(resolve => setTimeout(resolve, propagationDelay));
         
         // Luego establecer el usuario 
         setUser({
@@ -83,8 +102,12 @@ const LoginPage = () => {
         // Mostrar mensaje de bienvenida
         toastService.success(`¡Bienvenido de nuevo, ${result.user.first_name || 'Usuario'}!`);
         
-        // Otro pequeño retraso antes de la navegación
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Otro pequeño retraso antes de la navegación - más largo en producción si es necesario
+        await new Promise(resolve => setTimeout(resolve, propagationDelay));
+        
+        // Verificar una última vez antes de navegar
+        const finalCheck = localStorage.getItem('token');
+        console.log('LoginPage: Verificación final del token antes de navegar:', !!finalCheck);
         
         // Navegar según el tipo de usuario
         switch (normalizedUserType) {

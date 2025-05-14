@@ -42,40 +42,50 @@ const AppointmentDetails = ({
 }: AppointmentDetailsProps) => {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const { user, token, setToken } = useAuth();
+  const { user, token, setToken, forceTokenSync } = useAuth();
+  const [tokenSynced, setTokenSynced] = useState(false);
 
-  // Función para sincronizar el token desde localStorage
-  const syncTokenFromLocalStorage = () => {
-    const localStorageToken = localStorage.getItem('token');
-    if (localStorageToken && localStorageToken !== token) {
-      console.log('Sincronizando token desde localStorage en AppointmentDetails');
-      setToken(localStorageToken);
-      return true;
-    }
-    return false;
-  };
-
-  // useLayoutEffect se ejecuta siempre antes de que el componente se pinte en pantalla
+  // Asegurar que el token esté siempre disponible - enfoque agresivo para producción
   useLayoutEffect(() => {
-    syncTokenFromLocalStorage();
-  }, []);
-
-  // Sincronizar el token inmediatamente cuando el componente se monta o se abre
-  useEffect(() => {
     if (isOpen) {
-      syncTokenFromLocalStorage();
+      if (!token) {
+        // Si no hay token en el contexto, intentar forzar la sincronización
+        console.log('AppointmentDetails: No hay token en contexto, forzando sincronización...');
+        
+        // Llamar a forceTokenSync pero no usar su valor de retorno directamente
+        forceTokenSync();
+        
+        // Verificar si después de la llamada tenemos token
+        const tokenAvailable = !!localStorage.getItem('token');
+        setTokenSynced(tokenAvailable);
+        
+        if (!tokenAvailable) {
+          // Si no se pudo sincronizar, mostrar error
+          console.error('⚠️ AppointmentDetails: No se pudo sincronizar el token');
+          toastService.error('Error de autenticación. Por favor, refresca la página o inicia sesión nuevamente.');
+        }
+      } else {
+        setTokenSynced(true);
+      }
     }
-  }, [isOpen]);
-  
-  // Log de debugging y segunda verificación de token
-  useEffect(() => {
-    console.log('Usuario actual:', user);
-    console.log('¿Es psicólogo?:', user?.user_type === 'psychologist');
-    console.log('Token disponible:', token ? 'Sí' : 'No');
+  }, [isOpen, token, forceTokenSync]);
+
+  // Función para obtener el token más actualizado para operaciones
+  const getAuthToken = (): string | null => {
+    // Intentar obtener el token del contexto
+    if (token) return token;
     
-    // Verificar si hay discrepancia entre token en localStorage y en el contexto
-    syncTokenFromLocalStorage();
-  }, [user, token]);
+    // Si no hay token en el contexto, intentar obtenerlo del localStorage
+    const localToken = localStorage.getItem('token');
+    if (localToken) {
+      // Actualizar el contexto con el token encontrado
+      setToken(localToken);
+      return localToken;
+    }
+    
+    // No hay token disponible
+    return null;
+  };
 
   // Update notes when appointment changes
   useEffect(() => {
@@ -91,7 +101,7 @@ const AppointmentDetails = ({
       document.body.style.overflow = 'hidden';
       
       // Sincronizar token cuando se abre el modal
-      syncTokenFromLocalStorage();
+      getAuthToken();
     } else {
       // Re-enable scrolling when modal is closed
       document.body.style.overflow = '';
@@ -172,8 +182,8 @@ const AppointmentDetails = ({
   const changeAppointmentStatus = async (status: AppointmentStatus) => {
     if (!appointment) return;
     
-    // Obtener token directamente de localStorage para esta operación crítica
-    const currentToken = localStorage.getItem('token');
+    // Obtener token actualizado
+    const currentToken = getAuthToken();
     if (!currentToken) {
       toastService.error('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
       return;
@@ -183,10 +193,9 @@ const AppointmentDetails = ({
     toastService.loading(`Cambiando estado a: ${getStatusDisplay(status)}...`);
     
     try {
-      // Sincronizar el token en el contexto
-      setToken(currentToken);
+      console.log(`⚠️ Cambiando estado de cita ${appointment.id} a ${status} con token directo`);
       
-      // Usar el nuevo servicio dedicado con token explícito
+      // Usar el servicio dedicado con token explícito
       await updateAppointmentStatus(
         appointment.id,
         status,
@@ -213,26 +222,20 @@ const AppointmentDetails = ({
   const handleSaveNotes = async () => {
     if (!appointment) return;
     
-    // Sincronizar token antes de la operación
-    syncTokenFromLocalStorage();
+    // Obtener token actualizado
+    const currentToken = getAuthToken();
+    if (!currentToken) {
+      toastService.error('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
+      return;
+    }
     
     setIsSaving(true);
-    
-    // Mostrar toast de carga
     toastService.loading('Guardando notas...');
     
     try {
-      // Asegurar que tenemos el token más reciente del localStorage
-      const currentToken = localStorage.getItem('token');
-      if (!currentToken) {
-        toastService.error('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
-        return;
-      }
+      console.log(`⚠️ Guardando notas de cita ${appointment.id} con token directo`);
       
-      // Sincronizar con el contexto
-      setToken(currentToken);
-      
-      // Usar el nuevo servicio dedicado con token explícito
+      // Usar el servicio dedicado con token explícito
       await saveAppointmentNotes(
         appointment.id,
         notes,
