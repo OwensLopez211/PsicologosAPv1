@@ -42,8 +42,8 @@ const AppointmentDetails = ({
 }: AppointmentDetailsProps) => {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const { user, token, setToken, forceTokenSync } = useAuth();
-  const [tokenSynced, setTokenSynced] = useState(false);
+  const { token, setToken, forceTokenSync } = useAuth();
+  const [, setTokenSynced] = useState(false);
 
   // Asegurar que el token esté siempre disponible - enfoque agresivo para producción
   useLayoutEffect(() => {
