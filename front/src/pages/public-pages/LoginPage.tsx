@@ -83,24 +83,29 @@ const LoginPage = () => {
         // Mostrar mensaje de bienvenida
         toastService.success(`¡Bienvenido de nuevo, ${result.user.first_name || 'Usuario'}!`);
         
-        // Otro pequeño retraso antes de la navegación
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        // Navegar según el tipo de usuario
+        // Determinar la URL de redirección según el tipo de usuario
+        let redirectUrl = '/dashboard';
         switch (normalizedUserType) {
           case 'client':
-            navigate('/dashboard');
+            redirectUrl = '/dashboard';
             break;
           case 'psychologist':
-            navigate('/psicologo/dashboard');
+            redirectUrl = '/psicologo/dashboard';
             break;
           case 'admin':
-            navigate('/admin/dashboard');
+            redirectUrl = '/admin/dashboard';
             break;
           default:
             console.error('Unknown user type:', result.user.user_type);
             toastService.error('Error en el tipo de usuario');
+            redirectUrl = '/';
         }
+        
+        // Guardar la URL de redirección en sessionStorage
+        sessionStorage.setItem('loginRedirect', redirectUrl);
+        
+        // Recargar la página - al recargar, se ejecutará el efecto de redirección
+        window.location.reload();
       }
     } catch (err) {
       console.error('Unexpected login error:', err);
@@ -108,6 +113,18 @@ const LoginPage = () => {
       setIsLoading(false);
     }
   };
+
+  // Efecto para comprobar si hay una URL de redirección pendiente después de la recarga
+  useEffect(() => {
+    const pendingRedirect = sessionStorage.getItem('loginRedirect');
+    if (pendingRedirect) {
+      console.log('Redirigiendo después de recarga a:', pendingRedirect);
+      // Eliminar la redirección pendiente
+      sessionStorage.removeItem('loginRedirect');
+      // Usar navigate para la redirección programática
+      navigate(pendingRedirect);
+    }
+  }, [navigate]);
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
