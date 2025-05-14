@@ -42,7 +42,7 @@ const AppointmentDetails = ({
 }: AppointmentDetailsProps) => {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const { user, token, setToken, refreshUserSession } = useAuth();
+  const { user, token, setToken } = useAuth();
 
   // Función para sincronizar el token desde localStorage
   const syncTokenFromLocalStorage = () => {
