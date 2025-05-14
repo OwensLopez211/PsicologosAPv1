@@ -1,6 +1,7 @@
 // AuthContext.tsx (actualizado)
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { refreshToken } from '../services/authService';
+import { setupTokenSync } from '../services/api';
 // import toast from 'react-hot-toast';
 
 interface User {
@@ -20,6 +21,7 @@ interface AuthContextType {
   logout: () => void;
   refreshUserSession: () => Promise<boolean>;
   token: string | null; // Add token to the context
+  setToken: (token: string | null) => void; // Añadir setToken a la interfaz
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +30,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token')); // Initialize from localStorage
+
+  // Configurar la sincronización del token con el API
+  useEffect(() => {
+    setupTokenSync(setToken);
+  }, []);
 
   // En la función logout, añadir:
   const logout = () => {
@@ -128,7 +135,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loading,
       logout,
       refreshUserSession,
-      token // Include token in the context
+      token, // Include token in the context
+      setToken // Añadir setToken al contexto
     }}>
       {children}
     </AuthContext.Provider>

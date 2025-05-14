@@ -16,12 +16,24 @@ const api = axios.create({
   withCredentials: false
 });
 
+// Variable para almacenar la función de sincronización del token
+let syncTokenFunction: ((token: string | null) => void) | null = null;
+
+// Función para configurar el sincronizador de token desde AuthContext
+export const setupTokenSync = (syncFn: (token: string | null) => void) => {
+  syncTokenFunction = syncFn;
+};
+
 // Interceptor de solicitud
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      // Sincronizar token con el contexto si está disponible la función
+      if (syncTokenFunction) {
+        syncTokenFunction(token);
+      }
     }
     return config;
   },

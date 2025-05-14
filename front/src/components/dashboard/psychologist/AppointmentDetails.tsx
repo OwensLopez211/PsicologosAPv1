@@ -42,14 +42,21 @@ const AppointmentDetails = ({
 }: AppointmentDetailsProps) => {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const { user, token, refreshUserSession } = useAuth();
+  const { user, token, setToken, refreshUserSession } = useAuth();
 
   // Log de debugging
   useEffect(() => {
     console.log('Usuario actual:', user);
     console.log('¿Es psicólogo?:', user?.user_type === 'psychologist');
     console.log('Token disponible:', token ? 'Sí' : 'No');
-  }, [user, token]);
+    
+    // Verificar si hay discrepancia entre token en localStorage y en el contexto
+    const localStorageToken = localStorage.getItem('token');
+    if (localStorageToken && !token) {
+      console.log('Token encontrado en localStorage pero no en contexto, actualizando...');
+      setToken(localStorageToken);
+    }
+  }, [user, token, setToken]);
 
   // Update notes when appointment changes
   useEffect(() => {

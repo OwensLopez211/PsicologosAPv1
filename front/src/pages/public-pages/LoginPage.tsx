@@ -9,7 +9,7 @@ import toastService from '../../services/toastService';
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setUser } = useAuth();
+  const { setUser, setToken } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -60,6 +60,9 @@ const LoginPage = () => {
       
       // Normalizar el tipo de usuario
         const normalizedUserType = result.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
+      
+      // Actualizar el token en el contexto de autenticación
+      setToken(localStorage.getItem('token'));
       
       setUser({
           ...result.user,
