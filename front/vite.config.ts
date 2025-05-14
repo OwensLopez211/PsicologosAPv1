@@ -35,14 +35,14 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'logo.jpeg',
+            src: 'logo2w.webp',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'logo.jpeg',
+            src: 'logo2.webp',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/webp'
           }
         ]
       }
