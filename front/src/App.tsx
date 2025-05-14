@@ -25,7 +25,6 @@ import ToastProvider from './components/toast/ToastProvider';
 import FAQPage from './pages/public-pages/FaqPage';
 import UnifiedPatientsPage from './pages/dashboard/UnifiedPatientsPage';
 import { useEffect } from 'react';
-import { setupTokenSync } from './services/api';
 
 // Componente para inicializar el token en localStorage
 function TokenInitializer() {
