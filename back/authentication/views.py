@@ -8,6 +8,7 @@ from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSeria
 from .permissions import IsAdminUser
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from backend.email_utils import send_welcome_email
 
 User = get_user_model()
 
@@ -87,6 +88,13 @@ class RegisterView(generics.CreateAPIView):
                     profile.save()
                     print(f"Updated psychologist profile for {user.email}")
             
+            # Enviar correo de bienvenida
+            try:
+                send_welcome_email(user)
+                print(f"Welcome email sent to {user.email}")
+            except Exception as e:
+                print(f"Error sending welcome email to {user.email}: {str(e)}")
+            
             refresh = RefreshToken.for_user(user)
             user_serializer = UserSerializer(user)
             
@@ -158,3 +166,45 @@ class CustomTokenRefreshView(TokenRefreshView):
             return Response({"detail": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
             
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+class SendWelcomeEmailView(APIView):
+    """
+    Vista para enviar correos de bienvenida a usuarios existentes.
+    Solo accesible para administradores.
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        
+        if not user_id:
+            return Response(
+                {"detail": "Se requiere el ID del usuario"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "Usuario no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        try:
+            result = send_welcome_email(user)
+            if result:
+                return Response(
+                    {"detail": f"Correo de bienvenida enviado a {user.email}"},
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {"detail": "No se pudo enviar el correo de bienvenida"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        except Exception as e:
+            return Response(
+                {"detail": f"Error al enviar el correo: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

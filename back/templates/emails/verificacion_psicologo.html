@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Actualización del estado de tu perfil</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h2 {
+      color: #4a86e8;
+    }
+    .section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }
+    .important {
+      font-weight: bold;
+      color: #e63946;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h2>¡Hola {{ nombre }}!</h2>
+  
+  <div class="section">
+    {% if estado == 'VERIFIED' %}
+    <p>Nos complace informarte que <strong>tu perfil ha sido verificado</strong> en E-Mind.</p>
+    <p>Ya puedes empezar a ofrecer tus servicios como psicólogo en nuestra plataforma.</p>
+    <p>¡Bienvenido oficialmente a nuestra red de profesionales!</p>
+    
+    {% elif estado == 'REJECTED' %}
+    <p>Lamentamos informarte que <strong>tu perfil no ha sido aprobado</strong> en E-Mind.</p>
+    <p><span class="important">Motivo:</span> {{ motivo }}</p>
+    <p>Te recomendamos revisar los requisitos y documentación necesaria para realizar una nueva solicitud.</p>
+    
+    {% elif estado == 'VERIFICATION_IN_PROGRESS' %}
+    <p>Tu perfil actualmente se encuentra <strong>en proceso de verificación</strong>.</p>
+    <p>Nuestro equipo está revisando tus documentos y credenciales profesionales. Te notificaremos tan pronto como se complete este proceso.</p>
+    
+    {% else %}
+    <p>Tu perfil ha cambiado al estado: <strong>{{ estado }}</strong></p>
+    <p>Si tienes alguna pregunta sobre este cambio, no dudes en contactarnos.</p>
+    {% endif %}
+  </div>
+  
+  <p>Si necesitas asistencia, puedes comunicarte con nosotros respondiendo a este correo o a <a href="mailto:soporte@emindapp.cl">soporte@emindapp.cl</a>.</p>
+  
+  <div class="footer">
+    <p>Saludos cordiales,<br>El equipo de E-Mind</p>
+  </div>
+</body>
+</html> 
