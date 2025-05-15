@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+import secrets
+import string
 
 User = get_user_model()
 
@@ -61,3 +63,40 @@ class RegisterSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True, validators=[validate_password])
+
+# Nuevos serializers para recuperación de contraseña
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    base_url = serializers.CharField(required=True)
+    
+    def validate_email(self, value):
+        # Verificar que exista un usuario con este email
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No existe ningún usuario con este correo electrónico.")
+        return value
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    token = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, validators=[validate_password])
+    
+    def validate(self, attrs):
+        email = attrs.get('email')
+        token = attrs.get('token')
+        
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"email": "No existe ningún usuario con este correo electrónico."})
+        
+        if user.reset_password_token != token:
+            raise serializers.ValidationError({"token": "Token inválido o expirado."})
+        
+        return attrs
+
+def generate_reset_token(length=10):
+    """
+    Genera un token aleatorio para recuperación de contraseña
+    """
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))

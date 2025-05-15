@@ -1,14 +1,17 @@
 from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-from .serializers import UserSerializer, RegisterSerializer, ChangePasswordSerializer
+from .serializers import (
+    UserSerializer, RegisterSerializer, ChangePasswordSerializer,
+    PasswordResetRequestSerializer, PasswordResetConfirmSerializer, generate_reset_token
+)
 from .permissions import IsAdminUser
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
-from backend.email_utils import send_welcome_email
+from backend.email_utils import send_welcome_email, send_password_reset_email
 
 User = get_user_model()
 
@@ -206,5 +209,95 @@ class SendWelcomeEmailView(APIView):
         except Exception as e:
             return Response(
                 {"detail": f"Error al enviar el correo: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+# Nuevas vistas para recuperación de contraseña
+class PasswordResetRequestView(APIView):
+    """
+    Vista para solicitar el restablecimiento de contraseña.
+    No requiere autenticación.
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        email = serializer.validated_data['email']
+        base_url = serializer.validated_data['base_url']
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Generar token y guardarlo en el usuario
+            token = generate_reset_token(length=20)
+            user.reset_password_token = token
+            user.save()
+            
+            # Enviar correo con instrucciones
+            send_password_reset_email(user, token, base_url)
+            
+            return Response(
+                {"detail": "Se ha enviado un correo con instrucciones para restablecer tu contraseña."},
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            # No debería ocurrir debido a la validación del serializer
+            return Response(
+                {"detail": "No existe ningún usuario con este correo electrónico."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Error al procesar la solicitud: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class PasswordResetConfirmView(APIView):
+    """
+    Vista para confirmar el restablecimiento de contraseña con token.
+    No requiere autenticación.
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        email = serializer.validated_data['email']
+        token = serializer.validated_data['token']
+        new_password = serializer.validated_data['new_password']
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Verificar el token
+            if user.reset_password_token != token:
+                return Response(
+                    {"detail": "Token inválido o expirado."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Establecer nueva contraseña
+            user.set_password(new_password)
+            # Limpiar el token para que no se pueda usar de nuevo
+            user.reset_password_token = None
+            user.save()
+            
+            return Response(
+                {"detail": "Tu contraseña ha sido restablecida con éxito."},
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "No existe ningún usuario con este correo electrónico."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Error al procesar la solicitud: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

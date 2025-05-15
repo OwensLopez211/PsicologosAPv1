@@ -2,6 +2,7 @@ import os
 import requests
 from django.template.loader import render_to_string
 from django.conf import settings
+from datetime import datetime
 
 # Configura las credenciales
 MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
@@ -114,3 +115,163 @@ def send_verification_status_email(psychologist_profile):
         'emails/verificacion_psicologo.html',
         context
     )
+
+def send_password_reset_email(user, token, base_url):
+    """
+    Envía un correo con instrucciones para restablecer la contraseña
+    
+    Args:
+        user: Instancia del modelo User
+        token: Token de restablecimiento generado
+        base_url: URL base para construir el enlace de restablecimiento
+    """
+    # Preparar el enlace de restablecimiento
+    reset_url = f"{base_url}/auth/reset-password/?token={token}&email={user.email}"
+    
+    # Preparar el contexto para la plantilla
+    context = {
+        'nombre': f"{user.first_name} {user.last_name}" if user.first_name else user.email,
+        'token': token,
+        'reset_url': reset_url
+    }
+    
+    # Definir asunto y plantilla
+    subject = 'Restablece tu contraseña en E-Mind'
+    template_name = 'emails/reset_password.html'
+    
+    # Enviar el correo
+    return send_email(user.email, subject, template_name, context)
+
+def send_appointment_created_client_email(appointment, payment_info=None):
+    """
+    Envía correo al cliente cuando agenda una nueva cita, incluyendo las instrucciones de pago
+    
+    Args:
+        appointment: Instancia del modelo Appointment
+        payment_info: Diccionario con información de pago (opcional)
+    """
+    client = appointment.client
+    user = client.user
+    psychologist = appointment.psychologist
+    
+    # Configurar información de pago por defecto si no se proporciona
+    if not payment_info:
+        payment_info = {
+            'nombre_destinatario': 'E-Mind SpA',
+            'rut_destinatario': '77.777.777-7',
+            'banco_destinatario': 'Banco Estado',
+            'tipo_cuenta': 'Cuenta Corriente',
+            'numero_cuenta': '12345678',
+            'correo_destinatario': 'pagos@emindapp.cl'
+        }
+    
+    # Formatear la fecha y horas para presentación
+    fecha_cita = appointment.date.strftime('%d/%m/%Y')
+    hora_inicio = appointment.start_time.strftime('%H:%M')
+    hora_fin = appointment.end_time.strftime('%H:%M')
+    
+    # Preparar el contexto para la plantilla
+    context = {
+        'nombre_paciente': f"{user.first_name} {user.last_name}",
+        'nombre_psicologo': f"{psychologist.user.first_name} {psychologist.user.last_name}",
+        'fecha_cita': fecha_cita,
+        'hora_inicio': hora_inicio,
+        'hora_fin': hora_fin,
+        'monto_pago': appointment.payment_amount,
+        'nombre_destinatario': payment_info['nombre_destinatario'],
+        'rut_destinatario': payment_info['rut_destinatario'],
+        'banco_destinatario': payment_info['banco_destinatario'],
+        'tipo_cuenta': payment_info['tipo_cuenta'],
+        'numero_cuenta': payment_info['numero_cuenta'],
+        'correo_destinatario': payment_info['correo_destinatario']
+    }
+    
+    # Definir asunto y plantilla
+    subject = f'Cita agendada para el {fecha_cita} - Pendiente de pago'
+    template_name = 'emails/cita_agendada_paciente.html'
+    
+    # Enviar el correo
+    return send_email(user.email, subject, template_name, context)
+
+def send_appointment_created_psychologist_email(appointment, is_first_appointment=None):
+    """
+    Envía correo al psicólogo cuando le agendan una nueva cita
+    
+    Args:
+        appointment: Instancia del modelo Appointment
+        is_first_appointment: Booleano indicando si es primera cita (opcional, se calcula si es None)
+    """
+    psychologist = appointment.psychologist
+    user_psy = psychologist.user
+    client = appointment.client
+    
+    # Determinar si es primera cita si no se especifica
+    if is_first_appointment is None:
+        # Verificar si hay citas previas entre este cliente y psicólogo
+        from appointments.models import Appointment as AppointmentModel
+        previous_appointments = AppointmentModel.objects.filter(
+            client=client,
+            psychologist=psychologist
+        ).exclude(pk=appointment.pk).exists()
+        
+        is_first_appointment = not previous_appointments
+    
+    # Formatear la fecha y horas para presentación
+    fecha_cita = appointment.date.strftime('%d/%m/%Y')
+    hora_inicio = appointment.start_time.strftime('%H:%M')
+    hora_fin = appointment.end_time.strftime('%H:%M')
+    
+    # Preparar el contexto para la plantilla
+    context = {
+        'nombre_psicologo': f"{user_psy.first_name} {user_psy.last_name}",
+        'nombre_paciente': f"{client.user.first_name} {client.user.last_name}",
+        'fecha_cita': fecha_cita,
+        'hora_inicio': hora_inicio,
+        'hora_fin': hora_fin,
+        'es_primera_cita': is_first_appointment
+    }
+    
+    # Definir asunto y plantilla
+    subject = f'Nueva cita agendada para el {fecha_cita}'
+    template_name = 'emails/cita_agendada_psicologo.html'
+    
+    # Enviar el correo
+    return send_email(user_psy.email, subject, template_name, context)
+
+def send_payment_verification_needed_email(appointment, frontend_url=None):
+    """
+    Envía correo al psicólogo cuando un paciente sube el comprobante de pago y está pendiente de verificación
+    
+    Args:
+        appointment: Instancia del modelo Appointment
+        frontend_url: URL base del frontend (opcional)
+    """
+    psychologist = appointment.psychologist
+    user_psy = psychologist.user
+    client = appointment.client
+    
+    # Generar URL del panel si se proporciona la URL del frontend
+    url_panel = f"{frontend_url}/psicologo/pagos-pendientes" if frontend_url else "#"
+    
+    # Formatear la fecha y horas para presentación
+    fecha_cita = appointment.date.strftime('%d/%m/%Y')
+    hora_inicio = appointment.start_time.strftime('%H:%M')
+    hora_fin = appointment.end_time.strftime('%H:%M')
+    
+    # Preparar el contexto para la plantilla
+    context = {
+        'nombre_psicologo': f"{user_psy.first_name} {user_psy.last_name}",
+        'nombre_paciente': f"{client.user.first_name} {client.user.last_name}",
+        'fecha_cita': fecha_cita,
+        'hora_inicio': hora_inicio,
+        'hora_fin': hora_fin,
+        'monto_pago': appointment.payment_amount,
+        'url_panel': url_panel
+    }
+    
+    # Definir asunto y plantilla
+    subject = f'Pago pendiente de verificación - Cita del {fecha_cita}'
+    template_name = 'emails/pago_pendiente_verificacion.html'
+    
+    # Enviar el correo
+    return send_email(user_psy.email, subject, template_name, context)

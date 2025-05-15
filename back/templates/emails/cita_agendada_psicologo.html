@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Nueva cita agendada</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h2 {
+      color: #4a86e8;
+    }
+    .section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }
+    .footer {
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      font-size: 14px;
+      color: #666;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #4a86e8;
+    }
+    .first-appointment {
+      background-color: #e8f5e9;
+      padding: 10px;
+      border-radius: 5px;
+      border-left: 4px solid #43a047;
+      margin-top: 10px;
+    }
+    .status-pending {
+      background-color: #fff8e1;
+      padding: 10px;
+      border-radius: 5px;
+      border-left: 4px solid #ff9800;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Nueva cita agendada</h2>
+  
+  <p>Hola {{ nombre_psicologo }},</p>
+  
+  <p>Tienes una nueva cita agendada en E-Mind.</p>
+  
+  <div class="section">
+    <h3>Detalles de la cita:</h3>
+    <p><strong>Fecha:</strong> {{ fecha_cita }}</p>
+    <p><strong>Hora:</strong> {{ hora_inicio }} - {{ hora_fin }}</p>
+    <p><strong>Paciente:</strong> {{ nombre_paciente }}</p>
+    {% if es_primera_cita %}
+    <div class="first-appointment">
+      <p><strong>¡Primera cita con este paciente!</strong></p>
+    </div>
+    {% else %}
+    <p><em>Este paciente ya ha tenido citas contigo anteriormente.</em></p>
+    {% endif %}
+    
+    <div class="status-pending">
+      <p><strong>Estado:</strong> Pendiente de pago</p>
+      <p>El paciente debe realizar el pago para confirmar la cita. Recibirás una notificación cuando suba el comprobante.</p>
+    </div>
+  </div>
+  
+  <p>Puedes ver y gestionar todas tus citas desde tu panel de psicólogo en la plataforma E-Mind.</p>
+  
+  <div class="footer">
+    <p>Saludos,<br>El equipo de E-Mind</p>
+  </div>
+</body>
+</html> 

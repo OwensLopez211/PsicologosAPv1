@@ -15,6 +15,12 @@ from authentication.permissions import IsClient, IsPsychologist, IsAdminUser
 from rest_framework import serializers
 import os
 from django.http import HttpResponse
+from backend.email_utils import (
+    send_appointment_created_client_email,
+    send_appointment_created_psychologist_email,
+    send_payment_verification_needed_email
+)
+from django.conf import settings
 
 class AppointmentViewSet(viewsets.ModelViewSet):
     """API endpoint para gestión de citas"""
@@ -104,6 +110,36 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 print(f"Error creating payment detail: {str(e)}")
                 # Don't fail the appointment creation if payment detail creation fails
+        
+        # Determinar si es primera cita
+        is_first_appointment = Appointment.objects.filter(
+            client=client,
+            psychologist=psychologist
+        ).exclude(pk=appointment.pk).exists() == False
+        
+        # Enviar correo al cliente con instrucciones de pago
+        try:
+            # Obtener la información de pago desde settings o configuración
+            payment_info = getattr(settings, 'PAYMENT_INFO', {
+                'nombre_destinatario': 'E-Mind SpA',
+                'rut_destinatario': '77.777.777-7',
+                'banco_destinatario': 'Banco Estado',
+                'tipo_cuenta': 'Cuenta Corriente',
+                'numero_cuenta': '12345678',
+                'correo_destinatario': 'pagos@emindapp.cl'
+            })
+            
+            send_appointment_created_client_email(appointment, payment_info)
+            print(f"✅ Correo de cita agendada enviado al cliente: {client.user.email}")
+        except Exception as e:
+            print(f"❌ Error al enviar correo al cliente: {str(e)}")
+        
+        # Enviar correo al psicólogo
+        try:
+            send_appointment_created_psychologist_email(appointment, is_first_appointment)
+            print(f"✅ Correo de cita agendada enviado al psicólogo: {psychologist.user.email}")
+        except Exception as e:
+            print(f"❌ Error al enviar correo al psicólogo: {str(e)}")
         
         return appointment
     
@@ -270,6 +306,16 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                     pass
             
             payment_detail.save()
+            
+            # Enviar correo al psicólogo para notificarle que debe verificar el pago
+            try:
+                # Obtener URL del frontend desde settings o configuración
+                frontend_url = getattr(settings, 'FRONTEND_URL', 'https://emindapp.cl')
+                
+                send_payment_verification_needed_email(appointment, frontend_url)
+                print(f"✅ Correo de verificación de pago enviado al psicólogo: {appointment.psychologist.user.email}")
+            except Exception as e:
+                print(f"❌ Error al enviar correo de verificación al psicólogo: {str(e)}")
             
             return Response({
                 "detail": "Comprobante de pago subido correctamente. Un administrador verificará el pago pronto."

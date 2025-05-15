@@ -205,3 +205,16 @@ LOGGING = {
         },
     },
 }
+
+# Configuración para emails de citas
+PAYMENT_INFO = {
+    'nombre_destinatario': 'E-Mind SpA',
+    'rut_destinatario': '77.777.777-7',  # Reemplazar con el RUT real
+    'banco_destinatario': 'Banco Estado',
+    'tipo_cuenta': 'Cuenta Corriente',
+    'numero_cuenta': '12345678',  # Reemplazar con número real
+    'correo_destinatario': 'pagos@emindapp.cl'  # Reemplazar con correo real
+}
+
+# URL base del frontend para los enlaces en emails
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://emindapp.cl")
