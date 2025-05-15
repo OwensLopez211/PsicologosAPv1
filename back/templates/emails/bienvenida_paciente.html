@@ -1,77 +1,237 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bienvenido a E-Mind</title>
   <style>
+    :root {
+      --primary-color: #4a78c4;
+      --secondary-color: #5c5c5c;
+      --accent-color: #e63946;
+      --light-bg: #f5f8fd;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
     body {
       font-family: Arial, sans-serif;
       line-height: 1.6;
       color: #333;
-      max-width: 600px;
+      max-width: 650px;
       margin: 0 auto;
-      padding: 20px;
-    }
-    h2 {
-      color: #4a86e8;
-    }
-    h3 {
-      color: #5c5c5c;
-    }
-    .section {
-      margin-bottom: 20px;
-      padding: 15px;
+      padding: 0;
       background-color: #f9f9f9;
-      border-radius: 5px;
     }
-    .button {
+    
+    .container {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+      margin: 20px;
+    }
+    
+    .header {
+      background-color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .logo {
+      max-width: 180px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    
+    .content {
+      padding: 20px 30px;
+    }
+    
+    h1, h2, h3 {
+      color: var(--primary-color);
+      margin-top: 0;
+    }
+    
+    .greeting {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: var(--secondary-color);
+    }
+    
+    .brand {
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    
+    .welcome-text {
+      margin-bottom: 25px;
+    }
+    
+    .feature-card {
+      background-color: var(--light-bg);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-3px);
+    }
+    
+    .feature-card h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+    
+    .feature-list {
+      padding-left: 0;
+    }
+    
+    .feature-list li {
+      list-style-type: none;
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 12px;
+    }
+    
+    .feature-list li:before {
+      content: "•";
+      color: var(--primary-color);
+      font-size: 24px;
+      position: absolute;
+      left: 0;
+      top: -5px;
+    }
+    
+    .cta-button {
       display: inline-block;
-      padding: 10px 20px;
-      background-color: #4a86e8;
+      background-color: var(--primary-color);
       color: white;
+      text-align: center;
+      padding: 12px 24px;
+      border-radius: var(--border-radius);
       text-decoration: none;
-      border-radius: 5px;
-      margin-top: 10px;
+      font-weight: bold;
+      margin-top: 15px;
+      transition: background-color 0.3s, transform 0.2s;
     }
+    
+    .cta-button:hover {
+      background-color: #3a68b4;
+      transform: translateY(-2px);
+    }
+    
+    .support-info {
+      background-color: var(--light-bg);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      margin-top: 30px;
+      text-align: center;
+    }
+    
+    .support-info a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    
+    .support-info a:hover {
+      text-decoration: underline;
+    }
+    
     .footer {
       margin-top: 30px;
-      padding-top: 15px;
-      border-top: 1px solid #eee;
+      padding: 20px 0;
+      text-align: center;
       font-size: 14px;
       color: #666;
+      border-top: 1px solid #eee;
+    }
+    
+    .social-media {
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    .social-media a {
+      display: inline-block;
+      margin: 0 10px;
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        margin: 10px;
+      }
+      
+      .content {
+        padding: 15px 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>¡Bienvenido a E-Mind, {{ nombre }}!</h2>
-  
-  <p>Gracias por registrarte en nuestra plataforma. En E-Mind nos dedicamos a facilitar el acceso a la atención psicológica de calidad, conectándote con profesionales calificados que pueden ayudarte en tu bienestar emocional y mental.</p>
-  
-  <div class="section">
-    <h3>🧠 Cómo empezar</h3>
-    <p>Ya puedes comenzar a usar la plataforma para:</p>
-    <ul>
-      <li>Buscar psicólogos según especialidad, experiencia o disponibilidad</li>
-      <li>Agendar sesiones en horarios que se adapten a tu rutina</li>
-      <li>Realizar sesiones online desde la comodidad de tu hogar</li>
-      <li>Gestionar tus pagos de manera segura</li>
-    </ul>
-    <a href="https://emindapp.cl/login" class="button">Ingresar a la plataforma</a>
-  </div>
-  
-  <div class="section">
-    <h3>👤 Tu perfil</h3>
-    <p>Te recomendamos completar tu perfil con toda tu información. Esto ayudará a los profesionales a brindarte una mejor atención.</p>
-  </div>
-  
-  <div class="section">
-    <h3>❓ ¿Necesitas ayuda?</h3>
-    <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos a <a href="mailto:soporte@emindapp.cl">soporte@emindapp.cl</a>.</p>
-  </div>
-  
-  <div class="footer">
-    <p>Nos alegra que formes parte de nuestra comunidad.<br>
-    El equipo de E-Mind</p>
+  <div class="container">
+    <div class="header">
+      <!-- Replace with your actual logo path -->
+      <img src="/api/placeholder/180/60" alt="E-Mind Logo" class="logo">
+      <h1>E-Mind</h1>
+    </div>
+    
+    <div class="content">
+      <div class="greeting">¡Bienvenido a E-Mind, {{ nombre }}!</div>
+      
+      <div class="welcome-text">
+        <p>Gracias por registrarte en nuestra plataforma. En <span class="brand">E-Mind</span> nos dedicamos a facilitar el acceso a la atención psicológica de calidad, conectándote con profesionales calificados que pueden ayudarte en tu bienestar emocional y mental.</p>
+      </div>
+      
+      <div class="feature-card">
+        <h3>🧠 Cómo empezar</h3>
+        <p>Ya puedes comenzar a usar la plataforma para:</p>
+        <ul class="feature-list">
+          <li>Buscar psicólogos según especialidad, experiencia o disponibilidad</li>
+          <li>Agendar sesiones en horarios que se adapten a tu rutina</li>
+          <li>Realizar sesiones online desde la comodidad de tu hogar</li>
+          <li>Gestionar tus pagos de manera segura</li>
+        </ul>
+        <a href="https://emindapp.cl/login" class="cta-button">Ingresar a la plataforma</a>
+      </div>
+      
+      <div class="feature-card">
+        <h3>👤 Tu perfil</h3>
+        <p>Te recomendamos completar tu perfil con toda tu información. Esto ayudará a los profesionales a conocerte mejor y brindarte una atención más personalizada desde la primera sesión.</p>
+        <a href="https://emindapp.cl/profile" class="cta-button">Completar mi perfil</a>
+      </div>
+      
+      <div class="feature-card">
+        <h3>🔍 Encuentra tu psicólogo ideal</h3>
+        <p>Nuestra plataforma te permite filtrar profesionales según tus necesidades específicas, horarios disponibles y especialidades. Toma el tiempo que necesites para encontrar el profesional que mejor se adapte a ti.</p>
+        <a href="https://emindapp.cl/search" class="cta-button">Buscar profesionales</a>
+      </div>
+      
+      <div class="support-info">
+        <h3>❓ ¿Necesitas ayuda?</h3>
+        <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en contactarnos a <a href="mailto:soporte@emindapp.cl">soporte@emindapp.cl</a></p>
+        <p>Nuestro equipo de soporte está disponible de lunes a viernes de 9:00 a 18:00 hrs.</p>
+      </div>
+      
+      <div class="social-media">
+        <p>Síguenos en Instagram para estar al día con consejos de bienestar mental, novedades y más:</p>
+        <a href="https://www.instagram.com/e_mindapp?igsh=MWRrYjRoeGs3NGh3Zg%3D%3D&utm_source=qr ">Instagram</a>
+
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>Nos alegra que formes parte de nuestra comunidad.<br>El equipo de E-Mind</p>
+      <p>© {% now "Y" %} E-Mind. Todos los derechos reservados.</p>
+    </div>
   </div>
 </body>
 </html>

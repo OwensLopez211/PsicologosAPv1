@@ -1,67 +1,220 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Actualización del estado de tu perfil</title>
   <style>
+    :root {
+      --primary-color: #4a78c4;
+      --secondary-color: #5c5c5c;
+      --accent-color: #e63946;
+      --success-color: #28a745;
+      --warning-color: #ffc107;
+      --danger-color: #dc3545;
+      --light-bg: #f5f8fd;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
     body {
       font-family: Arial, sans-serif;
       line-height: 1.6;
       color: #333;
-      max-width: 600px;
+      max-width: 650px;
       margin: 0 auto;
-      padding: 20px;
-    }
-    h2 {
-      color: #4a86e8;
-    }
-    .section {
-      margin-bottom: 20px;
-      padding: 15px;
+      padding: 0;
       background-color: #f9f9f9;
-      border-radius: 5px;
     }
+    
+    .container {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+      margin: 20px;
+    }
+    
+    .header {
+      background-color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .logo {
+      max-width: 180px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    
+    .content {
+      padding: 20px 30px;
+    }
+    
+    h1, h2, h3 {
+      color: var(--primary-color);
+      margin-top: 0;
+    }
+    
+    .greeting {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: var(--secondary-color);
+    }
+    
+    .brand {
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    
+    .status-section {
+      background-color: var(--light-bg);
+      border-radius: var(--border-radius);
+      padding: 25px;
+      margin-bottom: 25px;
+      border-left: 5px solid var(--primary-color);
+    }
+    
+    .status-verified {
+      border-left-color: var(--success-color);
+    }
+    
+    .status-rejected {
+      border-left-color: var(--danger-color);
+    }
+    
+    .status-verification {
+      border-left-color: var(--warning-color);
+    }
+    
+    .status-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      display: block;
+      text-align: center;
+    }
+    
+    .status-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: var(--secondary-color);
+    }
+    
     .important {
       font-weight: bold;
-      color: #e63946;
+      color: var(--accent-color);
     }
+    
+    .contact-info {
+      background-color: var(--light-bg);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      margin: 25px 0;
+      text-align: center;
+    }
+    
+    .contact-info a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    
+    .contact-info a:hover {
+      text-decoration: underline;
+    }
+    
     .footer {
       margin-top: 30px;
-      padding-top: 15px;
-      border-top: 1px solid #eee;
+      padding: 20px 0;
+      text-align: center;
       font-size: 14px;
       color: #666;
+      border-top: 1px solid #eee;
+    }
+    
+    .cta-button {
+      display: block;
+      background-color: var(--primary-color);
+      color: white;
+      text-align: center;
+      padding: 12px 24px;
+      border-radius: var(--border-radius);
+      text-decoration: none;
+      font-weight: bold;
+      margin: 30px auto;
+      max-width: 200px;
+      transition: background-color 0.3s;
+    }
+    
+    .cta-button:hover {
+      background-color: #3a68b4;
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        margin: 10px;
+      }
+      
+      .content {
+        padding: 15px 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>¡Hola {{ nombre }}!</h2>
-  
-  <div class="section">
-    {% if estado == 'VERIFIED' %}
-    <p>Nos complace informarte que <strong>tu perfil ha sido verificado</strong> en E-Mind.</p>
-    <p>Ya puedes empezar a ofrecer tus servicios como psicólogo en nuestra plataforma.</p>
-    <p>¡Bienvenido oficialmente a nuestra red de profesionales!</p>
+  <div class="container">
+    <div class="header">
+      <!-- Replace with your actual logo path -->
+      <img src="/api/placeholder/180/60" alt="E-Mind Logo" class="logo">
+      <h1>E-Mind</h1>
+    </div>
     
-    {% elif estado == 'REJECTED' %}
-    <p>Lamentamos informarte que <strong>tu perfil no ha sido aprobado</strong> en E-Mind.</p>
-    <p><span class="important">Motivo:</span> {{ motivo }}</p>
-    <p>Te recomendamos revisar los requisitos y documentación necesaria para realizar una nueva solicitud.</p>
+    <div class="content">
+      <div class="greeting">¡Hola {{ nombre }}!</div>
+      
+      <div class="status-section {% if estado == 'VERIFIED' %}status-verified{% elif estado == 'REJECTED' %}status-rejected{% elif estado == 'VERIFICATION_IN_PROGRESS' %}status-verification{% endif %}">
+        {% if estado == 'VERIFIED' %}
+          <div class="status-icon">✅</div>
+          <div class="status-title">Perfil Verificado</div>
+          <p>Nos complace informarte que <strong>tu perfil ha sido verificado exitosamente</strong> en E-Mind.</p>
+          <p>Ya puedes empezar a ofrecer tus servicios como psicólogo en nuestra plataforma y conectar con pacientes que están buscando profesionales como tú.</p>
+          <p>¡Bienvenido oficialmente a nuestra red de profesionales!</p>
+          <a href="#" class="cta-button">Iniciar Sesión</a>
+          
+        {% elif estado == 'REJECTED' %}
+          <div class="status-icon">❌</div>
+          <div class="status-title">Perfil No Aprobado</div>
+          <p>Lamentamos informarte que <strong>tu perfil no ha sido aprobado</strong> en esta ocasión.</p>
+          <p><span class="important">Motivo:</span> {{ motivo }}</p>
+          <p>Te recomendamos revisar cuidadosamente los requisitos y la documentación necesaria para realizar una nueva solicitud. Si necesitas asistencia específica, estamos aquí para ayudarte.</p>
+          <a href="#" class="cta-button">Revisar Requisitos</a>
+          
+        {% elif estado == 'VERIFICATION_IN_PROGRESS' %}
+          <div class="status-icon">⏳</div>
+          <div class="status-title">Verificación en Proceso</div>
+          <p>Tu perfil actualmente se encuentra <strong>en proceso de verificación</strong>.</p>
+          <p>Nuestro equipo está revisando tus documentos y credenciales profesionales con detenimiento. Este proceso puede tomar entre 24 y 48 horas hábiles.</p>
+          <p>Te notificaremos tan pronto como se complete esta revisión. Mientras tanto, puedes revisar y asegurarte de que toda tu información esté completa.</p>
+          <a href="#" class="cta-button">Ver mi Perfil</a>
+          
+        {% else %}
+          <div class="status-icon">🔄</div>
+          <div class="status-title">Cambio de Estado</div>
+          <p>Tu perfil ha cambiado al estado: <strong>{{ estado }}</strong></p>
+          <p>Si tienes alguna pregunta sobre este cambio, no dudes en contactarnos utilizando la información que aparece a continuación.</p>
+        {% endif %}
+      </div>
+      
+      <div class="contact-info">
+        <p>Si necesitas asistencia adicional, puedes comunicarte con nosotros respondiendo a este correo o escribiendo a <a href="mailto:soporte@emindapp.cl">soporte@emindapp.cl</a></p>
+      </div>
+    </div>
     
-    {% elif estado == 'VERIFICATION_IN_PROGRESS' %}
-    <p>Tu perfil actualmente se encuentra <strong>en proceso de verificación</strong>.</p>
-    <p>Nuestro equipo está revisando tus documentos y credenciales profesionales. Te notificaremos tan pronto como se complete este proceso.</p>
-    
-    {% else %}
-    <p>Tu perfil ha cambiado al estado: <strong>{{ estado }}</strong></p>
-    <p>Si tienes alguna pregunta sobre este cambio, no dudes en contactarnos.</p>
-    {% endif %}
-  </div>
-  
-  <p>Si necesitas asistencia, puedes comunicarte con nosotros respondiendo a este correo o a <a href="mailto:soporte@emindapp.cl">soporte@emindapp.cl</a>.</p>
-  
-  <div class="footer">
-    <p>Saludos cordiales,<br>El equipo de E-Mind</p>
+    <div class="footer">
+      <p>Saludos cordiales,<br>El equipo de E-Mind</p>
+      <p>© {% now "Y" %} E-Mind. Todos los derechos reservados.</p>
+    </div>
   </div>
 </body>
-</html> 
+</html>
