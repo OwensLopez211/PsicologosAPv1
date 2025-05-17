@@ -7,7 +7,7 @@ const Hero = () => {
   const navigate = useNavigate();
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // Precarga la imagen del héroe
+  // Precarga la imagen del héroe de manera simplificada
   useEffect(() => {
     const img = new Image();
     img.src = '/Psychologist-bro.svg';
@@ -48,24 +48,15 @@ const Hero = () => {
         <div className="relative order-1 md:order-2">
           <div className="absolute top-8 right-8 w-full h-full rounded-2xl bg-[#B4E4D3]/30 -z-10 transform rotate-3"></div>
           <div className="relative w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl">
-            {/* Imagen optimizada con formato WebP como alternativa cuando esté disponible */}
-            <picture>
-              <source srcSet="/Psychologist-bro.webp" type="image/webp" />
-              <img
-                src="/Psychologist-bro.svg"
-                alt="Sesión de terapia psicológica online"
-                className="w-full h-full object-cover"
-                loading="eager"
-                fetchPriority="high"
-                width="600"
-                height="500"
-                decoding="async"
-                style={{ 
-                  contentVisibility: 'auto',
-                  containIntrinsicSize: '600px 500px',
-                }}
-              />
-            </picture>
+            {/* Imagen del héroe simplificada para solucionar problemas de renderizado */}
+            <img
+              src="/Psychologist-bro.svg"
+              alt="Sesión de terapia psicológica online"
+              className="w-full h-full object-cover"
+              loading="eager"
+              width="600"
+              height="500"
+            />
             <div 
               className="absolute inset-0 bg-gradient-to-tr from-[#2A6877]/30 to-transparent"
               aria-hidden="true"
