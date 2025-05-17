@@ -1,8 +1,12 @@
 import os
 import requests
+import logging
 from django.template.loader import render_to_string
 from django.conf import settings
 from datetime import datetime
+
+# Configurar logger
+logger = logging.getLogger(__name__)
 
 # Configura las credenciales
 MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
@@ -21,9 +25,22 @@ def send_email(to_email, subject, template_name=None, context=None, template_con
         template_content (str, optional): Contenido HTML directo para el correo
         is_html_template (bool, optional): Indica si el template_content es HTML
     """
+    # Verificar que tengamos las credenciales necesarias
+    if not MAILGUN_API_KEY:
+        logger.error("❌ Error: MAILGUN_API_KEY no está configurada")
+        return False
+        
+    if not MAILGUN_DOMAIN:
+        logger.error("❌ Error: MAILGUN_DOMAIN no está configurada")
+        return False
+    
     # Renderiza el HTML usando la plantilla y el contexto o usa el contenido proporcionado
     if template_name and context:
-        html_content = render_to_string(template_name, context)
+        try:
+            html_content = render_to_string(template_name, context)
+        except Exception as e:
+            logger.error(f"❌ Error al renderizar la plantilla {template_name}: {str(e)}")
+            return False
     elif template_content and is_html_template:
         html_content = template_content
     elif template_content:
@@ -31,11 +48,16 @@ def send_email(to_email, subject, template_name=None, context=None, template_con
         # y lo envolvemos en un HTML simple
         html_content = f"<html><body>{template_content}</body></html>"
     else:
-        print("❌ Error: Debe proporcionar una plantilla y contexto, o el contenido directo")
+        logger.error("❌ Error: Debe proporcionar una plantilla y contexto, o el contenido directo")
         return False
     
     # URL de la API de Mailgun
     url = f"https://api.mailgun.net/v3/{MAILGUN_DOMAIN}/messages"
+    
+    # Validar el correo destinatario
+    if not to_email or '@' not in to_email:
+        logger.error(f"❌ Error: Dirección de correo destinatario inválida: {to_email}")
+        return False
     
     # Prepara los datos del mensaje
     data = {
@@ -46,30 +68,43 @@ def send_email(to_email, subject, template_name=None, context=None, template_con
     }
     
     # Imprimir lo que se va a enviar (para debug)
-    print(f"\n===== ENVIANDO CORREO REAL =====")
-    print(f"Para: {to_email}")
-    print(f"Asunto: {subject}")
-    print(f"Dominio Mailgun: {MAILGUN_DOMAIN}")
-    print(f"API Key presente: {'Sí' if MAILGUN_API_KEY else 'No'}")
-    print(f"===========================\n")
+    logger.debug(f"\n===== ENVIANDO CORREO REAL =====")
+    logger.debug(f"Para: {to_email}")
+    logger.debug(f"Asunto: {subject}")
+    logger.debug(f"Dominio Mailgun: {MAILGUN_DOMAIN}")
+    logger.debug(f"API Key presente: {'Sí' if MAILGUN_API_KEY else 'No'}")
+    logger.debug(f"===========================\n")
     
     # Envía el mensaje usando la API de Mailgun
     try:
         response = requests.post(
             url,
             auth=("api", MAILGUN_API_KEY),
-            data=data
+            data=data,
+            timeout=10  # Añadir timeout para evitar que se quede esperando indefinidamente
         )
         
         # Verifica la respuesta
         if response.status_code == 200:
-            print(f"✅ Correo enviado correctamente a {to_email} vía Mailgun API")
+            logger.info(f"✅ Correo enviado correctamente a {to_email} vía Mailgun API")
             return True
         else:
-            print(f"❌ Fallo al enviar correo a {to_email}: {response.status_code} {response.text}")
+            logger.error(f"❌ Fallo al enviar correo a {to_email}: Código {response.status_code} - {response.text}")
+            # Intentar decodificar el mensaje de error para más información
+            try:
+                error_data = response.json()
+                logger.error(f"Detalles del error: {error_data}")
+            except:
+                pass
             return False
+    except requests.exceptions.Timeout:
+        logger.error(f"❌ Timeout al enviar correo a {to_email}: La petición a Mailgun tardó demasiado")
+        return False
+    except requests.exceptions.ConnectionError:
+        logger.error(f"❌ Error de conexión al enviar correo a {to_email}: No se pudo conectar con Mailgun")
+        return False
     except Exception as e:
-        print(f"❌ Error al enviar correo a {to_email}: {str(e)}")
+        logger.error(f"❌ Error al enviar correo a {to_email}: {str(e)}")
         return False
 
 def send_welcome_email(user):

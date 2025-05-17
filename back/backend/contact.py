@@ -8,6 +8,8 @@ from .email_utils import send_email
 import os
 import re
 import logging
+from django.conf import settings
+from datetime import datetime
 
 # Configurar logger
 logger = logging.getLogger(__name__)
@@ -73,11 +75,17 @@ def contact_form(request):
             'correo': correo,
             'mensaje': mensaje,
             'ip_address': request.META.get('REMOTE_ADDR', 'Desconocida'),
-            'user_agent': request.META.get('HTTP_USER_AGENT', 'Desconocido')
+            'user_agent': request.META.get('HTTP_USER_AGENT', 'Desconocido'),
+            'date_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
         
-        # Enviar correo al administrador
+        # Enviar correo al administrador - usar directamente el correo contacto@emindapp.cl si no hay variable de entorno
         admin_email = os.getenv("ADMIN_EMAIL", "contacto@emindapp.cl")
+        # Verificar correo de administrador
+        if not admin_email or not re.match(email_regex, admin_email):
+            logger.warning(f"Correo de administrador inválido o no configurado: {admin_email}, usando contacto@emindapp.cl")
+            admin_email = "contacto@emindapp.cl"
+        
         subject = f"Nuevo mensaje de contacto de {nombre}"
         
         # Utilizar la plantilla HTML para el correo
@@ -115,6 +123,11 @@ def contact_form(request):
         </body>
         </html>
         """
+        
+        # Imprimir información de depuración
+        logger.debug(f"Intentando enviar correo a administrador: {admin_email}")
+        logger.debug(f"Mailgun Domain: {settings.MAILGUN_DOMAIN}")
+        logger.debug(f"Mailgun API Key presente: {'Sí' if settings.MAILGUN_API_KEY else 'No'}")
         
         # Enviar el correo utilizando la función existente en email_utils.py
         admin_email_sent = send_email(
@@ -163,12 +176,14 @@ def contact_form(request):
         
         # Enviar correo de confirmación (no es crítico si falla)
         try:
-            send_email(
+            sender_email_sent = send_email(
                 to_email=correo,
                 subject=confirmation_subject,
                 template_content=confirmation_message,
                 is_html_template=True
             )
+            if not sender_email_sent:
+                logger.warning(f"No se pudo enviar el correo de confirmación a {correo}")
         except Exception as e:
             logger.warning(f"No se pudo enviar el correo de confirmación a {correo}: {str(e)}")
         
