@@ -153,7 +153,7 @@ const RegistrationForm = ({
           <div className="absolute -inset-1 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3] rounded-lg blur opacity-25 group-hover:opacity-60 transition duration-700"></div>
           <img
             className="relative mx-auto h-24 w-24 rounded-xl shadow-lg transform group-hover:scale-105 transition duration-300"
-            src="/logo.jpeg"
+            src="logo2.webp"
             alt="E-mind"
           />
         </Link>
