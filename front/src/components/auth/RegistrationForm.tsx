@@ -34,7 +34,7 @@ const RegistrationForm = ({
     email: '',
     password: '',
     confirmPassword: '',
-    phoneNumber: '',
+    phoneNumber: '+56 9 ',
     terms: false
   });
   const [showTerms, setShowTerms] = useState(false);
@@ -45,7 +45,13 @@ const RegistrationForm = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     
-    // Actualizar los datos del formulario
+    // Si es el campo de teléfono, aplicar reglas especiales
+    if (name === 'phoneNumber') {
+      handlePhoneChange(value);
+      return;
+    }
+    
+    // Para otros campos, mantener el comportamiento normal
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value
@@ -55,6 +61,44 @@ const RegistrationForm = ({
     if (name === 'password') {
       evaluatePasswordStrength(value);
     }
+  };
+
+  // Nueva función específica para manejar cambios en el teléfono
+  const handlePhoneChange = (value: string) => {
+    const prefix = '+56 9 ';
+    
+    // Si el valor es más corto que el prefijo, mantener solo el prefijo
+    if (value.length < prefix.length) {
+      setFormData({
+        ...formData,
+        phoneNumber: prefix
+      });
+      return;
+    }
+    
+    // Obtener solo los dígitos después del prefijo
+    const digitsAfterPrefix = value.substring(prefix.length).replace(/\D/g, '');
+    
+    // Limitar a 8 dígitos
+    const limitedDigits = digitsAfterPrefix.substring(0, 8);
+    
+    // Formatear con espacio después de los primeros 4 dígitos
+    let formattedValue = prefix;
+    
+    if (limitedDigits.length > 0) {
+      // Primeros 4 dígitos
+      formattedValue += limitedDigits.substring(0, Math.min(4, limitedDigits.length));
+      
+      // Espacio y siguientes dígitos después de los primeros 4
+      if (limitedDigits.length > 4) {
+        formattedValue += ' ' + limitedDigits.substring(4);
+      }
+    }
+    
+    setFormData({
+      ...formData,
+      phoneNumber: formattedValue
+    });
   };
 
   const evaluatePasswordStrength = (password: string) => {
@@ -133,6 +177,58 @@ const RegistrationForm = ({
       terms: true
     });
     setShowTerms(false);
+  };
+
+  // Manejar el keydown en el campo de teléfono
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const prefix = '+56 9 ';
+    const input = e.target as HTMLInputElement;
+    const cursorPos = input.selectionStart || 0;
+    
+    // No permitir modificar el prefijo
+    if (cursorPos < prefix.length && e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Tab') {
+      e.preventDefault();
+      return;
+    }
+    
+    // Para tecla de borrado, prevenir borrar el prefijo
+    if (e.key === 'Backspace') {
+      if (cursorPos <= prefix.length) {
+        e.preventDefault();
+        return;
+      }
+    }
+    
+    // Permitir teclas de navegación y control
+    if (['ArrowLeft', 'ArrowRight', 'Tab', 'Delete', 'Backspace'].includes(e.key)) {
+      return;
+    }
+    
+    // Permitir solo números
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+    
+    // Limitar a 8 dígitos después del prefijo
+    const currentDigits = formData.phoneNumber.replace(/\D/g, '').substring(2); // Quitamos el '56'
+    if (currentDigits.length >= 9) {
+      e.preventDefault();
+      return;
+    }
+  };
+
+  // Nueva función para manejar el clic en el campo de teléfono
+  const handlePhoneClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const prefix = '+56 9 ';
+    
+    // Si el cursor está antes del final del prefijo, moverlo después del prefijo
+    if (input.selectionStart && input.selectionStart < prefix.length) {
+      setTimeout(() => {
+        input.setSelectionRange(prefix.length, prefix.length);
+      }, 0);
+    }
   };
 
   return (
@@ -229,14 +325,23 @@ const RegistrationForm = ({
                     placeholder="tu@correo.com"
                   />
                   
-                  <FormField
-                    id="phoneNumber"
-                    label="Número de teléfono"
-                    type="tel"
-                    value={formData.phoneNumber}
-                    onChange={handleChange}
-                    placeholder="+56 9 1234 5678"
-                  />
+                  <div className="relative">
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                      Número de teléfono
+                    </label>
+                    <input
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={handleChange}
+                      onKeyDown={handlePhoneKeyDown}
+                      onClick={handlePhoneClick}
+                      className="appearance-none block w-full px-3 py-2.5 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent text-sm"
+                      placeholder="+56 9 XXXX XXXX"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Formato: +56 9 XXXX XXXX</p>
+                  </div>
 
                   <motion.div
                     whileHover={{ scale: 1.02 }}
