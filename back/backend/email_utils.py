@@ -9,18 +9,30 @@ MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
 MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@emindapp.cl")
 
-def send_email(to_email, subject, template_name, context):
+def send_email(to_email, subject, template_name=None, context=None, template_content=None, is_html_template=False):
     """
     Envía un correo electrónico usando la API de Mailgun
     
     Args:
         to_email (str): Email del destinatario
         subject (str): Asunto del correo
-        template_name (str): Nombre de la plantilla HTML
-        context (dict): Contexto para renderizar la plantilla
+        template_name (str, optional): Nombre de la plantilla HTML
+        context (dict, optional): Contexto para renderizar la plantilla
+        template_content (str, optional): Contenido HTML directo para el correo
+        is_html_template (bool, optional): Indica si el template_content es HTML
     """
-    # Renderiza el HTML usando la plantilla y el contexto
-    html_content = render_to_string(template_name, context)
+    # Renderiza el HTML usando la plantilla y el contexto o usa el contenido proporcionado
+    if template_name and context:
+        html_content = render_to_string(template_name, context)
+    elif template_content and is_html_template:
+        html_content = template_content
+    elif template_content:
+        # Si hay contenido pero no es HTML, asumimos que es texto plano
+        # y lo envolvemos en un HTML simple
+        html_content = f"<html><body>{template_content}</body></html>"
+    else:
+        print("❌ Error: Debe proporcionar una plantilla y contexto, o el contenido directo")
+        return False
     
     # URL de la API de Mailgun
     url = f"https://api.mailgun.net/v3/{MAILGUN_DOMAIN}/messages"

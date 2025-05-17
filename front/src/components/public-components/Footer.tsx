@@ -165,8 +165,8 @@ const Footer = () => {
                   </div>
                   <div>
                     <span className="block text-xs text-gray-300 mb-1">Email</span>
-                    <a href="mailto:contacto@bienestar.cl" className="hover:text-[#B4E4D3] transition-colors">
-                      contacto@bienestar.cl
+                    <a href="mailto:contacto@emindapp.cl" className="hover:text-[#B4E4D3] transition-colors">
+                      contacto@emindapp.cl
                     </a>
                   </div>
                 </li>
@@ -177,9 +177,9 @@ const Footer = () => {
                     </svg>
                   </div>
                   <div>
-                    <span className="block text-xs text-gray-300 mb-1">Teléfono</span>
-                    <a href="tel:+56912345678" className="hover:text-[#B4E4D3] transition-colors">
-                      +56 9 1234 5678
+                    <span className="block text-xs text-gray-300 mb-1">WhatsApp</span>
+                    <a href="https://wa.me/56944100640" target="_blank" rel="noopener noreferrer" className="hover:text-[#B4E4D3] transition-colors">
+                      +56 9 4410 0640
                     </a>
                   </div>
                 </li>

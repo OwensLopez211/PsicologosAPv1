@@ -25,7 +25,7 @@ const HeaderPage = ({
       />
       
       {/* Contenido principal */}
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 md:py-24 lg:py-32 text-center">
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8  sm:py-16 md:py-24 lg:py-32 text-center">
         <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-bold text-white mb-3 sm:mb-4 md:mb-6 tracking-tight leading-tight">
           <span className="inline-block relative">
             {title}

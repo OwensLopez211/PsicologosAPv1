@@ -16,7 +16,7 @@
     
     body {
       font-family: Arial, sans-serif;
-      line-height: 1.6;
+      line-height: 1.5;
       color: #333;
       max-width: 650px;
       margin: 0 auto;
@@ -29,12 +29,12 @@
       border-radius: var(--border-radius);
       box-shadow: var(--box-shadow);
       overflow: hidden;
-      margin: 20px;
+      margin: 10px;
     }
     
     .header {
       background-color: white;
-      padding: 20px;
+      padding: 15px;
       text-align: center;
       border-bottom: 1px solid #eee;
     }
@@ -42,21 +42,22 @@
     .logo {
       max-width: 180px;
       height: auto;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
     
     .content {
-      padding: 20px 30px;
+      padding: 15px 20px;
     }
     
     h1, h2, h3 {
       color: var(--primary-color);
       margin-top: 0;
+      margin-bottom: 12px;
     }
     
     .greeting {
       font-size: 1.5rem;
-      margin-bottom: 20px;
+      margin-bottom: 12px;
       color: var(--secondary-color);
     }
     
@@ -66,14 +67,19 @@
     }
     
     .welcome-text {
-      margin-bottom: 25px;
+      margin-bottom: 15px;
+    }
+    
+    p {
+      margin-top: 0;
+      margin-bottom: 10px;
     }
     
     .feature-card {
       background-color: var(--light-bg);
       border-radius: var(--border-radius);
-      padding: 20px;
-      margin-bottom: 20px;
+      padding: 15px;
+      margin-bottom: 15px;
       transition: transform 0.3s ease;
     }
     
@@ -86,18 +92,20 @@
       align-items: center;
       gap: 8px;
       margin-top: 0;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
     
     .feature-list {
       padding-left: 0;
+      margin-top: 8px;
+      margin-bottom: 10px;
     }
     
     .feature-list li {
       list-style-type: none;
       position: relative;
       padding-left: 28px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
     
     .feature-list li:before {
@@ -114,11 +122,11 @@
       background-color: var(--primary-color);
       color: white;
       text-align: center;
-      padding: 12px 24px;
+      padding: 10px 20px;
       border-radius: var(--border-radius);
       text-decoration: none;
       font-weight: bold;
-      margin-top: 15px;
+      margin-top: 10px;
       transition: background-color 0.3s, transform 0.2s;
     }
     
@@ -130,8 +138,8 @@
     .support-info {
       background-color: var(--light-bg);
       border-radius: var(--border-radius);
-      padding: 20px;
-      margin-top: 30px;
+      padding: 15px;
+      margin-top: 15px;
       text-align: center;
     }
     
@@ -145,8 +153,8 @@
     }
     
     .footer {
-      margin-top: 30px;
-      padding: 20px 0;
+      margin-top: 15px;
+      padding: 15px 0;
       text-align: center;
       font-size: 14px;
       color: #666;
@@ -154,7 +162,7 @@
     }
     
     .social-media {
-      margin: 15px 0;
+      margin: 10px 0;
       text-align: center;
     }
     
@@ -167,11 +175,11 @@
     
     @media (max-width: 600px) {
       .container {
-        margin: 10px;
+        margin: 5px;
       }
       
       .content {
-        padding: 15px 20px;
+        padding: 10px 15px;
       }
     }
   </style>
@@ -179,14 +187,12 @@
 <body>
   <div class="container">
     <div class="header">
-      <!-- Replace with your actual logo path -->
-      <img src="/api/placeholder/180/60" alt="E-Mind Logo" class="logo">
       <h1>E-Mind</h1>
     </div>
     
     <div class="content">
       <div class="greeting">¡Bienvenido a E-Mind, {{ nombre }}!</div>
-      
+    
       <div class="welcome-text">
         <p>Gracias por registrarte en nuestra plataforma. En <span class="brand">E-Mind</span> nos dedicamos a facilitar el acceso a la atención psicológica de calidad, conectándote con profesionales calificados que pueden ayudarte en tu bienestar emocional y mental.</p>
       </div>
@@ -202,7 +208,6 @@
         </ul>
         <a href="https://emindapp.cl/login" class="cta-button">Ingresar a la plataforma</a>
       </div>
-      
       <div class="feature-card">
         <h3>👤 Tu perfil</h3>
         <p>Te recomendamos completar tu perfil con toda tu información. Esto ayudará a los profesionales a conocerte mejor y brindarte una atención más personalizada desde la primera sesión.</p>
@@ -224,7 +229,6 @@
       <div class="social-media">
         <p>Síguenos en Instagram para estar al día con consejos de bienestar mental, novedades y más:</p>
         <a href="https://www.instagram.com/e_mindapp?igsh=MWRrYjRoeGs3NGh3Zg%3D%3D&utm_source=qr ">Instagram</a>
-
       </div>
     </div>
     
