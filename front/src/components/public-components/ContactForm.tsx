@@ -57,7 +57,7 @@ const ContactForm = () => {
     
     try {
       // Usar la URL configurada
-      const response = await fetch(`${API_URL}/api/contacto/`, {
+      const response = await fetch(`${API_URL}/contacto/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
