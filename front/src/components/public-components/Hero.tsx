@@ -1,9 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import { useEffect, useState } from 'react';
 
 const Hero = () => {
   const navigate = useNavigate();
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Precarga la imagen del héroe
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/Psychologist-bro.svg';
+    img.onload = () => setImageLoaded(true);
+  }, []);
 
   const handleSpecialistsClick = () => {
     navigate('/especialistas');
@@ -35,66 +44,80 @@ const Hero = () => {
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#2A6877] opacity-5 rounded-full transform -translate-x-1/3 translate-y-1/4"></div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 items-center relative z-10">
-        {/* Imagen primero para que sea el LCP */}
+        {/* Contenido principal - Imagen del héroe optimizada para LCP */}
         <div className="relative order-1 md:order-2">
           <div className="absolute top-8 right-8 w-full h-full rounded-2xl bg-[#B4E4D3]/30 -z-10 transform rotate-3"></div>
           <div className="relative w-full h-[500px] rounded-2xl overflow-hidden shadow-2xl">
-            <img
-              src="/Psychologist-bro.svg"
-              alt="Sesión de terapia psicológica online"
-              className="w-full h-full object-cover"
-              loading="eager"
-              width="600"
-              height="500"
-            />
+            {/* Imagen optimizada con formato WebP como alternativa cuando esté disponible */}
+            <picture>
+              <source srcSet="/Psychologist-bro.webp" type="image/webp" />
+              <img
+                src="/Psychologist-bro.svg"
+                alt="Sesión de terapia psicológica online"
+                className="w-full h-full object-cover"
+                loading="eager"
+                fetchPriority="high"
+                width="600"
+                height="500"
+                decoding="async"
+                style={{ 
+                  contentVisibility: 'auto',
+                  containIntrinsicSize: '600px 500px',
+                }}
+              />
+            </picture>
             <div 
               className="absolute inset-0 bg-gradient-to-tr from-[#2A6877]/30 to-transparent"
               aria-hidden="true"
             />
           </div>
           
-          {/* Floating elements */}
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -top-6 -right-6 bg-white p-4 rounded-lg shadow-lg border-l-4 border-[#2A6877]"
-            role="presentation"
-          >
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-[#2A6877] mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-              </svg>
-              <span className="text-[#2A6877] font-bold">100% Online</span>
-            </div>
-          </motion.div>
-          
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute -bottom-6 -left-6 bg-white p-4 rounded-lg shadow-lg border-l-4 border-[#2A6877]"
-            role="presentation"
-          >
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-[#2A6877] mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-[#2A6877] font-bold">Profesionales Certificados</span>
-            </div>
-          </motion.div>
-          
-          {/* Trust badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.8 }}
-            className="absolute top-1/2 left-0 transform -translate-x-1/3 -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hidden lg:block"
-          >
-            <div className="w-16 h-16 rounded-full bg-[#B4E4D3]/20 flex items-center justify-center">
-              <svg className="w-8 h-8 text-[#2A6877]" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
-              </svg>
-            </div>
-          </motion.div>
+          {/* Floating elements - lazy loaded ya que no son parte del LCP */}
+          {imageLoaded && (
+            <>
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-6 -right-6 bg-white p-4 rounded-lg shadow-lg border-l-4 border-[#2A6877]"
+                role="presentation"
+              >
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-[#2A6877] mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-[#2A6877] font-bold">100% Online</span>
+                </div>
+              </motion.div>
+              
+              <motion.div
+                animate={{ y: [0, 10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="absolute -bottom-6 -left-6 bg-white p-4 rounded-lg shadow-lg border-l-4 border-[#2A6877]"
+                role="presentation"
+              >
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-[#2A6877] mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-[#2A6877] font-bold">Profesionales Certificados</span>
+                </div>
+              </motion.div>
+              
+              {/* Trust badge */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8 }}
+                className="absolute top-1/2 left-0 transform -translate-x-1/3 -translate-y-1/2 bg-white rounded-full p-3 shadow-lg hidden lg:block"
+              >
+                <div className="w-16 h-16 rounded-full bg-[#B4E4D3]/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-[#2A6877]" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                  </svg>
+                </div>
+              </motion.div>
+            </>
+          )}
         </div>
 
         {/* Texto Hero */}
