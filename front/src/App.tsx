@@ -25,6 +25,8 @@ import ToastProvider from './components/toast/ToastProvider';
 import FAQPage from './pages/public-pages/FaqPage';
 import UnifiedPatientsPage from './pages/dashboard/UnifiedPatientsPage';
 import { useEffect } from 'react';
+import RecuperarPasswordPage from './pages/public-pages/RecuperarPasswordPage';
+import EstablecerPasswordPage from './pages/public-pages/EstablecerPasswordPage';
 
 // Componente para inicializar el token en localStorage
 function TokenInitializer() {
@@ -68,6 +70,16 @@ function App() {
               <Route path="/contacto" element={<ContactPage />} />
               <Route path="/terminos-y-condiciones" element={<TermsPage />} />
               <Route path="/preguntas-frecuentes" element={<FAQPage />} />
+              <Route path="/recuperar-password" element={
+                <PublicRoute>
+                  <RecuperarPasswordPage />
+                </PublicRoute>
+              } />
+              <Route path="/reset-password/:token" element={
+                <PublicRoute>
+                  <EstablecerPasswordPage />
+                </PublicRoute>
+              } />
             </Route>
 
             {/* Client Dashboard routes */}

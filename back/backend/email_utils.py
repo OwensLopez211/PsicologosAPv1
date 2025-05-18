@@ -173,7 +173,7 @@ def send_password_reset_email(user, token, base_url):
         base_url: URL base para construir el enlace de restablecimiento
     """
     # Preparar el enlace de restablecimiento
-    reset_url = f"{base_url}/auth/reset-password/?token={token}&email={user.email}"
+    reset_url = f"{base_url}/reset-password/{token}"
     
     # Preparar el contexto para la plantilla
     context = {

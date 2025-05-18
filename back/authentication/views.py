@@ -301,3 +301,39 @@ class PasswordResetConfirmView(APIView):
                 {"detail": f"Error al procesar la solicitud: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class VerifyResetTokenView(APIView):
+    """
+    Vista para verificar si un token de restablecimiento de contraseña es válido.
+    No requiere autenticación.
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        token = request.data.get('token')
+        
+        if not token:
+            return Response(
+                {"detail": "Se requiere un token", "valid": False},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Verificar si existe un usuario con este token
+            user = User.objects.filter(reset_password_token=token).first()
+            
+            if user:
+                return Response(
+                    {"detail": "Token válido", "valid": True, "email": user.email},
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {"detail": "Token inválido o expirado", "valid": False},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Exception as e:
+            return Response(
+                {"detail": f"Error al verificar token: {str(e)}", "valid": False},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
