@@ -22,10 +22,10 @@ const VisionSection = () => {
   };
 
   return (
-    <section className="py-24 bg-gradient-to-b from-[#f8fdfb] to-white relative overflow-hidden">
+    <section className="py-16 bg-gradient-to-b from-[#f8fdfb] to-white relative overflow-hidden">
       {/* Decorative Elements */}
-      <div className="absolute top-1/3 left-0 w-72 h-72 bg-[#0066FF] opacity-5 rounded-full transform -translate-x-1/2"></div>
-      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-teal-500 opacity-5 rounded-full transform translate-x-1/2"></div>
+      <div className="absolute top-1/3 left-0 w-72 h-72 bg-[#2A6877] opacity-5 rounded-full transform -translate-x-1/2"></div>
+      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-[#B4E4D3] opacity-10 rounded-full transform translate-x-1/2"></div>
       
       <div className="container mx-auto px-6 relative z-10">
         <motion.div 
@@ -37,18 +37,18 @@ const VisionSection = () => {
         >
           {/* Header with animated underline */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end mb-12 relative">
-            <h2 className="text-4xl font-bold text-gray-800 relative">
+            <h2 className="text-3xl font-bold text-[#2A6877] relative">
               Hacia Dónde Vamos
               <motion.div 
-                className="hidden sm:block absolute -right-4 bottom-0 h-1 bg-[#0066FF]" 
+                className="hidden sm:block absolute -right-4 bottom-0 h-1 bg-[#2A6877]" 
                 initial={{ width: 0 }}
                 whileInView={{ width: '30%' }}
                 transition={{ duration: 0.8, delay: 0.5 }}
                 viewport={{ once: true }}
               ></motion.div>
             </h2>
-            <div className="w-16 h-16 rounded-full bg-[#0066FF] bg-opacity-10 flex items-center justify-center mt-4 sm:mt-0 sm:ml-5 shadow-inner">
-              <svg className="w-8 h-8 text-[#0066FF]" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-14 h-14 rounded-full bg-[#2A6877] bg-opacity-10 flex items-center justify-center mt-4 sm:mt-0 sm:ml-5 shadow-inner">
+              <svg className="w-7 h-7 text-[#2A6877]" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
               </svg>
             </div>
@@ -60,15 +60,15 @@ const VisionSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
-            className="bg-white rounded-2xl shadow-xl overflow-hidden mb-16 relative"
+            className="bg-white rounded-2xl shadow-lg overflow-hidden mb-16 relative"
           >
             {/* Border accent */}
-            <div className="absolute top-0 right-0 bottom-0 w-4 bg-gradient-to-b from-[#0066FF] to-blue-400"></div>
+            <div className="absolute top-0 right-0 bottom-0 w-4 bg-gradient-to-b from-[#2A6877] to-[#B4E4D3]"></div>
             
             {/* Content with decorative elements */}
             <div className="p-8 sm:p-10 relative">
               <div className="absolute right-8 top-8 opacity-5">
-                <svg className="w-32 h-32 text-[#0066FF]" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-32 h-32 text-[#2A6877]" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                   <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                 </svg>
