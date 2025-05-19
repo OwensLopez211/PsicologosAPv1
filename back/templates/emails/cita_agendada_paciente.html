@@ -42,6 +42,20 @@
       font-weight: bold;
       color: #4a86e8;
     }
+    .payment-info {
+      background-color: #f1f1f1;
+      padding: 12px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    .payment-info ul {
+      margin-top: 8px;
+      margin-bottom: 8px;
+      padding-left: 20px;
+    }
+    .payment-info li {
+      margin-bottom: 5px;
+    }
     .steps {
       counter-reset: step-counter;
       margin: 10px 0;
@@ -89,7 +103,22 @@
     <h3>¡Tu cita está casi lista!</h3>
     <p>Para confirmar tu cita, es necesario realizar el pago correspondiente.</p>
     
-    <h4>Para completar tu reserva:</h4>
+    <div class="payment-info">
+      <h4>Instrucciones de pago:</h4>
+      <p>Por favor realiza una transferencia bancaria con los datos correspondientes en el detalle de tu cita</p>
+      <ul>
+        <li><strong>Nombre:</strong> {{ nombre_destinatario }}</li>
+        <li><strong>RUT:</strong> {{ rut_destinatario }}</li>
+        <li><strong>Banco:</strong> {{ banco_destinatario }}</li>
+        <li><strong>Tipo de cuenta:</strong> {{ tipo_cuenta }}</li>
+        <li><strong>Número de cuenta:</strong> {{ numero_cuenta }}</li>
+        <li><strong>Monto:</strong> ${{ monto_pago }}</li>
+        <li><strong>Correo:</strong> {{ correo_destinatario }}</li>
+        <li><strong>Asunto:</strong> Cita {{ nombre_paciente }} {{ fecha_cita }}</li>
+      </ul>
+    </div>
+    
+    <h4>Después de realizar el pago:</h4>
     <ol class="steps">
       <li>Ingresa a tu cuenta en E-Mind</li>
       <li>Ve a "Mis citas" en el menú</li>

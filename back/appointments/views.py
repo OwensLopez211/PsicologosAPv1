@@ -119,17 +119,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         
         # Enviar correo al cliente con instrucciones de pago
         try:
-            # Obtener la información de pago desde settings o configuración
-            payment_info = getattr(settings, 'PAYMENT_INFO', {
-                'nombre_destinatario': 'E-Mind SpA',
-                'rut_destinatario': '77.777.777-7',
-                'banco_destinatario': 'Banco Estado',
-                'tipo_cuenta': 'Cuenta Corriente',
-                'numero_cuenta': '12345678',
-                'correo_destinatario': 'pagos@emindapp.cl'
-            })
-            
-            send_appointment_created_client_email(appointment, payment_info)
+            send_appointment_created_client_email(appointment)
             print(f"✅ Correo de cita agendada enviado al cliente: {client.user.email}")
         except Exception as e:
             print(f"❌ Error al enviar correo al cliente: {str(e)}")

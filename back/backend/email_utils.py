@@ -4,6 +4,7 @@ import logging
 from django.template.loader import render_to_string
 from django.conf import settings
 from datetime import datetime
+from appointments.models import Appointment
 
 # Configurar logger
 logger = logging.getLogger(__name__)
@@ -201,15 +202,33 @@ def send_appointment_created_client_email(appointment, payment_info=None):
     user = client.user
     psychologist = appointment.psychologist
     
-    # Configurar información de pago por defecto si no se proporciona
-    if not payment_info:
+    # Determinar si es primera cita
+    is_first_appointment = Appointment.objects.filter(
+        client=client,
+        psychologist=psychologist
+    ).exclude(pk=appointment.pk).exists() == False
+    
+    # Configurar información de pago según si es primera cita o no
+    if is_first_appointment:
+        # Si es primera cita, usar datos del administrador
+        if not payment_info:
+            payment_info = {
+                'nombre_destinatario': 'E-Mind SpA',
+                'rut_destinatario': '77.777.777-7',
+                'banco_destinatario': 'Banco Estado',
+                'tipo_cuenta': 'Cuenta Corriente',
+                'numero_cuenta': '12345678',
+                'correo_destinatario': 'pagos@emindapp.cl'
+            }
+    else:
+        # Si no es primera cita, usar datos del psicólogo
         payment_info = {
-            'nombre_destinatario': 'E-Mind SpA',
-            'rut_destinatario': '77.777.777-7',
-            'banco_destinatario': 'Banco Estado',
-            'tipo_cuenta': 'Cuenta Corriente',
-            'numero_cuenta': '12345678',
-            'correo_destinatario': 'pagos@emindapp.cl'
+            'nombre_destinatario': psychologist.bank_account_owner,
+            'rut_destinatario': psychologist.bank_account_owner_rut,
+            'banco_destinatario': psychologist.bank_name,
+            'tipo_cuenta': psychologist.bank_account_type,
+            'numero_cuenta': psychologist.bank_account_number,
+            'correo_destinatario': psychologist.bank_account_owner_email
         }
     
     # Formatear la fecha y horas para presentación

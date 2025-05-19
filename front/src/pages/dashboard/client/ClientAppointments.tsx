@@ -10,8 +10,7 @@ import {
   ExclamationCircleIcon,
   ArrowPathIcon,
   DocumentTextIcon,
-  CreditCardIcon,
-  BuildingLibraryIcon
+  CreditCardIcon
 } from '@heroicons/react/24/outline';
 
 // Define appointment status types to match backend
@@ -30,8 +29,6 @@ interface Appointment {
   psychologist_notes?: string;
   payment_proof?: string;
   meeting_link?: string;
-  psychologist_id?: number;
-  payment_amount?: number;
 }
 
 const ClientAppointments = () => {
@@ -46,17 +43,6 @@ const ClientAppointments = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [isLoadingBankInfo, setIsLoadingBankInfo] = useState(false);
-  const [isFirstAppointment, setIsFirstAppointment] = useState(true);
-  const [bankInfo, setBankInfo] = useState({
-    bankName: '',
-    accountNumber: '',
-    accountType: '',
-    accountOwner: '',
-    ownerRut: '',
-    ownerEmail: '',
-    isAdmin: true
-  });
   
 // Remove unused import since user is not being used
 
@@ -164,94 +150,12 @@ const ClientAppointments = () => {
     }
   };
 
-  // Función para verificar si es primera cita con el psicólogo
-  const checkIfFirstAppointment = async (psychologistId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `/api/appointments/has-confirmed-appointments/${psychologistId}/`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      return !response.data.has_confirmed_appointments;
-    } catch (err) {
-      console.error('Error verificando si es primera cita:', err);
-      return true; // Por defecto asumimos que es primera cita si hay error
-    }
-  };
-
-  // Función para obtener la información bancaria
-  const fetchBankInfo = async (appointment: Appointment) => {
-    if (!appointment.psychologist_id) return;
-    
-    setIsLoadingBankInfo(true);
-    try {
-      const token = localStorage.getItem('token');
-      const isFirst = await checkIfFirstAppointment(appointment.psychologist_id);
-      setIsFirstAppointment(isFirst);
-      
-      if (isFirst) {
-        // Si es primera cita, obtener datos del admin
-        const response = await axios.get('/api/profiles/bank-info/', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        const adminData = response.data;
-        setBankInfo({
-          bankName: adminData.bank_name || 'No especificado',
-          accountNumber: adminData.bank_account_number || 'No especificado',
-          accountType: adminData.bank_account_type || 'No especificado',
-          accountOwner: adminData.bank_account_owner || 'Administración',
-          ownerRut: adminData.bank_account_owner_rut || 'No especificado',
-          ownerEmail: adminData.bank_account_owner_email || 'No especificado',
-          isAdmin: true
-        });
-      } else {
-        // Si no es primera cita, obtener datos del psicólogo
-        const response = await axios.get(
-          `/api/profiles/psychologist-profiles/${appointment.psychologist_id}/`,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        const psychData = response.data;
-        setBankInfo({
-          bankName: psychData.bank_name || 'No especificado',
-          accountNumber: psychData.bank_account_number || 'No especificado',
-          accountType: psychData.bank_account_type_display || 'No especificado',
-          accountOwner: psychData.bank_account_owner || psychData.first_name + ' ' + psychData.last_name,
-          ownerRut: psychData.bank_account_owner_rut || psychData.rut || 'No especificado',
-          ownerEmail: psychData.bank_account_owner_email || psychData.email || 'No especificado',
-          isAdmin: false
-        });
-      }
-    } catch (err) {
-      console.error('Error obteniendo información bancaria:', err);
-      setError('No pudimos cargar la información bancaria. Por favor, intenta de nuevo más tarde.');
-    } finally {
-      setIsLoadingBankInfo(false);
-    }
-  };
-
   // Handle appointment click
-  const handleAppointmentClick = async (appointment: Appointment) => {
+  const handleAppointmentClick = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setIsModalOpen(true);
     setUploadSuccess(false);
     setUploadError(null);
-    await fetchBankInfo(appointment);
   };
 
   // Handle file change
@@ -552,78 +456,8 @@ const ClientAppointments = () => {
                     <ClockIcon className="h-5 w-5 mr-3 text-gray-400" />
                     <span>{selectedAppointment.start_time} - {selectedAppointment.end_time}</span>
                   </div>
-
-                  {selectedAppointment.payment_amount && (
-                    <div className="flex items-center">
-                      <CreditCardIcon className="h-5 w-5 mr-3 text-gray-400" />
-                      <span>${selectedAppointment.payment_amount.toLocaleString()}</span>
-                    </div>
-                  )}
                 </div>
               </div>
-
-              {/* Información bancaria */}
-              {selectedAppointment.status === 'PENDING_PAYMENT' && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-gray-900 flex items-center">
-                      <BuildingLibraryIcon className="h-5 w-5 mr-2 text-[#2A6877]" />
-                      Datos para transferencia
-                      {isFirstAppointment ? ' (Administración)' : ' (Especialista)'}
-                    </h3>
-                    {isLoadingBankInfo && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#2A6877]"></div>
-                    )}
-                  </div>
-
-                  {bankInfo && !isLoadingBankInfo && (
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-sm text-gray-500">Banco</p>
-                          <p className="font-medium">{bankInfo.bankName}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Tipo de cuenta</p>
-                          <p className="font-medium">{bankInfo.accountType}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Número de cuenta</p>
-                          <p className="font-medium">{bankInfo.accountNumber}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Titular</p>
-                          <p className="font-medium">{bankInfo.accountOwner}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">RUT</p>
-                          <p className="font-medium">{bankInfo.ownerRut}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Email</p>
-                          <p className="font-medium">{bankInfo.ownerEmail}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Información sobre primera cita */}
-                  {isFirstAppointment && (
-                    <div className="mt-4 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <ExclamationCircleIcon className="h-5 w-5 text-yellow-600" />
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm text-yellow-700">
-                            Esta es tu primera cita con este especialista. Por políticas de la plataforma, el pago de esta primera sesión debe realizarse a la cuenta de administración.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
               
               {/* Notes section */}
               {selectedAppointment.client_notes && (
