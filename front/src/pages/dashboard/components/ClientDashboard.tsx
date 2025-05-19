@@ -10,7 +10,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchClientStats, testApiConnection } from '../../../services/api';
 import api from '../../../services/api';
-import axios from 'axios';
 
 // Interfaz para las estadísticas del cliente
 interface ClientStats {
