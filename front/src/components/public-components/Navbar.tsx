@@ -283,7 +283,7 @@ const Navbar = () => {
         {/* Mobile menu button */}
         <motion.button 
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors relative z-50"
+          className="xl:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors relative z-50"
           aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
           whileTap={{ scale: 0.9 }}
         >
@@ -319,7 +319,7 @@ const Navbar = () => {
         </motion.button>
 
         {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-6 xl:gap-8">
+        <div className="hidden xl:flex items-center gap-6 xl:gap-8">
           <div className="flex items-center gap-6 xl:gap-8">
             {renderNavItems()}
           </div>
@@ -336,7 +336,7 @@ const Navbar = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30"
+              className="xl:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30"
               onClick={() => setIsMenuOpen(false)}
               aria-hidden="true"
             />
@@ -347,7 +347,7 @@ const Navbar = () => {
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              className="lg:hidden fixed top-0 right-0 h-[100dvh] w-4/5 max-w-sm bg-white shadow-xl z-40 overflow-y-auto rounded-l-2xl"
+              className="xl:hidden fixed top-0 right-0 h-[100dvh] w-4/5 max-w-sm bg-white shadow-xl z-40 overflow-y-auto rounded-l-2xl"
               initial={{ x: '100%', opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}

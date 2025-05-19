@@ -94,10 +94,11 @@ export const updateProfile = async (userType: string, profileData: any) => {
         ...otherData,
         first_name, // Include these at the top level for the backend
         last_name,
-        gender, // Extraer explícitamente el género y asegurarse de que se incluya
+        gender: gender || '', // Asegurarse de que el género se incluya, incluso si es vacío
       };
       
       console.log('Formatted data for psychologist update:', formattedData);
+      console.log('Gender value being sent:', formattedData.gender);
       const response = await api.patch(endpoint, formattedData);
       return response.data;
     } else {
@@ -139,6 +140,8 @@ export const uploadProfileImage = async (userType: string, imageFile: File) => {
   
   const formData = new FormData();
   formData.append('profile_image', imageFile);
+  
+  console.log('Datos a guardar:', formData);
   
   try {
     const response = await api.post(endpoint, formData, {

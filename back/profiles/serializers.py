@@ -114,58 +114,6 @@ class ProfessionalExperienceSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id',)
 
-class PsychologistProfileSerializer(BaseProfileSerializer):
-    """Serializer para perfiles de psicólogo"""
-    phone = serializers.CharField(source='phone_number', required=False, allow_blank=True, allow_null=True)
-    gender = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    rut = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    region = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    city = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    user = serializers.SerializerMethodField()
-    presentation_video_url = serializers.SerializerMethodField(read_only=True)
-    experiences = ProfessionalExperienceSerializer(many=True, read_only=True)
-    
-    def get_user(self, obj):
-        return {
-            'id': obj.user.id,
-            'email': obj.user.email,
-            'first_name': obj.user.first_name,
-            'last_name': obj.user.last_name,
-            'is_active': obj.user.is_active
-        }
-    
-    def get_presentation_video_url(self, obj):
-        # This will be populated by the view, but we include it here for schema generation
-        return None
-    
-    class Meta(BaseProfileSerializer.Meta):
-        model = PsychologistProfile
-        fields = BaseProfileSerializer.Meta.fields + (
-            'id', 'phone', 'gender', 'rut', 'region', 'city', 'user',
-            'professional_title', 'health_register_number', 'university',
-            'graduation_year', 'specialties', 'target_populations', 
-            'intervention_areas', 'verification_status',
-            'presentation_video_url', 'experiences'
-        )
-        read_only_fields = ('id', 'verification_status')
-    documents = ProfessionalDocumentSerializer(many=True, read_only=True, source='professionaldocument_set')
-    
-    # Ensure these fields can handle empty values properly
-    specialties = serializers.ListField(child=serializers.CharField(), required=False)
-    target_populations = serializers.ListField(child=serializers.CharField(), required=False)
-    intervention_areas = serializers.ListField(child=serializers.CharField(), required=False)
-    graduation_year = serializers.IntegerField(required=False, allow_null=True)
-    
-    class Meta(BaseProfileSerializer.Meta):
-        model = PsychologistProfile
-        fields = BaseProfileSerializer.Meta.fields + (
-            'id', 'rut', 'phone', 'gender', 'region', 'city',
-            'professional_title', 'specialties', 'health_register_number', 'university',
-            'graduation_year', 'target_populations', 'intervention_areas', 
-            'verification_status', 'documents', 'experiences'
-        )
-        read_only_fields = ('id', 'verification_status', 'created_at', 'updated_at')
-
 class PsychologistProfileBasicSerializer(BaseProfileSerializer):
     """Serializer básico para listado de psicólogos"""
     id = serializers.IntegerField(source='user.id', read_only=True)
@@ -200,6 +148,8 @@ class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
     verification_status_display = serializers.CharField(source='get_verification_status_display', read_only=True)
     bank_account_type_display = serializers.CharField(source='get_bank_account_type_display', read_only=True)
     experiences = ProfessionalExperienceSerializer(many=True, read_only=True)
+    # Asegurarnos que gender se procese correctamente
+    gender = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     
     def get_user(self, obj):
         return {

@@ -348,6 +348,10 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         user_data = {}
         profile_data = request.data.copy()
         
+        # Log para depuración - Ver todos los datos recibidos
+        print("DEBUG - Datos recibidos para actualizar:", profile_data)
+        print("DEBUG - Valor de gender recibido:", profile_data.get('gender', 'No hay valor de gender en la solicitud'))
+        
         # Remove profile_image from regular update if it's present but not a file
         if 'profile_image' in profile_data and not hasattr(profile_data['profile_image'], 'read'):
             profile_data.pop('profile_image')
@@ -369,14 +373,23 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
             else:
                 return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+        # Asegurarse de que el campo gender se procese correctamente
+        if 'gender' in profile_data:
+            print("DEBUG - Procesando campo gender:", profile_data['gender'])
+            
         # Update profile
         serializer = self.get_serializer(profile, data=profile_data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            print("DEBUG - Perfil actualizado correctamente con gender:", profile.gender)
             
             # Return the complete updated profile
             updated_serializer = self.get_serializer(profile)
             return Response(updated_serializer.data)
+        else:
+            print("DEBUG - Errores al validar el perfil:", serializer.errors)
+            if 'gender' in serializer.errors:
+                print("DEBUG - Error específico en gender:", serializer.errors['gender'])
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
