@@ -13,7 +13,6 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    remember: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -26,14 +25,6 @@ const LoginPage = () => {
       toastService.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     }
   }, [location]);
-
-  // Cargar email recordado
-  useEffect(() => {
-    const rememberedEmail = localStorage.getItem('rememberedEmail');
-    if (rememberedEmail) {
-      setFormData(prev => ({ ...prev, email: rememberedEmail, remember: true }));
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,13 +42,6 @@ const LoginPage = () => {
           // Manejar otros errores...
         }
       } else {
-        // Gestionar "recordarme"
-        if (formData.remember) {
-          localStorage.setItem('rememberedEmail', formData.email);
-        } else {
-          localStorage.removeItem('rememberedEmail');
-        }
-        
         // Normalizar el tipo de usuario
         const normalizedUserType = result.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
         
@@ -197,7 +181,7 @@ const LoginPage = () => {
           className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
         >
           <div className="bg-white/90 backdrop-blur-md py-8 px-6 shadow-xl rounded-2xl sm:px-10 border border-white/50">
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-6" onSubmit={handleSubmit} autoComplete="on">
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1">
                   Correo electrónico
@@ -214,7 +198,7 @@ const LoginPage = () => {
                     id="email"
                     name="email"
                     type="email"
-                    autoComplete="email"
+                    autoComplete="username email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -266,24 +250,7 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="relative">
-                    <input
-                      id="remember"
-                      name="remember"
-                      type="checkbox"
-                      checked={formData.remember}
-                      onChange={(e) => setFormData({ ...formData, remember: e.target.checked })}
-                      className="h-4 w-4 text-[#2A6877] focus:ring-[#2A6877] border-gray-300 rounded transition-colors duration-200 cursor-pointer"
-                    />
-                    <span className="absolute -inset-0.5 bg-[#2A6877]/10 rounded-sm opacity-0 peer-checked:opacity-100 transition-opacity duration-300"></span>
-                  </div>
-                  <label htmlFor="remember" className="ml-2 block text-sm text-gray-700 cursor-pointer">
-                    Recordarme
-                  </label>
-                </div>
-
+              <div className="flex items-center justify-end">
                 <div className="text-sm">
                   <Link to="/recuperar-password" className="font-medium text-[#2A6877] hover:text-[#235A67] underline decoration-2 decoration-[#B4E4D3] underline-offset-2 transition-colors duration-300">
                     ¿Olvidaste tu contraseña?
