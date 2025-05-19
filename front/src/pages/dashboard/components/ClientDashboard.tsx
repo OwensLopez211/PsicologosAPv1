@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   UserIcon, 
   CalendarIcon, 
-  ClockIcon,
-  ArrowRightIcon
-} from '@heroicons/react/24/outline';
+  ClockIcon} from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
@@ -36,7 +34,7 @@ const ClientDashboard: React.FC = () => {
     completedAppointments: 0,
     lastSessionDate: null
   });
-  const [upcomingAppointments, setUpcomingAppointments] = useState<UpcomingAppointment[]>([]);
+  const [, setUpcomingAppointments] = useState<UpcomingAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -137,34 +135,6 @@ const ClientDashboard: React.FC = () => {
       day: 'numeric' 
     };
     return new Date(dateString).toLocaleDateString('es-ES', options);
-  };
-
-  // Función para obtener el color según el estado de la cita
-  const getAppointmentStatusColor = (status: string) => {
-    switch (status) {
-      case 'CONFIRMED':
-        return 'bg-green-100 text-green-800';
-      case 'PENDING_PAYMENT':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'CANCELED':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Función para obtener el texto del estado de la cita
-  const getAppointmentStatusText = (status: string) => {
-    switch (status) {
-      case 'CONFIRMED':
-        return 'Confirmada';
-      case 'PENDING_PAYMENT':
-        return 'Pendiente de pago';
-      case 'CANCELED':
-        return 'Cancelada';
-      default:
-        return 'Desconocido';
-    }
   };
 
   return (
