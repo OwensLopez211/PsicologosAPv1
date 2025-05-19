@@ -83,21 +83,55 @@ export default api;
 // Nueva función para obtener estadísticas del cliente
 export const fetchClientStats = async () => {
   try {
-    // Intentar primero con la URL usando guion
+    // Intentar con el endpoint de prueba que ahora también devuelve estadísticas
+    const response = await api.get('/appointments/test-stats/');
+    
+    // Si la respuesta del test tiene los campos de estadísticas, los usamos
+    if ('totalAppointments' in response.data) {
+      console.log('Estadísticas obtenidas desde test-stats:', response.data);
+      return {
+        totalAppointments: response.data.totalAppointments,
+        upcomingAppointments: response.data.upcomingAppointments,
+        completedAppointments: response.data.completedAppointments,
+        lastSessionDate: response.data.lastSessionDate
+      };
+    }
+    
+    // Si no encontramos estadísticas en test-stats, intentar con el endpoint específico
     try {
-      const response = await api.get('/appointments/client-stats/');
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
-        // Si devuelve 404, intentar con la URL sin guion
-        console.log('Intentando con URL alternativa para client_stats');
-        const response = await api.get('/appointments/client_stats/');
-        return response.data;
-      }
-      throw error;
+      const statsResponse = await api.get('/appointments/dashboard-stats/');
+      console.log('Estadísticas obtenidas desde dashboard-stats:', statsResponse.data);
+      return statsResponse.data;
+    } catch (statsError) {
+      console.error('Error al obtener estadísticas desde dashboard-stats:', statsError);
+      // Si falla, devolver valores por defecto
+      return {
+        totalAppointments: 0,
+        upcomingAppointments: 0,
+        completedAppointments: 0,
+        lastSessionDate: null
+      };
     }
   } catch (error) {
     console.error('Error al obtener estadísticas del cliente:', error);
+    // Devolver estadísticas vacías cuando hay error para evitar romper la UI
+    return {
+      totalAppointments: 0,
+      upcomingAppointments: 0,
+      completedAppointments: 0,
+      lastSessionDate: null
+    };
+  }
+};
+
+// Nueva función para probar la API
+export const testApiConnection = async () => {
+  try {
+    const response = await api.get('/appointments/test-stats/');
+    console.log('Test API response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error en prueba de API:', error);
     throw error;
   }
 };

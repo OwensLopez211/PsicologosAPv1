@@ -8,7 +8,7 @@ import {
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { fetchClientStats } from '../../../services/api';
+import { fetchClientStats, testApiConnection } from '../../../services/api';
 import api from '../../../services/api';
 import axios from 'axios';
 
@@ -45,6 +45,14 @@ const ClientDashboard: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       
+      // Primero probar la conexión con el endpoint de prueba
+      try {
+        const testResult = await testApiConnection();
+        console.log('Prueba de API exitosa:', testResult);
+      } catch (testError) {
+        console.error('Error en la prueba de API:', testError);
+      }
+      
       try {
         // Obtener estadísticas del cliente
         let statsData;
@@ -53,13 +61,31 @@ const ClientDashboard: React.FC = () => {
           console.log('Estadísticas obtenidas:', statsData);
         } catch (statsError) {
           console.error('Error al obtener estadísticas, usando datos de fallback:', statsError);
-          // Usar datos de fallback si falla
-          statsData = {
-            totalAppointments: 0,
-            upcomingAppointments: 0,
-            completedAppointments: 0,
-            lastSessionDate: null
-          };
+          
+          // Intentar obtener al menos los datos de citas para tener estadísticas más precisas
+          try {
+            const appointmentsResponse = await api.get('/appointments/client-appointments/');
+            const upcoming = appointmentsResponse.data.upcoming || [];
+            const past = appointmentsResponse.data.past || [];
+            const all = appointmentsResponse.data.all || [];
+            
+            // Crear estadísticas basadas en los datos de citas
+            statsData = {
+              totalAppointments: all.length,
+              upcomingAppointments: upcoming.length,
+              completedAppointments: past.filter((a: any) => a.status === 'COMPLETED').length,
+              lastSessionDate: past.length > 0 ? past[0].date : null
+            };
+          } catch (appointmentsError) {
+            // Si también falla, usar datos vacíos
+            console.error('No se pudieron obtener datos de citas para estadísticas:', appointmentsError);
+            statsData = {
+              totalAppointments: 0,
+              upcomingAppointments: 0,
+              completedAppointments: 0,
+              lastSessionDate: null
+            };
+          }
         }
         setStats(statsData);
         

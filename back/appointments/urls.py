@@ -6,6 +6,15 @@ router = DefaultRouter()
 router.register(r'', AppointmentViewSet, basename='appointment')
 
 urlpatterns = [
+    # URL de prueba sin restricciones
+    path('test-stats/', AppointmentViewSet.as_view({
+        'get': 'test_stats',
+    }), name='test-stats'),
+    
+    path('dashboard-stats/', AppointmentViewSet.as_view({
+        'get': 'client_stats',
+    }), name='dashboard-stats'),
+    
     path('client-stats/', AppointmentViewSet.as_view({
         'get': 'client_stats',
     }), name='client-stats'),

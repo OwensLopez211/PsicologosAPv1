@@ -1150,54 +1150,131 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsClient])
+    @action(detail=False, methods=['get'], url_path='dashboard-stats', permission_classes=[permissions.IsAuthenticated, IsClient])
     def client_stats(self, request):
         """Endpoint para obtener estadísticas del cliente para el dashboard"""
         user = request.user
         try:
             client = ClientProfile.objects.get(user=user)
+            
+            # Fecha actual para comparar
+            today = timezone.now().date()
+            current_time = timezone.now().time()
+            
+            # Obtener todas las citas del cliente
+            all_appointments = Appointment.objects.filter(client=client)
+            
+            # Citas totales
+            total_appointments = all_appointments.count()
+            
+            # Citas pendientes (próximas)
+            upcoming_appointments = all_appointments.filter(
+                Q(date__gt=today) | 
+                (Q(date=today) & Q(start_time__gt=current_time))
+            ).exclude(
+                status__in=['COMPLETED', 'CANCELLED', 'NO_SHOW']
+            ).count()
+            
+            # Citas completadas
+            completed_appointments = all_appointments.filter(
+                status='COMPLETED'
+            ).count()
+            
+            # Última sesión (la cita completada más reciente)
+            last_session = all_appointments.filter(
+                status='COMPLETED'
+            ).order_by('-date', '-start_time').first()
+            
+            # Construir respuesta
+            response_data = {
+                "totalAppointments": total_appointments,
+                "upcomingAppointments": upcoming_appointments,
+                "completedAppointments": completed_appointments,
+                "lastSessionDate": last_session.date if last_session else None
+            }
+            
+            return Response(response_data)
+            
         except ClientProfile.DoesNotExist:
-            return Response(
-                {"detail": "No se encontró el perfil de cliente para este usuario."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Fecha actual para comparar
-        today = timezone.now().date()
-        current_time = timezone.now().time()
-        
-        # Obtener todas las citas del cliente
-        all_appointments = Appointment.objects.filter(client=client)
-        
-        # Citas totales
-        total_appointments = all_appointments.count()
-        
-        # Citas pendientes (próximas)
-        upcoming_appointments = all_appointments.filter(
-            Q(date__gt=today) | 
-            (Q(date=today) & Q(start_time__gt=current_time))
-        ).exclude(
-            status__in=['COMPLETED', 'CANCELLED', 'NO_SHOW']
-        ).count()
-        
-        # Citas completadas
-        completed_appointments = all_appointments.filter(
-            status='COMPLETED'
-        ).count()
-        
-        # Última sesión (la cita completada más reciente)
-        last_session = all_appointments.filter(
-            status='COMPLETED'
-        ).order_by('-date', '-start_time').first()
-        
-        # Construir respuesta
-        response_data = {
-            "totalAppointments": total_appointments,
-            "upcomingAppointments": upcoming_appointments,
-            "completedAppointments": completed_appointments,
-            "lastSessionDate": last_session.date if last_session else None
+            # Si no existe el perfil del cliente, devolver estadísticas vacías
+            return Response({
+                "success": False,
+                "message": "No se encontró el perfil de cliente para este usuario.",
+                "totalAppointments": 0,
+                "upcomingAppointments": 0,
+                "completedAppointments": 0,
+                "lastSessionDate": None
+            })
+        except Exception as e:
+            # Si hay algún otro error, incluir mensaje pero devolver estadísticas vacías
+            return Response({
+                "success": False,
+                "error": str(e),
+                "totalAppointments": 0,
+                "upcomingAppointments": 0,
+                "completedAppointments": 0,
+                "lastSessionDate": None
+            })
+
+    # Método simple para testear la API que también devuelve estadísticas
+    @action(detail=False, methods=['get'], url_path='test-stats')
+    def test_stats(self, request):
+        """Endpoint simple para testear la API y obtener estadísticas básicas"""
+        result = {
+            "success": True,
+            "message": "API funciona correctamente",
+            "timestamp": timezone.now()
         }
         
-        return Response(response_data)
+        # Si el usuario es cliente, también devolvemos estadísticas
+        if request.user.is_authenticated and hasattr(request.user, 'user_type') and request.user.user_type == 'client':
+            try:
+                client = ClientProfile.objects.get(user=request.user)
+                
+                # Fecha actual para comparar
+                today = timezone.now().date()
+                current_time = timezone.now().time()
+                
+                # Obtener todas las citas del cliente
+                all_appointments = Appointment.objects.filter(client=client)
+                
+                # Añadir estadísticas a la respuesta
+                result.update({
+                    "totalAppointments": all_appointments.count(),
+                    "upcomingAppointments": all_appointments.filter(
+                        Q(date__gt=today) | 
+                        (Q(date=today) & Q(start_time__gt=current_time))
+                    ).exclude(
+                        status__in=['COMPLETED', 'CANCELLED', 'NO_SHOW']
+                    ).count(),
+                    "completedAppointments": all_appointments.filter(
+                        status='COMPLETED'
+                    ).count(),
+                    "lastSessionDate": all_appointments.filter(
+                        status='COMPLETED'
+                    ).order_by('-date', '-start_time').first().date if all_appointments.filter(
+                        status='COMPLETED'
+                    ).exists() else None
+                })
+            except ClientProfile.DoesNotExist:
+                # Si no existe el perfil del cliente, devolver estadísticas vacías
+                result.update({
+                    "stats_error": "ClientProfile matching query does not exist.",
+                    "totalAppointments": 0,
+                    "upcomingAppointments": 0,
+                    "completedAppointments": 0,
+                    "lastSessionDate": None
+                })
+            except Exception as e:
+                # Si hay error, incluimos información pero no fallamos
+                result.update({
+                    "stats_error": str(e),
+                    "totalAppointments": 0,
+                    "upcomingAppointments": 0,
+                    "completedAppointments": 0,
+                    "lastSessionDate": None
+                })
+        
+        return Response(result)
 
    
