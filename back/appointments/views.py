@@ -1150,4 +1150,54 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsClient])
+    def client_stats(self, request):
+        """Endpoint para obtener estadísticas del cliente para el dashboard"""
+        user = request.user
+        try:
+            client = ClientProfile.objects.get(user=user)
+        except ClientProfile.DoesNotExist:
+            return Response(
+                {"detail": "No se encontró el perfil de cliente para este usuario."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Fecha actual para comparar
+        today = timezone.now().date()
+        current_time = timezone.now().time()
+        
+        # Obtener todas las citas del cliente
+        all_appointments = Appointment.objects.filter(client=client)
+        
+        # Citas totales
+        total_appointments = all_appointments.count()
+        
+        # Citas pendientes (próximas)
+        upcoming_appointments = all_appointments.filter(
+            Q(date__gt=today) | 
+            (Q(date=today) & Q(start_time__gt=current_time))
+        ).exclude(
+            status__in=['COMPLETED', 'CANCELLED', 'NO_SHOW']
+        ).count()
+        
+        # Citas completadas
+        completed_appointments = all_appointments.filter(
+            status='COMPLETED'
+        ).count()
+        
+        # Última sesión (la cita completada más reciente)
+        last_session = all_appointments.filter(
+            status='COMPLETED'
+        ).order_by('-date', '-start_time').first()
+        
+        # Construir respuesta
+        response_data = {
+            "totalAppointments": total_appointments,
+            "upcomingAppointments": upcoming_appointments,
+            "completedAppointments": completed_appointments,
+            "lastSessionDate": last_session.date if last_session else None
+        }
+        
+        return Response(response_data)
+
    

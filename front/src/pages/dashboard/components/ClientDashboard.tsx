@@ -2,24 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { 
   UserIcon, 
   CalendarIcon, 
-  ArrowTrendingUpIcon,
-  HeartIcon,
   ClockIcon,
-  ChatBubbleLeftRightIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { fetchClientStats } from '../../../services/api';
+import api from '../../../services/api';
 
 // Interfaz para las estadísticas del cliente
 interface ClientStats {
   totalAppointments: number;
   upcomingAppointments: number;
   completedAppointments: number;
-  favoritesPsychologists: number;
   lastSessionDate: string | null;
-  unreadMessages: number;
 }
 
 // Interfaz para citas próximas
@@ -31,26 +28,15 @@ interface UpcomingAppointment {
   status: 'CONFIRMED' | 'PENDING_PAYMENT' | 'CANCELED' | string;
 }
 
-// Interfaz para psicólogos favoritos
-interface FavoritePsychologist {
-  id: number;
-  name: string;
-  specialty: string;
-  imageUrl: string | null;
-}
-
 const ClientDashboard: React.FC = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState<ClientStats>({
     totalAppointments: 0,
     upcomingAppointments: 0,
     completedAppointments: 0,
-    favoritesPsychologists: 0,
-    lastSessionDate: null,
-    unreadMessages: 0
+    lastSessionDate: null
   });
   const [upcomingAppointments, setUpcomingAppointments] = useState<UpcomingAppointment[]>([]);
-  const [favoritePsychologists, setFavoritePsychologists] = useState<FavoritePsychologist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,63 +44,25 @@ const ClientDashboard: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Aquí se realizarían las llamadas a la API para obtener datos reales
-        // Por ahora, simulamos datos de ejemplo
+        // Obtener estadísticas del cliente
+        const statsData = await fetchClientStats();
+        setStats(statsData);
         
-        // Simulación de carga de estadísticas
-        setTimeout(() => {
-          setStats({
-            totalAppointments: 12,
-            upcomingAppointments: 2,
-            completedAppointments: 10,
-            favoritesPsychologists: 3,
-            lastSessionDate: '2023-11-28',
-            unreadMessages: 2
-          });
-          
-          // Simulación de citas próximas
-          setUpcomingAppointments([
-            {
-              id: 1,
-              psychologistName: 'Dr. Carlos Mendoza',
-              date: '2023-12-05',
-              time: '15:30',
-              status: 'CONFIRMED'
-            },
-            {
-              id: 2,
-              psychologistName: 'Dra. Laura Vega',
-              date: '2023-12-12',
-              time: '10:00',
-              status: 'PENDING_PAYMENT'
-            }
-          ]);
-          
-          // Simulación de psicólogos favoritos
-          setFavoritePsychologists([
-            {
-              id: 1,
-              name: 'Dr. Carlos Mendoza',
-              specialty: 'Terapia Cognitivo-Conductual',
-              imageUrl: null
-            },
-            {
-              id: 2,
-              name: 'Dra. Laura Vega',
-              specialty: 'Psicología Familiar',
-              imageUrl: null
-            },
-            {
-              id: 3,
-              name: 'Dr. Miguel Ángel Santos',
-              specialty: 'Ansiedad y Depresión',
-              imageUrl: null
-            }
-          ]);
-          
-          setLoading(false);
-        }, 1000);
+        // Obtener citas próximas
+        const appointmentsResponse = await api.get('/appointments/client-appointments/');
+        const upcomingData = appointmentsResponse.data.upcoming;
         
+        // Transformar datos de citas próximas al formato esperado
+        const formattedAppointments: UpcomingAppointment[] = upcomingData.map((appointment: any) => ({
+          id: appointment.id,
+          psychologistName: `${appointment.psychologist.user.first_name} ${appointment.psychologist.user.last_name}`,
+          date: appointment.date,
+          time: appointment.start_time,
+          status: appointment.status
+        }));
+        
+        setUpcomingAppointments(formattedAppointments);
+        setLoading(false);
       } catch (err) {
         console.error('Error al cargar datos del dashboard:', err);
         setError('No se pudieron cargar tus datos. Por favor, intenta nuevamente más tarde.');
@@ -214,21 +162,12 @@ const ClientDashboard: React.FC = () => {
                   'Aún no has tenido ninguna sesión'
                 }
               </p>
-              
-              {stats.unreadMessages > 0 && (
-                <div className="mt-3 bg-white/20 rounded-md p-2 text-sm">
-                  <div className="flex items-center">
-                    <ChatBubbleLeftRightIcon className="h-4 w-4 mr-2" />
-                    <span>Tienes {stats.unreadMessages} mensaje{stats.unreadMessages !== 1 ? 's' : ''} sin leer</span>
-                  </div>
-                </div>
-              )}
             </div>
           </motion.div>
 
           {/* Estadísticas principales */}
           <motion.div variants={itemVariants} className="mb-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Total de consultas */}
               <div className="bg-white rounded-lg p-3 border border-gray-200 flex flex-col">
                 <div className="flex items-center mb-2">
@@ -249,38 +188,6 @@ const ClientDashboard: React.FC = () => {
                   <span className="text-xs font-medium text-gray-500">Citas pendientes</span>
                 </div>
                 <span className="text-xl font-semibold text-gray-800">{stats.upcomingAppointments}</span>
-              </div>
-              
-              {/* Psicólogos favoritos */}
-              <div className="bg-white rounded-lg p-3 border border-gray-200 flex flex-col">
-                <div className="flex items-center mb-2">
-                  <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center mr-2">
-                    <HeartIcon className="h-4 w-4 text-red-500" />
-                  </div>
-                  <span className="text-xs font-medium text-gray-500">Favoritos</span>
-                </div>
-                <span className="text-xl font-semibold text-gray-800">{stats.favoritesPsychologists}</span>
-              </div>
-              
-              {/* Progreso terapéutico */}
-              <div className="bg-white rounded-lg p-3 border border-gray-200 flex flex-col">
-                <div className="flex items-center mb-2">
-                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-2">
-                    <ArrowTrendingUpIcon className="h-4 w-4 text-green-600" />
-                  </div>
-                  <span className="text-xs font-medium text-gray-500">Progreso</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="flex-1 bg-gray-200 h-2 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-green-400 h-full rounded-full" 
-                      style={{ width: `${Math.min(stats.completedAppointments * 10, 100)}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-xs font-medium text-gray-500 ml-2">
-                    {Math.min(stats.completedAppointments * 10, 100)}%
-                  </span>
-                </div>
               </div>
             </div>
           </motion.div>
@@ -306,12 +213,8 @@ const ClientDashboard: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Sección de dos columnas: próximas citas y psicólogos favoritos */}
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            variants={itemVariants}
-          >
-            {/* Próximas citas */}
+          {/* Sección principal: próximas citas */}
+          <motion.div variants={itemVariants}>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               <div className="p-3 border-b border-gray-100">
                 <h3 className="font-medium text-gray-800 text-sm">Mis próximas citas</h3>
@@ -373,113 +276,6 @@ const ClientDashboard: React.FC = () => {
                   </Link>
                 </div>
               )}
-            </div>
-
-            {/* Psicólogos favoritos */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-3 border-b border-gray-100">
-                <h3 className="font-medium text-gray-800 text-sm">Mis psicólogos favoritos</h3>
-              </div>
-
-              {favoritePsychologists.length > 0 ? (
-                <>
-                  <div className="divide-y divide-gray-100">
-                    {favoritePsychologists.map(psychologist => (
-                      <div key={psychologist.id} className="p-3 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 mr-3">
-                            {psychologist.imageUrl ? (
-                              <img 
-                                src={psychologist.imageUrl} 
-                                alt={psychologist.name} 
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <UserIcon className="h-6 w-6 text-gray-400 m-2" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-gray-800 text-sm truncate">
-                              {psychologist.name}
-                            </div>
-                            <div className="text-xs text-gray-500 truncate">
-                              {psychologist.specialty}
-                            </div>
-                          </div>
-                          <Link 
-                            to={`/psychologists/${psychologist.id}`}
-                            className="ml-2 text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium flex items-center"
-                          >
-                            Ver perfil
-                            <ArrowRightIcon className="h-3 w-3 ml-1" />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="p-3 text-center border-t border-gray-100">
-                    <Link 
-                      to="/psychologists" 
-                      className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium"
-                    >
-                      Buscar más psicólogos →
-                    </Link>
-                  </div>
-                </>
-              ) : (
-                <div className="p-6 text-center text-gray-500">
-                  <HeartIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                  <p className="font-medium text-gray-600 text-sm mb-1">Aún no tienes psicólogos favoritos</p>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Marca tus especialistas preferidos
-                  </p>
-                  <Link 
-                    to="/psychologists"
-                    className="inline-flex items-center text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium"
-                  >
-                    Buscar psicólogos
-                    <ArrowRightIcon className="h-3 w-3 ml-1" />
-                  </Link>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Sección de Recursos y Bienestar */}
-          <motion.div 
-            className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200"
-            variants={itemVariants}
-          >
-            <div className="p-3 border-b border-gray-100">
-              <h3 className="font-medium text-gray-800 text-sm">Recursos de bienestar</h3>
-              <p className="text-gray-500 text-xs">Artículos y recursos para tu salud mental</p>
-            </div>
-
-            <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50">
-              <div className="bg-white rounded-lg p-3 shadow-sm">
-                <h4 className="font-medium text-sm text-gray-800 mb-1">Artículos recomendados</h4>
-                <ul className="space-y-2">
-                  <li>
-                    <a href="#" className="text-xs text-blue-600 hover:underline flex items-center">
-                      <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                      Técnicas de respiración para reducir la ansiedad
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-xs text-blue-600 hover:underline flex items-center">
-                      <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                      Cómo mejorar la calidad del sueño
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-xs text-blue-600 hover:underline flex items-center">
-                      <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                      Mindfulness: ejercicios prácticos para el día a día
-                    </a>
-                  </li>
-                </ul>
-              </div>
             </div>
           </motion.div>
         </>

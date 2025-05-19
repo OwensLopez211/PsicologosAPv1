@@ -79,3 +79,14 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+// Nueva función para obtener estadísticas del cliente
+export const fetchClientStats = async () => {
+  try {
+    const response = await api.get('/appointments/client-stats/');
+    return response.data;
+  } catch (error) {
+    console.error('Error al obtener estadísticas del cliente:', error);
+    throw error;
+  }
+};

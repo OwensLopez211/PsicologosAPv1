@@ -73,4 +73,9 @@ urlpatterns = [
     path('psychologist_patients/', AppointmentViewSet.as_view({
         'get': 'psychologist_patients',
     }), name='psychologist_patients'),
+    
+    # Nuevo endpoint para estadísticas del cliente
+    path('client-stats/', AppointmentViewSet.as_view({
+        'get': 'client_stats',
+    }), name='client-stats'),
 ]
