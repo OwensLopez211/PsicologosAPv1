@@ -4,8 +4,10 @@ import logging
 from django.template.loader import render_to_string
 from django.conf import settings
 from datetime import datetime
+import datetime as dt
 from appointments.models import Appointment
 from profiles.models import AdminProfile
+from urllib.parse import quote
 
 # Configurar logger
 logger = logging.getLogger(__name__)
@@ -403,3 +405,62 @@ def send_payment_verification_needed_email(appointment, frontend_url=None):
     
     # Enviar el correo
     return send_email(user_psy.email, subject, template_name, context)
+
+def send_appointment_confirmed_client_email(appointment, frontend_url=None):
+    """
+    Envía correo al cliente cuando el psicólogo confirma la cita, incluyendo enlace para Google Calendar
+    
+    Args:
+        appointment: Instancia del modelo Appointment
+        frontend_url: URL base del frontend (opcional)
+    """
+    client = appointment.client
+    user = client.user
+    psychologist = appointment.psychologist
+    
+    # Formatear la fecha y horas para presentación
+    fecha_cita = appointment.date.strftime('%d/%m/%Y')
+    hora_inicio = appointment.start_time.strftime('%H:%M')
+    hora_fin = appointment.end_time.strftime('%H:%M')
+    
+    # Generar enlace para Google Calendar
+    # Formato de fecha para Google Calendar: YYYYMMDDTHHMMSSZ
+    cita_fecha = appointment.date
+    
+    # Convertir datetime.time a datetime completo para poder formatear correctamente
+    start_datetime = dt.datetime.combine(cita_fecha, appointment.start_time)
+    end_datetime = dt.datetime.combine(cita_fecha, appointment.end_time)
+    
+    # Formatear fechas para Google Calendar (sin zona horaria)
+    start_formatted = start_datetime.strftime('%Y%m%dT%H%M%S')
+    end_formatted = end_datetime.strftime('%Y%m%dT%H%M%S')
+    
+    # Crear el título y detalles del evento
+    event_title = f"Sesión con {psychologist.user.first_name} {psychologist.user.last_name}"
+    event_details = f"Cita de terapia a través de E-Mind con {psychologist.user.first_name} {psychologist.user.last_name}."
+    
+    # Generar el enlace completo
+    google_calendar_url = (
+        f"https://calendar.google.com/calendar/render?"
+        f"action=TEMPLATE&"
+        f"text={quote(event_title)}&"
+        f"dates={start_formatted}/{end_formatted}&"
+        f"details={quote(event_details)}"
+    )
+    
+    # Preparar el contexto para la plantilla
+    context = {
+        'nombre_paciente': f"{user.first_name} {user.last_name}",
+        'nombre_psicologo': f"{psychologist.user.first_name} {psychologist.user.last_name}",
+        'fecha_cita': fecha_cita,
+        'hora_inicio': hora_inicio,
+        'hora_fin': hora_fin,
+        'google_calendar_url': google_calendar_url
+    }
+    
+    # Definir asunto y plantilla
+    subject = f'Tu cita del {fecha_cita} ha sido confirmada'
+    template_name = 'emails/cita_confirmada_paciente.html'
+    
+    # Enviar el correo
+    return send_email(user.email, subject, template_name, context)
