@@ -7,7 +7,6 @@ import toastService from '../../services/toastService';
 
 const EstablecerPasswordPage = () => {
   const { token } = useParams<{ token: string }>();
-  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     password: '',
