@@ -5,6 +5,7 @@ import DocumentHeader from './DocumentHeader';
 import DocumentsList from './DocumentsList';
 import InfoBox from './InfoBox';
 import { Document } from './types';
+import { requiredDocumentTypes } from '../DocumentsUpload';
 
 interface DocumentsUploadProps {
   profile?: any;
@@ -50,6 +51,21 @@ const DocumentsUpload = ({  isLoading, onLoadingChange, onSave }: DocumentsUploa
       setLocalLoading(false);
       if (onLoadingChange) onLoadingChange(false);
     }
+  };
+
+  // Verificar si hay documentos que pueden ser editados (rechazados o no subidos)
+  const hasEditableDocuments = () => {
+    // Obtener todos los tipos de documentos requeridos
+    const requiredTypes = requiredDocumentTypes.map(doc => doc.type);
+    
+    // Verificar si hay documentos rechazados
+    const hasRejectedDocs = documents.some(doc => doc.verification_status === 'rejected');
+    
+    // Verificar si hay documentos pendientes de subir
+    const uploadedDocTypes = documents.map(doc => doc.document_type);
+    const hasPendingDocs = requiredTypes.some(type => !uploadedDocTypes.includes(type));
+    
+    return hasRejectedDocs || hasPendingDocs;
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, documentType: string) => {
@@ -131,6 +147,7 @@ const DocumentsUpload = ({  isLoading, onLoadingChange, onSave }: DocumentsUploa
         handleSaveChanges={handleSaveChanges}
         isLoading={localLoading || isLoading}
         hasPendingUploads={Object.keys(pendingUploads).length > 0}
+        canEdit={hasEditableDocuments()}
       />
 
       {localLoading || isLoading ? (

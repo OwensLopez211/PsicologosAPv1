@@ -4,7 +4,7 @@ import { DocumentIcon, VideoCameraIcon, IdentificationIcon, ClipboardDocumentChe
 import { uploadDocument, getDocuments } from '../../services/documentService';
 import DocumentHeader from './DocumentsUpload/DocumentHeader';
 import DocumentsList from './DocumentsUpload/DocumentsList';
-import { Document } from './DocumentsUpload/types';
+import { Document, DocumentType } from './DocumentsUpload/types';
 
 interface DocumentsUploadProps {
   profile?: any;
@@ -14,7 +14,7 @@ interface DocumentsUploadProps {
 }
 
 // Define required documents - exportado para usarlo en otros componentes
-export const requiredDocumentTypes = [
+export const requiredDocumentTypes: DocumentType[] = [
     {
       type: 'presentation_video',
       name: 'Video de presentación',
@@ -47,6 +47,19 @@ const DocumentsUpload = ({ isLoading, onLoadingChange }: DocumentsUploadProps) =
   const [pendingUploads, setPendingUploads] = useState<Record<string, File>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [localLoading, setLocalLoading] = useState(false);
+
+  // Verificar si hay documentos que pueden ser editados (rechazados o no subidos)
+  const hasEditableDocuments = () => {
+    // Verificar si hay documentos rechazados
+    const hasRejectedDocs = documents.some(doc => doc.verification_status === 'rejected');
+    
+    // Verificar si hay documentos pendientes de subir
+    const requiredTypes = requiredDocumentTypes.map(doc => doc.type);
+    const uploadedDocTypes = documents.map(doc => doc.document_type);
+    const hasPendingDocs = requiredTypes.some(type => !uploadedDocTypes.includes(type));
+    
+    return hasRejectedDocs || hasPendingDocs;
+  };
 
   // Modify the useEffect to add a loading flag to prevent multiple requests
   useEffect(() => {
@@ -93,6 +106,14 @@ const DocumentsUpload = ({ isLoading, onLoadingChange }: DocumentsUploadProps) =
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>, documentType: string) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Solo permitir seleccionar archivos para documentos rechazados o no subidos
+    const existingDoc = documents.find(d => d.document_type === documentType);
+    if (existingDoc && existingDoc.verification_status !== 'rejected') {
+      toast.error('Este documento no se puede modificar a menos que sea rechazado por un administrador');
+      event.target.value = '';
+      return;
+    }
 
     // Add file to pending uploads
     setPendingUploads(prev => ({
@@ -183,6 +204,7 @@ const DocumentsUpload = ({ isLoading, onLoadingChange }: DocumentsUploadProps) =
         handleSaveChanges={handleSaveChanges}
         isLoading={localLoading || isLoading}
         hasPendingUploads={Object.keys(pendingUploads).length > 0}
+        canEdit={hasEditableDocuments()}
       />
 
       {localLoading || isLoading ? (
@@ -216,6 +238,7 @@ const DocumentsUpload = ({ isLoading, onLoadingChange }: DocumentsUploadProps) =
                 <li>El tamaño máximo por archivo es de 5MB.</li>
                 <li>La verificación puede tomar hasta 48 horas hábiles.</li>
                 <li>Te notificaremos por correo electrónico cuando tu cuenta sea verificada.</li>
+                <li>Solo podrás reemplazar documentos que hayan sido rechazados por un administrador.</li>
               </ul>
             </div>
           </div>

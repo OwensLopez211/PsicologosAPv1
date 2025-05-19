@@ -7,6 +7,7 @@ interface DocumentHeaderProps {
   handleSaveChanges: () => void;
   isLoading: boolean;
   hasPendingUploads: boolean;
+  canEdit?: boolean;
 }
 
 const DocumentHeader: React.FC<DocumentHeaderProps> = ({
@@ -15,7 +16,8 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
   cancelEdit,
   handleSaveChanges,
   isLoading,
-  hasPendingUploads
+  hasPendingUploads,
+  canEdit = true
 }) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-0">
@@ -30,10 +32,13 @@ const DocumentHeader: React.FC<DocumentHeaderProps> = ({
       {!isEditMode ? (
         <button
           onClick={() => setIsEditMode(true)}
-          className="px-3 sm:px-4 py-1.5 sm:py-2 bg-[#2A6877] text-white text-xs sm:text-sm rounded-md hover:bg-[#1d4b56] transition-colors self-start sm:self-auto mt-1 sm:mt-0"
-          disabled={isLoading}
+          className={`px-3 sm:px-4 py-1.5 sm:py-2 ${canEdit 
+            ? 'bg-[#2A6877] text-white hover:bg-[#1d4b56]' 
+            : 'bg-gray-200 text-gray-500 cursor-not-allowed'} 
+            text-xs sm:text-sm rounded-md transition-colors self-start sm:self-auto mt-1 sm:mt-0`}
+          disabled={isLoading || !canEdit}
         >
-          Editar documentos
+          {canEdit ? 'Editar documentos' : 'No hay documentos para editar'}
         </button>
       ) : (
         <div className="flex space-x-2 self-start sm:self-auto mt-1 sm:mt-0">

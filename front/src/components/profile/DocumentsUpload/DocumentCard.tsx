@@ -23,18 +23,32 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
 }) => {
   const getDocumentStatus = (type: string): 'pending' | 'approved' | 'rejected' | 'not_uploaded' => {
     const doc = documents.find(d => d.document_type === type);
-    if (doc?.verification_status === 'verified') return 'approved'; // Asumiendo que 'verified' es un estado equivalente a 'approved'
-    return doc?.verification_status || 'not_uploaded';
+    if (!doc) return 'not_uploaded';
+    
+    // Mapear los estados a valores permitidos
+    switch (doc.verification_status) {
+      case 'pending': return 'pending';
+      case 'approved': return 'approved';
+      case 'verified': return 'approved'; // 'verified' se mapea a 'approved'
+      case 'rejected': return 'rejected';
+      default: return 'not_uploaded';
+    }
   };
 
   const status = getDocumentStatus(docType.type);
   const hasPendingUpload = !!pendingUpload;
   
+  // Verificar si el documento puede ser editado (solo si está rechazado o no se ha subido)
+  const canEdit = !existingDoc || status === 'rejected';
+  
   // Determinar el texto del botón según el estado
   const getButtonText = () => {
     if (isUploading) return 'Subiendo...';
     if (hasPendingUpload) return 'Cambiar archivo';
-    if (existingDoc) return 'Reemplazar documento';
+    if (existingDoc) {
+      if (status === 'rejected') return 'Reemplazar documento';
+      return 'No se puede reemplazar';
+    }
     return 'Seleccionar archivo';
   };
 
@@ -86,7 +100,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
           </div>
         )}
         
-        {/* Input de archivo solo visible en modo edición */}
+        {/* Input de archivo solo visible en modo edición y si el documento puede ser editado */}
         <div className="relative">
           <input
             type="file"
@@ -94,13 +108,13 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
             onChange={(e) => onFileSelect(e, docType.type)}
             className="hidden"
             accept={docType.type === 'presentation_video' ? 'video/*' : '.pdf,.jpg,.jpeg,.png'}
-            disabled={!isEditMode || isUploading}
+            disabled={!isEditMode || isUploading || !canEdit}
           />
           {isEditMode && (
             <label
               htmlFor={`file-${docType.type}`}
               className={`w-full flex items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium 
-                ${isUploading 
+                ${isUploading || !canEdit
                   ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
                   : 'bg-white text-gray-700 hover:bg-gray-50 cursor-pointer'}`}
             >
@@ -112,12 +126,26 @@ const DocumentCard: React.FC<DocumentCardProps> = ({
                   </svg>
                   Subiendo...
                 </>
+              ) : !canEdit ? (
+                <>
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  No se puede reemplazar
+                </>
               ) : (
                 getButtonText()
               )}
             </label>
           )}
         </div>
+        
+        {/* Mostrar mensaje informativo si el documento no se puede reemplazar */}
+        {isEditMode && existingDoc && !canEdit && (
+          <div className="mt-2 text-xs text-gray-600 italic">
+            Este documento no puede ser reemplazado mientras esté en revisión o aprobado.
+          </div>
+        )}
         
         {/* Mostrar motivo de rechazo si corresponde */}
         {status === 'rejected' && existingDoc?.rejection_reason && (
