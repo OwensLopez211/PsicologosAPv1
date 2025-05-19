@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from datetime import datetime
 from appointments.models import Appointment
+from profiles.models import AdminProfile
 
 # Configurar logger
 logger = logging.getLogger(__name__)
@@ -210,16 +211,31 @@ def send_appointment_created_client_email(appointment, payment_info=None):
     
     # Configurar información de pago según si es primera cita o no
     if is_first_appointment:
-        # Si es primera cita, usar datos del administrador
+        # Si es primera cita, usar datos del administrador obtenidos dinámicamente
         if not payment_info:
-            payment_info = {
-                'nombre_destinatario': 'E-Mind SpA',
-                'rut_destinatario': '77.777.777-7',
-                'banco_destinatario': 'Banco Estado',
-                'tipo_cuenta': 'Cuenta Corriente',
-                'numero_cuenta': '12345678',
-                'correo_destinatario': 'pagos@emindapp.cl'
-            }
+            # Obtener el perfil del administrador (tomamos el primero)
+            admin_profile = AdminProfile.objects.first()
+            
+            if admin_profile:
+                payment_info = {
+                    'nombre_destinatario': admin_profile.bank_account_owner or 'E-Mind SpA',
+                    'rut_destinatario': admin_profile.bank_account_owner_rut or '77.777.777-7',
+                    'banco_destinatario': admin_profile.bank_name or 'Banco Estado',
+                    'tipo_cuenta': admin_profile.bank_account_type or 'Cuenta Corriente',
+                    'numero_cuenta': admin_profile.bank_account_number or '12345678',
+                    'correo_destinatario': admin_profile.bank_account_owner_email or 'pagos@emindapp.cl'
+                }
+            else:
+                # Si no hay perfil de administrador, usar datos por defecto
+                logger.warning("⚠️ No se encontró perfil de administrador, usando datos bancarios por defecto")
+                payment_info = {
+                    'nombre_destinatario': 'E-Mind SpA',
+                    'rut_destinatario': '77.777.777-7',
+                    'banco_destinatario': 'Banco Estado',
+                    'tipo_cuenta': 'Cuenta Corriente',
+                    'numero_cuenta': '12345678',
+                    'correo_destinatario': 'pagos@emindapp.cl'
+                }
     else:
         # Si no es primera cita, usar datos del psicólogo
         payment_info = {
@@ -287,6 +303,34 @@ def send_appointment_created_psychologist_email(appointment, is_first_appointmen
     hora_inicio = appointment.start_time.strftime('%H:%M')
     hora_fin = appointment.end_time.strftime('%H:%M')
     
+    # Si es primera cita, obtener los datos bancarios del administrador para incluirlos en el contexto
+    if is_first_appointment:
+        # Obtener el perfil del administrador
+        admin_profile = AdminProfile.objects.first()
+        
+        if admin_profile:
+            admin_bank_info = {
+                'nombre_destinatario': admin_profile.bank_account_owner or 'E-Mind SpA',
+                'rut_destinatario': admin_profile.bank_account_owner_rut or '77.777.777-7',
+                'banco_destinatario': admin_profile.bank_name or 'Banco Estado',
+                'tipo_cuenta': admin_profile.bank_account_type or 'Cuenta Corriente',
+                'numero_cuenta': admin_profile.bank_account_number or '12345678',
+                'correo_destinatario': admin_profile.bank_account_owner_email or 'pagos@emindapp.cl'
+            }
+        else:
+            # Si no hay perfil de administrador, usar datos por defecto
+            logger.warning("⚠️ No se encontró perfil de administrador, usando datos bancarios por defecto")
+            admin_bank_info = {
+                'nombre_destinatario': 'E-Mind SpA',
+                'rut_destinatario': '77.777.777-7',
+                'banco_destinatario': 'Banco Estado',
+                'tipo_cuenta': 'Cuenta Corriente',
+                'numero_cuenta': '12345678',
+                'correo_destinatario': 'pagos@emindapp.cl'
+            }
+    else:
+        admin_bank_info = None
+    
     # Preparar el contexto para la plantilla
     context = {
         'nombre_psicologo': f"{user_psy.first_name} {user_psy.last_name}",
@@ -294,7 +338,8 @@ def send_appointment_created_psychologist_email(appointment, is_first_appointmen
         'fecha_cita': fecha_cita,
         'hora_inicio': hora_inicio,
         'hora_fin': hora_fin,
-        'es_primera_cita': is_first_appointment
+        'es_primera_cita': is_first_appointment,
+        'admin_bank_info': admin_bank_info
     }
     
     # Definir asunto y plantilla
