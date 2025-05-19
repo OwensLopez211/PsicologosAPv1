@@ -4,6 +4,20 @@ import { refreshToken } from '../services/authService';
 import { setupTokenSync } from '../services/api';
 // import toast from 'react-hot-toast';
 
+// Función auxiliar para logs condicionados al entorno
+const logAuth = (message: string, isError = false, forceInProduction = false) => {
+  const isDev = process.env.NODE_ENV !== 'production';
+  
+  // Mostrar siempre en desarrollo o si es error/crítico en producción
+  if (isDev || isError || forceInProduction) {
+    if (isError) {
+      console.error(message);
+    } else {
+      console.log(message);
+    }
+  }
+};
+
 interface User {
   id: number;
   email: string;
@@ -37,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const forceTokenSync = (): boolean => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
-      console.log('Forzando sincronización del token desde localStorage');
+      logAuth('Forzando sincronización del token desde localStorage');
       setToken(storedToken);
       return true;
     }
@@ -51,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const synced = forceTokenSync();
       initializeAttempts.current += 1;
       
-      console.log(`Intento #${initializeAttempts.current} de sincronización del token:`, synced ? 'Éxito' : 'No se encontró token');
+      logAuth(`Intento #${initializeAttempts.current} de sincronización del token: ${synced ? 'Éxito' : 'No se encontró token'}`);
       
       // Detener después de 5 intentos
       if (initializeAttempts.current >= 5) {
@@ -70,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Escuchar el evento personalizado tokenChange
   useEffect(() => {
     const handleTokenChange = (event: CustomEvent<{ token: string }>) => {
-      console.log('Evento tokenChange detectado:', !!event.detail.token);
+      logAuth('Evento tokenChange detectado', false);
       setToken(event.detail.token);
     };
 
@@ -79,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // También escuchar el nuevo evento tokenUpdated
     const handleTokenUpdated = (event: CustomEvent<{ token: string }>) => {
-      console.log('Evento tokenUpdated detectado:', !!event.detail.token);
+      logAuth('Evento tokenUpdated detectado', false);
       setToken(event.detail.token);
     };
     window.addEventListener('tokenUpdated', handleTokenUpdated as EventListener);
@@ -93,7 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // En la función logout, añadir:
   const logout = () => {
-    console.log('Logging out, clearing auth data');
+    logAuth('Cerrando sesión, eliminando datos de autenticación', false, true);
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
@@ -115,30 +129,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return false;
     } catch (error) {
-      console.error('Error refreshing token:', error);
+      logAuth('Error al refrescar token:', true, true);
       return false;
     }
   };
 
   useEffect(() => {
-    console.log('AuthContext initializing...');
+    logAuth('AuthContext inicializando...', false);
     const initAuth = async () => {
       try {
         const savedUser = localStorage.getItem('user');
         const storedToken = localStorage.getItem('token');
         const refreshTokenValue = localStorage.getItem('refresh_token');
 
-        console.log('Auth state from localStorage:', { 
-          hasUser: !!savedUser, 
-          hasToken: !!storedToken, 
-          hasRefreshToken: !!refreshTokenValue 
-        });
+        const hasAuth = !!(savedUser && (storedToken || refreshTokenValue));
+        logAuth(`Datos de autenticación: ${hasAuth ? 'encontrados' : 'no encontrados'}`, false, true);
 
         if (savedUser && (storedToken || refreshTokenValue)) {
           // Establecer el token de inmediato si existe
           if (storedToken) {
             setToken(storedToken);
-            console.log('Token set from localStorage');
           }
 
           const parsedUser = JSON.parse(savedUser);
@@ -159,20 +169,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           // Si no hay token pero hay refresh token, intentar refrescar la sesión
           if (!storedToken && refreshTokenValue) {
-            console.log('No token found, attempting to refresh session');
+            logAuth('No se encontró token, intentando refrescar la sesión', false, true);
             const success = await refreshUserSession();
             if (!success) {
-              console.log('Failed to refresh session, logging out');
+              logAuth('Falló la actualización de la sesión, cerrando sesión', false, true);
               logout();
             }
           }
         } else {
-          console.log('No authentication data found, user is not logged in');
           setToken(null);
           setUser(null);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        logAuth('Error en inicialización de autenticación:', true, true);
         logout();
       } finally {
         setLoading(false);
@@ -209,13 +218,12 @@ export const useAuth = () => {
   if (!context.token) {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
-      console.log('useAuth: Token encontrado en localStorage pero no en contexto, sincronizando...');
+      logAuth('useAuth: Token encontrado en localStorage pero no en contexto', false, true);
       
       // Forzamos la sincronización en lugar de solo llamar a setToken
       context.forceTokenSync();
       
       // Forzar reporte del token ya presente (aunque el estado se actualizará en el próximo render)
-      console.log('useAuth called, token status: true (forzado desde localStorage)');
       return {
         ...context,
         token: storedToken
@@ -225,12 +233,11 @@ export const useAuth = () => {
   
   // Modo producción: verificación más agresiva
   if (process.env.NODE_ENV === 'production' && !context.token) {
-    console.log('⚠️ useAuth en PRODUCCIÓN sin token, intentando resincronizar...');
+    logAuth('⚠️ useAuth en PRODUCCIÓN sin token, intentando resincronizar...', false, true);
     setTimeout(() => {
       context.forceTokenSync();
     }, 100);
   }
   
-  console.log('useAuth called, token status:', !!context.token, 'ENV:', process.env.NODE_ENV || 'development');
   return context;
 };
