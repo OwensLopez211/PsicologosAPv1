@@ -554,7 +554,7 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
         transition={{ duration: 0.3 }}
       >
         <RegionDropdown
-          value={formData.region}
+        value={formData.region}
           onChange={handleRegionChange}
           isEditing={isEditing && !disabledFields.includes('region')}
         />
@@ -566,11 +566,11 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
         transition={{ duration: 0.3 }}
       >
         <ComunaDropdown
-          value={formData.city}
+        value={formData.city}
           onChange={handleCityChange}
           isEditing={isEditing && !disabledFields.includes('city')}
           selectedRegion={formData.region}
-        />
+      />
       </motion.div>
     </motion.div>
   );

@@ -272,9 +272,11 @@ const ClientAppointments = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Mis Citas</h1>
-        <p className="text-gray-600">Administra tus citas con psicólogos</p>
+      <div className="container mx-auto px-2 sm:px-4">
+        <h1 className="text-2xl mt-2 md:text-3xl font-bold text-[#2A6877] mb-4 md:mb-6">
+          Mis Citas
+        </h1>
+        <p className="text-gray-600 mb-6 md:text-lg">Administra tus citas con psicólogos</p>
       </div>
       
       {/* Filters */}
@@ -390,6 +392,11 @@ const ClientAppointments = () => {
                     <CreditCardIcon className="h-5 w-5 mr-2" />
                     <span className="text-sm">Pendiente de pago - Haz clic para subir tu comprobante</span>
                   </div>
+                  <div className="mt-2 bg-blue-50 p-3 rounded-md">
+                    <p className="text-sm text-blue-700">
+                      Los datos de transferencia fueron enviados a tu correo electrónico
+                    </p>
+                  </div>
                 </div>
               )}
               
@@ -494,6 +501,12 @@ const ClientAppointments = () => {
                   <p className="text-sm text-yellow-700 mb-3">
                     Para confirmar tu cita, por favor sube el comprobante de pago.
                   </p>
+                  
+                  <div className="mb-4 bg-blue-50 p-3 rounded-md">
+                    <p className="text-sm text-blue-700">
+                      Los datos de transferencia fueron enviados a tu correo electrónico
+                    </p>
+                  </div>
                   
                   {uploadSuccess ? (
                     <div className="bg-green-50 p-3 rounded-md text-green-700 flex items-center">
