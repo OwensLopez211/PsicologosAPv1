@@ -203,15 +203,23 @@ def send_appointment_created_client_email(appointment, payment_info=None):
     user = client.user
     psychologist = appointment.psychologist
     
-    # Determinar si es primera cita
-    is_first_appointment = Appointment.objects.filter(
+    # Determinar si es primera cita o si no tiene citas completadas previas
+    previous_appointments = Appointment.objects.filter(
         client=client,
         psychologist=psychologist
-    ).exclude(pk=appointment.pk).exists() == False
+    ).exclude(pk=appointment.pk)
     
-    # Configurar información de pago según si es primera cita o no
-    if is_first_appointment:
-        # Si es primera cita, usar datos del administrador obtenidos dinámicamente
+    is_first_appointment = not previous_appointments.exists()
+    
+    # Verificar si tiene citas previas completadas con este psicólogo
+    has_completed_appointments = previous_appointments.filter(status='COMPLETED').exists()
+    
+    # Usar datos del admin si es primera cita O si no tiene citas completadas previas
+    use_admin_data = is_first_appointment or not has_completed_appointments
+    
+    # Configurar información de pago según las condiciones
+    if use_admin_data:
+        # Si es primera cita o no tiene citas completadas, usar datos del administrador
         if not payment_info:
             # Obtener el perfil del administrador (tomamos el primero)
             admin_profile = AdminProfile.objects.first()
@@ -237,7 +245,7 @@ def send_appointment_created_client_email(appointment, payment_info=None):
                     'correo_destinatario': 'pagos@emindapp.cl'
                 }
     else:
-        # Si no es primera cita, usar datos del psicólogo
+        # Si tiene citas completadas previas, usar datos del psicólogo
         payment_info = {
             'nombre_destinatario': psychologist.bank_account_owner,
             'rut_destinatario': psychologist.bank_account_owner_rut,
@@ -287,24 +295,33 @@ def send_appointment_created_psychologist_email(appointment, is_first_appointmen
     user_psy = psychologist.user
     client = appointment.client
     
-    # Determinar si es primera cita si no se especifica
+    # Determinar si es primera cita y/o si hay citas completadas si no se especifica
     if is_first_appointment is None:
         # Verificar si hay citas previas entre este cliente y psicólogo
         from appointments.models import Appointment as AppointmentModel
         previous_appointments = AppointmentModel.objects.filter(
             client=client,
             psychologist=psychologist
-        ).exclude(pk=appointment.pk).exists()
+        ).exclude(pk=appointment.pk)
         
-        is_first_appointment = not previous_appointments
+        is_first_appointment = not previous_appointments.exists()
+        # Verificar si hay citas completadas
+        has_completed_appointments = previous_appointments.filter(status='COMPLETED').exists()
+        
+        # Usar lógica de primera cita incluso si no es primera pero no tiene completadas
+        should_use_admin_payment = is_first_appointment or not has_completed_appointments
+    else:
+        # Si is_first_appointment ya fue especificado, asumimos que la lógica de citas completadas
+        # ya fue considerada en el parámetro
+        should_use_admin_payment = is_first_appointment
     
     # Formatear la fecha y horas para presentación
     fecha_cita = appointment.date.strftime('%d/%m/%Y')
     hora_inicio = appointment.start_time.strftime('%H:%M')
     hora_fin = appointment.end_time.strftime('%H:%M')
     
-    # Si es primera cita, obtener los datos bancarios del administrador para incluirlos en el contexto
-    if is_first_appointment:
+    # Si es primera cita o no hay citas completadas, obtener los datos bancarios del administrador
+    if should_use_admin_payment:
         # Obtener el perfil del administrador
         admin_profile = AdminProfile.objects.first()
         
@@ -338,7 +355,7 @@ def send_appointment_created_psychologist_email(appointment, is_first_appointmen
         'fecha_cita': fecha_cita,
         'hora_inicio': hora_inicio,
         'hora_fin': hora_fin,
-        'es_primera_cita': is_first_appointment,
+        'es_primera_cita': should_use_admin_payment,  # Cambiamos para reflejar la lógica correcta
         'admin_bank_info': admin_bank_info
     }
     
