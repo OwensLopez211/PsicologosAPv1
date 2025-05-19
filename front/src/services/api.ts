@@ -83,37 +83,36 @@ export default api;
 // Nueva función para obtener estadísticas del cliente
 export const fetchClientStats = async () => {
   try {
-    // Intentar con el endpoint de prueba que ahora también devuelve estadísticas
-    const response = await api.get('/appointments/test-stats/');
+    // Intentar con el endpoint principal de estadísticas del cliente
+    const response = await api.get('/appointments/dashboard-stats/');
+    console.log('Estadísticas obtenidas desde dashboard-stats:', response.data);
     
-    // Si la respuesta del test tiene los campos de estadísticas, los usamos
-    if ('totalAppointments' in response.data) {
-      console.log('Estadísticas obtenidas desde test-stats:', response.data);
-      return {
-        totalAppointments: response.data.totalAppointments,
-        upcomingAppointments: response.data.upcomingAppointments,
-        completedAppointments: response.data.completedAppointments,
-        lastSessionDate: response.data.lastSessionDate
-      };
-    }
+    return {
+      totalAppointments: response.data.totalAppointments || 0,
+      upcomingAppointments: response.data.upcomingAppointments || 0,
+      completedAppointments: response.data.completedAppointments || 0,
+      lastSessionDate: response.data.lastSessionDate || null
+    };
+  } catch (statsError) {
+    console.error('Error al obtener estadísticas desde dashboard-stats:', statsError);
     
-    // Si no encontramos estadísticas en test-stats, intentar con el endpoint específico
+    // Intentar con el endpoint alternativo
     try {
-      const statsResponse = await api.get('/appointments/dashboard-stats/');
-      console.log('Estadísticas obtenidas desde dashboard-stats:', statsResponse.data);
-      return statsResponse.data;
-    } catch (statsError) {
-      console.error('Error al obtener estadísticas desde dashboard-stats:', statsError);
-      // Si falla, devolver valores por defecto
-      return {
-        totalAppointments: 0,
-        upcomingAppointments: 0,
-        completedAppointments: 0,
-        lastSessionDate: null
-      };
+      const testResponse = await api.get('/appointments/test-stats/');
+      console.log('Estadísticas obtenidas desde test-stats:', testResponse.data);
+      
+      if ('totalAppointments' in testResponse.data) {
+        return {
+          totalAppointments: testResponse.data.totalAppointments || 0,
+          upcomingAppointments: testResponse.data.upcomingAppointments || 0,
+          completedAppointments: testResponse.data.completedAppointments || 0,
+          lastSessionDate: testResponse.data.lastSessionDate || null
+        };
+      }
+    } catch (testError) {
+      console.error('Error al obtener estadísticas desde test-stats:', testError);
     }
-  } catch (error) {
-    console.error('Error al obtener estadísticas del cliente:', error);
+    
     // Devolver estadísticas vacías cuando hay error para evitar romper la UI
     return {
       totalAppointments: 0,
@@ -121,17 +120,5 @@ export const fetchClientStats = async () => {
       completedAppointments: 0,
       lastSessionDate: null
     };
-  }
-};
-
-// Nueva función para probar la API
-export const testApiConnection = async () => {
-  try {
-    const response = await api.get('/appointments/test-stats/');
-    console.log('Test API response:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error en prueba de API:', error);
-    throw error;
   }
 };

@@ -8,7 +8,7 @@ import {
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { fetchClientStats, testApiConnection } from '../../../services/api';
+import { fetchClientStats } from '../../../services/api';
 import api from '../../../services/api';
 
 // Interfaz para las estadísticas del cliente
@@ -43,14 +43,6 @@ const ClientDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      
-      // Primero probar la conexión con el endpoint de prueba
-      try {
-        const testResult = await testApiConnection();
-        console.log('Prueba de API exitosa:', testResult);
-      } catch (testError) {
-        console.error('Error en la prueba de API:', testError);
-      }
       
       try {
         // Obtener estadísticas del cliente
@@ -243,104 +235,19 @@ const ClientDashboard: React.FC = () => {
             <h3 className="font-medium text-gray-800 text-sm">Acciones rápidas</h3>
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Link 
-                to="/dashboard/new-appointment"
-                className="flex-1 sm:flex-none px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors flex items-center justify-center"
-              >
-                <CalendarIcon className="h-3.5 w-3.5 mr-1" />
-                Agendar cita
-              </Link>
-              <Link 
-                to="/psychologists"
+                to="/especialistas"
                 className="flex-1 sm:flex-none px-3 py-1.5 bg-gray-100 text-gray-700 text-xs rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
               >
                 <UserIcon className="h-3.5 w-3.5 mr-1" />
                 Buscar psicólogo
               </Link>
-            </div>
-          </motion.div>
-
-          {/* Sección principal: próximas citas */}
-          <motion.div variants={itemVariants}>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-3 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="font-medium text-gray-800 text-sm">Mis próximas citas</h3>
-                <span className="text-xs text-gray-500">{upcomingAppointments.length} pendiente(s)</span>
-              </div>
-
-              {upcomingAppointments.length > 0 ? (
-                <>
-                  <div className="divide-y divide-gray-100">
-                    {upcomingAppointments.map(appointment => (
-                      <div key={appointment.id} className="p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <div className="font-medium text-gray-800">
-                              {appointment.psychologistName}
-                            </div>
-                            <div className="text-sm text-gray-600 mt-1 flex items-center">
-                              <CalendarIcon className="h-4 w-4 mr-1 text-gray-400" />
-                              {formatDate(appointment.date)}
-                            </div>
-                            <div className="text-sm text-gray-600 mt-1 flex items-center">
-                              <ClockIcon className="h-4 w-4 mr-1 text-gray-400" />
-                              {appointment.time}
-                            </div>
-                          </div>
-                          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getAppointmentStatusColor(appointment.status)}`}>
-                            {getAppointmentStatusText(appointment.status)}
-                          </span>
-                        </div>
-                        
-                        {appointment.status === 'PENDING_PAYMENT' && (
-                          <div className="bg-yellow-50 p-2 rounded-md mb-3">
-                            <p className="text-xs text-yellow-700">
-                              Esta cita requiere que completes el pago para confirmarla.
-                            </p>
-                          </div>
-                        )}
-                        
-                        <div className="flex justify-end">
-                          <Link 
-                            to={`/dashboard/appointments`}
-                            className="px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors flex items-center"
-                          >
-                            Ver detalles
-                            <ArrowRightIcon className="h-3 w-3 ml-1" />
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="p-3 text-center border-t border-gray-100">
-                    <Link 
-                      to="/dashboard/appointments" 
-                      className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium flex items-center justify-center"
-                    >
-                      Ver todas mis citas
-                      <ArrowRightIcon className="h-3 w-3 ml-1" />
-                    </Link>
-                    <p className="text-xs text-gray-500 mt-2">
-                      En el panel de citas podrás ver todos los detalles, gestionar pagos y cancelaciones.
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <div className="p-6 text-center text-gray-500">
-                  <CalendarIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                  <p className="font-medium text-gray-600 text-sm mb-1">No tienes citas programadas</p>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Agenda tu primera cita con un profesional
-                  </p>
-                  <Link 
-                    to="/dashboard/new-appointment"
-                    className="inline-flex items-center px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors"
-                  >
-                    Agendar cita
-                    <ArrowRightIcon className="h-3 w-3 ml-1" />
-                  </Link>
-                </div>
-              )}
+              <Link 
+                to="/dashboard/appointments" 
+                className="flex-1 sm:flex-none px-3 py-1.5 bg-gray-100 text-gray-700 text-xs rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
+              >
+                <CalendarIcon className="h-3.5 w-3.5 mr-1" />
+                Ver mis citas
+              </Link>
             </div>
           </motion.div>
         </>
