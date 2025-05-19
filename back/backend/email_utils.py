@@ -212,10 +212,10 @@ def send_appointment_created_client_email(appointment, payment_info=None):
     is_first_appointment = not previous_appointments.exists()
     
     # Verificar si tiene citas previas completadas con este psicólogo
-    has_completed_appointments = previous_appointments.filter(status='COMPLETED').exists()
+    has_confirmed_appointments = previous_appointments.filter(status='CONFIRMED').exists()
     
     # Usar datos del admin si es primera cita O si no tiene citas completadas previas
-    use_admin_data = is_first_appointment or not has_completed_appointments
+    use_admin_data = is_first_appointment or not has_confirmed_appointments
     
     # Configurar información de pago según las condiciones
     if use_admin_data:
@@ -306,10 +306,10 @@ def send_appointment_created_psychologist_email(appointment, is_first_appointmen
         
         is_first_appointment = not previous_appointments.exists()
         # Verificar si hay citas completadas
-        has_completed_appointments = previous_appointments.filter(status='COMPLETED').exists()
+        has_confirmed_appointments = previous_appointments.filter(status='CONFIRMED').exists()
         
         # Usar lógica de primera cita incluso si no es primera pero no tiene completadas
-        should_use_admin_payment = is_first_appointment or not has_completed_appointments
+        should_use_admin_payment = is_first_appointment or not has_confirmed_appointments
     else:
         # Si is_first_appointment ya fue especificado, asumimos que la lógica de citas completadas
         # ya fue considerada en el parámetro
