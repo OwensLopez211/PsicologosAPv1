@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { verifyResetToken, resetPassword } from '../../services/authService';
 import { motion } from 'framer-motion';
 import PageTransition from '../../components/animations/PageTransition';
