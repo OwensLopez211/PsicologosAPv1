@@ -83,8 +83,19 @@ export default api;
 // Nueva función para obtener estadísticas del cliente
 export const fetchClientStats = async () => {
   try {
-    const response = await api.get('/appointments/client-stats/');
-    return response.data;
+    // Intentar primero con la URL usando guion
+    try {
+      const response = await api.get('/appointments/client-stats/');
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        // Si devuelve 404, intentar con la URL sin guion
+        console.log('Intentando con URL alternativa para client_stats');
+        const response = await api.get('/appointments/client_stats/');
+        return response.data;
+      }
+      throw error;
+    }
   } catch (error) {
     console.error('Error al obtener estadísticas del cliente:', error);
     throw error;

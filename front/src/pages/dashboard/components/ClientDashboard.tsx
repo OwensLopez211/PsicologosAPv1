@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchClientStats } from '../../../services/api';
 import api from '../../../services/api';
+import axios from 'axios';
 
 // Interfaz para las estadísticas del cliente
 interface ClientStats {
@@ -43,28 +44,48 @@ const ClientDashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      
       try {
         // Obtener estadísticas del cliente
-        const statsData = await fetchClientStats();
+        let statsData;
+        try {
+          statsData = await fetchClientStats();
+          console.log('Estadísticas obtenidas:', statsData);
+        } catch (statsError) {
+          console.error('Error al obtener estadísticas, usando datos de fallback:', statsError);
+          // Usar datos de fallback si falla
+          statsData = {
+            totalAppointments: 0,
+            upcomingAppointments: 0,
+            completedAppointments: 0,
+            lastSessionDate: null
+          };
+        }
         setStats(statsData);
         
         // Obtener citas próximas
-        const appointmentsResponse = await api.get('/appointments/client-appointments/');
-        const upcomingData = appointmentsResponse.data.upcoming;
+        try {
+          const appointmentsResponse = await api.get('/appointments/client-appointments/');
+          const upcomingData = appointmentsResponse.data.upcoming;
+          
+          // Transformar datos de citas próximas al formato esperado
+          const formattedAppointments: UpcomingAppointment[] = upcomingData.map((appointment: any) => ({
+            id: appointment.id,
+            psychologistName: `${appointment.psychologist.user.first_name} ${appointment.psychologist.user.last_name}`,
+            date: appointment.date,
+            time: appointment.start_time,
+            status: appointment.status
+          }));
+          
+          setUpcomingAppointments(formattedAppointments);
+        } catch (appointmentsError) {
+          console.error('Error al obtener citas próximas:', appointmentsError);
+          // En caso de error, dejamos la lista vacía
+        }
         
-        // Transformar datos de citas próximas al formato esperado
-        const formattedAppointments: UpcomingAppointment[] = upcomingData.map((appointment: any) => ({
-          id: appointment.id,
-          psychologistName: `${appointment.psychologist.user.first_name} ${appointment.psychologist.user.last_name}`,
-          date: appointment.date,
-          time: appointment.start_time,
-          status: appointment.status
-        }));
-        
-        setUpcomingAppointments(formattedAppointments);
         setLoading(false);
       } catch (err) {
-        console.error('Error al cargar datos del dashboard:', err);
+        console.error('Error general al cargar datos del dashboard:', err);
         setError('No se pudieron cargar tus datos. Por favor, intenta nuevamente más tarde.');
         setLoading(false);
       }

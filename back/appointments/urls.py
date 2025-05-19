@@ -6,8 +6,14 @@ router = DefaultRouter()
 router.register(r'', AppointmentViewSet, basename='appointment')
 
 urlpatterns = [
-    path('', include(router.urls)),
-    # Add explicit paths for the appointment endpoints
+    path('client-stats/', AppointmentViewSet.as_view({
+        'get': 'client_stats',
+    }), name='client-stats'),
+    
+    path('client_stats/', AppointmentViewSet.as_view({
+        'get': 'client_stats',
+    }), name='client_stats'),
+    
     path('available-slots/', AppointmentViewSet.as_view({
         'get': 'available_slots',
     }), name='available-slots'),
@@ -20,7 +26,6 @@ urlpatterns = [
     path('<int:pk>/verify-payment/', AppointmentViewSet.as_view({
         'post': 'verify_payment',
     }), name='verify-payment'),
-    # Nuevos endpoints para psicólogos
     path('my-appointments/', AppointmentViewSet.as_view({
         'get': 'my_appointments',
     }), name='my-appointments'),
@@ -30,20 +35,15 @@ urlpatterns = [
     path('<int:pk>/add-notes/', AppointmentViewSet.as_view({
         'patch': 'add_notes',
     }), name='add-notes'),
-    # Nuevo endpoint para clientes - both with and without trailing slash
     path('client-appointments/', AppointmentViewSet.as_view({
         'get': 'client_appointments',
     }), name='client-appointments'),
     path('client-appointments', AppointmentViewSet.as_view({
         'get': 'client_appointments',
     }), name='client-appointments-no-slash'),
-    # The psychologist appointments endpoint will be handled by the router
-    # It will be available at: /api/appointments/psychologist/{id}/
     path('has-confirmed-appointments/<int:pk>/', AppointmentViewSet.as_view({
         'get': 'has_confirmed_appointments',
     }), name='has-confirmed-appointments'),
-    
-    # Nuevos endpoints para verificación de pagos
     path('admin-payment-verification/', AppointmentViewSet.as_view({
         'get': 'admin_payment_verification',
     }), name='admin-payment-verification'),
@@ -56,26 +56,17 @@ urlpatterns = [
     path('<int:pk>/update-payment-status/', AppointmentViewSet.as_view({
         'patch': 'update_payment_status',
     }), name='update-payment-status'),
-    
-    # Nuevo endpoint para descargar comprobante de pago
     path('<int:pk>/download-payment-proof/', AppointmentViewSet.as_view({
         'get': 'download_payment_proof',
     }), name='download-payment-proof'),
     path('<int:pk>/is-first-appointment/', AppointmentViewSet.as_view({
         'get': 'is_first_appointment',
     }), name='is-first-appointment'),
-    
-    # Nuevo endpoint para obtener pacientes del psicólogo
     path('psychologist-patients/', AppointmentViewSet.as_view({
         'get': 'psychologist_patients',
     }), name='psychologist-patients'),
-    # Versión sin guion para mayor compatibilidad
     path('psychologist_patients/', AppointmentViewSet.as_view({
         'get': 'psychologist_patients',
     }), name='psychologist_patients'),
-    
-    # Nuevo endpoint para estadísticas del cliente
-    path('client-stats/', AppointmentViewSet.as_view({
-        'get': 'client_stats',
-    }), name='client-stats'),
+    path('', include(router.urls)),
 ]
