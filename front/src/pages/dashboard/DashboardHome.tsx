@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import AdminDashboard from './components/AdminDashboard';
+import PsychologistDashboard from './components/PsychologistDashboard';
 
-// Componentes específicos para cada tipo de usuario (por implementar)
+// Componente específico para cliente (por implementar)
 const ClientDashboard = () => (
   <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
     <h2 className="text-xl font-semibold text-gray-800 mb-4">Bienvenido a tu Panel de Cliente</h2>
@@ -11,16 +12,6 @@ const ClientDashboard = () => (
       Aquí podrás gestionar tus citas, ver tu historial y conectar con profesionales.
     </p>
     {/* Aquí se añadirán más componentes específicos para clientes */}
-  </div>
-);
-
-const PsychologistDashboard = () => (
-  <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
-    <h2 className="text-xl font-semibold text-gray-800 mb-4">Bienvenido a tu Panel de Psicólogo</h2>
-    <p className="text-gray-600">
-      Aquí podrás gestionar tu agenda, ver tus pacientes y administrar tu perfil profesional.
-    </p>
-    {/* Aquí se añadirán más componentes específicos para psicólogos */}
   </div>
 );
 
@@ -96,9 +87,8 @@ const DashboardHome = () => {
   
   // Estadísticas de ejemplo (personalizar según tipo de usuario)
   const renderStats = () => {
-    // No mostramos las estadísticas genéricas para el panel de admin
-    // ya que ahora usamos el componente AdminDashboard especializado
-    if (!user || user.user_type?.toLowerCase() === 'admin') return null;
+    // No mostramos las estadísticas genéricas para los paneles especializados
+    if (!user || ['admin', 'psychologist'].includes(user.user_type?.toLowerCase() || '')) return null;
     
     const statsItems = [];
     
@@ -108,13 +98,6 @@ const DashboardHome = () => {
           { title: 'Citas Pendientes', value: '2', icon: '📅', color: 'bg-blue-100' },
           { title: 'Mensajes', value: '5', icon: '💬', color: 'bg-green-100' },
           { title: 'Psicólogos Favoritos', value: '3', icon: '⭐', color: 'bg-yellow-100' }
-        );
-        break;
-      case 'psychologist':
-        statsItems.push(
-          { title: 'Citas Hoy', value: '4', icon: '📅', color: 'bg-blue-100' },
-          { title: 'Pacientes Activos', value: '12', icon: '👥', color: 'bg-green-100' },
-          { title: 'Valoración', value: '4.8', icon: '⭐', color: 'bg-yellow-100' }
         );
         break;
       default:
@@ -136,9 +119,9 @@ const DashboardHome = () => {
     );
   };
   
-  // No renderizamos las secciones adicionales para el administrador
+  // No renderizamos las secciones adicionales para los dashboards especializados
   const shouldShowAdditionalSections = () => {
-    return !user || user.user_type?.toLowerCase() !== 'admin';
+    return !user || !['admin', 'psychologist'].includes(user.user_type?.toLowerCase() || '');
   };
   
   return (
@@ -148,7 +131,8 @@ const DashboardHome = () => {
       initial="hidden"
       animate="visible"
     >
-      {/* Encabezado con saludo personalizado */}
+      {/* Solo mostramos el encabezado con saludo para tipos sin dashboard especializado */}
+      {shouldShowAdditionalSections() && (
       <motion.div 
         className="flex flex-col md:flex-row md:items-center justify-between"
         variants={itemVariants}
@@ -167,8 +151,9 @@ const DashboardHome = () => {
           </p>
         </div>
       </motion.div>
+      )}
       
-      {/* Tarjetas de estadísticas (solo para cliente y psicólogo) */}
+      {/* Tarjetas de estadísticas (solo para cliente) */}
       <motion.div variants={itemVariants}>
         {renderStats()}
       </motion.div>
@@ -178,7 +163,7 @@ const DashboardHome = () => {
         {renderDashboardByUserType()}
       </motion.div>
       
-      {/* Sección adicional (solo para cliente y psicólogo) */}
+      {/* Sección adicional (solo para cliente) */}
       {shouldShowAdditionalSections() && (
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8"
