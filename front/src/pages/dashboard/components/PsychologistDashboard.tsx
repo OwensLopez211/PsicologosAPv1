@@ -33,7 +33,7 @@ interface UpcomingAppointment {
 }
 
 const PsychologistDashboard: React.FC = () => {
-  const { user } = useAuth();
+  useAuth();
   const [stats, setStats] = useState<PsychologistStats>({
     totalAppointments: 0,
     pendingAppointments: 0,
