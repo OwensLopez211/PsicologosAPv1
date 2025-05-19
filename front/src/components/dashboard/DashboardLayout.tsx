@@ -132,11 +132,6 @@ const DashboardLayout = () => {
             </AnimatePresence>
           </motion.div>
         </motion.main>
-        
-        {/* Footer con espacio ajustado para móvil */}
-        <footer className="mt-auto text-center text-sm text-gray-500 py-4 md:py-6">
-          <p>© {new Date().getFullYear()} E-mind - Plataforma de Salud Mental</p>
-        </footer>
       </div>
     </div>
   );

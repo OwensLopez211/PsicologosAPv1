@@ -10,7 +10,6 @@ import {
   formatDate 
 } from './scheduleUtils';
 import AppointmentService from '../../services/appointmentService';
-import { toast } from 'react-hot-toast';
 
 interface AppointmentModalProps {
   psychologistId: number;
@@ -46,11 +45,6 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
   // Estado para el precio de la sesión
   const [sessionPrice, setSessionPrice] = useState<number | null>(null);
   
-  // Estado para citas pendientes de pago
-  const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0);
-  const [pendingPaymentsChecked, setPendingPaymentsChecked] = useState(false);
-  const MAX_PENDING_PAYMENTS = 2; // Máximo número de citas pendientes permitidas
-  
   // Available payment methods
   const paymentMethods: PaymentMethod[] = [
     {
@@ -82,36 +76,10 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
     if (psychologistId) {
       fetchAvailableTimeSlots();
       fetchSessionPrice();
-      checkPendingPayments();
     } else {
       setError('ID del psicólogo no disponible. Por favor, recargue la página.');
     }
   }, [psychologistId]);
-  
-  // Función para verificar cuántas citas pendientes de pago tiene el cliente
-  const checkPendingPayments = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.log('Usuario no autenticado, no se verifican pagos pendientes');
-        return;
-      }
-      
-      const response = await axios.get('/api/appointments/pending-payments-count/', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.data && response.data.count !== undefined) {
-        setPendingPaymentsCount(response.data.count);
-      }
-      
-      setPendingPaymentsChecked(true);
-    } catch (error) {
-      console.error('Error al verificar pagos pendientes:', error);
-    }
-  };
 
   // Función para obtener el precio de la sesión
   const fetchSessionPrice = async () => {
@@ -212,32 +180,11 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
 
   // Function to handle slot selection
   const handleSlotSelection = (date: string, startTime: string, endTime: string) => {
-    // Verificar si tiene demasiadas citas pendientes de pago
-    if (pendingPaymentsCount >= MAX_PENDING_PAYMENTS) {
-      toast.error(
-        `Tienes ${pendingPaymentsCount} citas pendientes de pago. Por favor, completa el pago de tus citas actuales antes de agendar una nueva.`,
-        { duration: 6000 }
-      );
-      return;
-    }
-    
     // Store the selected slot
     setSelectedSlot({date, startTime, endTime});
     
     // Show payment options
     setShowPaymentOptions(true);
-    
-    // Mostrar advertencia si tiene al menos una cita pendiente
-    if (pendingPaymentsCount > 0) {
-      toast(
-        `Tienes ${pendingPaymentsCount} ${pendingPaymentsCount === 1 ? 'cita pendiente' : 'citas pendientes'} de pago. Recuerda completar todos los pagos para mantener tus reservas.`,
-        { 
-          duration: 5000,
-          icon: '⚠️',
-          className: 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-        }
-      );
-    }
   };
   
   // Function to handle payment method selection
@@ -259,16 +206,6 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
   // Function to process the appointment
   const handleProcessAppointment = async () => {
     if (!selectedSlot || !selectedPaymentMethod) {
-      return;
-    }
-    
-    // Verificar nuevamente las citas pendientes de pago
-    await checkPendingPayments();
-    if (pendingPaymentsCount >= MAX_PENDING_PAYMENTS) {
-      toast.error(
-        `Tienes ${pendingPaymentsCount} citas pendientes de pago. Por favor, completa el pago de tus citas actuales antes de agendar una nueva.`,
-        { duration: 6000 }
-      );
       return;
     }
     
@@ -387,9 +324,6 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
         });
       }
       
-      // Actualizar contador de citas pendientes
-      setPendingPaymentsCount(prevCount => prevCount + 1);
-      
       // Mostrar el modal de confirmación de pago
       setShowPaymentConfirmation(true);
       
@@ -468,24 +402,6 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
               <div className="bg-red-50 text-red-700 p-4 rounded-md m-6">
                 {error}
               </div>
-            ) : pendingPaymentsChecked && pendingPaymentsCount >= MAX_PENDING_PAYMENTS ? (
-              <div className="bg-red-50 text-red-700 p-4 rounded-md m-6">
-                <div className="flex items-start">
-                  <svg className="h-5 w-5 mr-2 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <div>
-                    <h3 className="font-medium">Tienes demasiadas citas pendientes de pago</h3>
-                    <p className="mt-1">Por favor, completa el pago de tus citas actuales antes de agendar una nueva cita. Puedes hacerlo desde la sección "Mis Citas" en tu panel de usuario.</p>
-                    <button 
-                      className="mt-3 bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                      onClick={() => window.location.href = '/dashboard/appointments'}
-                    >
-                      Ir a Mis Citas
-                    </button>
-                  </div>
-                </div>
-              </div>
             ) : showPaymentOptions ? (
               <PaymentSelector
                 paymentMethods={paymentMethods}
@@ -502,20 +418,6 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
                 No hay horarios disponibles en los próximos 30 días.
               </div>
             ) : (
-              <>
-                {pendingPaymentsChecked && pendingPaymentsCount > 0 && (
-                  <div className="bg-yellow-50 p-4 rounded-md m-6 border border-yellow-200">
-                    <div className="flex items-start">
-                      <svg className="h-5 w-5 mr-2 mt-0.5 text-yellow-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
-                      <div>
-                        <h3 className="font-medium text-yellow-800">Tienes {pendingPaymentsCount} {pendingPaymentsCount === 1 ? 'cita pendiente' : 'citas pendientes'} de pago</h3>
-                        <p className="mt-1 text-yellow-700">Te recordamos que es importante mantener tus citas al día para garantizar tu atención. Puedes completar tus pagos desde la sección "Mis Citas".</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
               <DaySelector
                 availableDays={availableDays}
                 selectedDate={selectedDate}
@@ -524,7 +426,6 @@ const AppointmentModal: FC<AppointmentModalProps> = ({
                 formatDate={formatDate}
                 formatTime={formatTime}
               />
-              </>
             )}
           </div>
 

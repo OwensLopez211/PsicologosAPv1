@@ -7,7 +7,7 @@ const ContactPage = () => {
     <PageTransition>
       <HeaderPage 
         title="Contáctanos"
-        description="¿Tienes preguntas o necesitas ayuda? Estamos aquí para asistirte. Completa el formulario a continuación y nuestro equipo se pondrá en contacto contigo lo antes posible."
+        description="¿Tienes preguntas sobre nuestros servicios de psicoterapia online? ¿Necesitas ayuda para encontrar el psicólogo adecuado? El equipo de E-Mind está aquí para asistirte. Completa el formulario o contáctanos directamente por WhatsApp."
       />
       <ContactContainer />
     </PageTransition>

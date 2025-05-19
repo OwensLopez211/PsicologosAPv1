@@ -15,6 +15,12 @@ from authentication.permissions import IsClient, IsPsychologist, IsAdminUser
 from rest_framework import serializers
 import os
 from django.http import HttpResponse
+from backend.email_utils import (
+    send_appointment_created_client_email,
+    send_appointment_created_psychologist_email,
+    send_payment_verification_needed_email
+)
+from django.conf import settings
 
 class AppointmentViewSet(viewsets.ModelViewSet):
     """API endpoint para gestión de citas"""
@@ -104,6 +110,36 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 print(f"Error creating payment detail: {str(e)}")
                 # Don't fail the appointment creation if payment detail creation fails
+        
+        # Determinar si es primera cita
+        is_first_appointment = Appointment.objects.filter(
+            client=client,
+            psychologist=psychologist
+        ).exclude(pk=appointment.pk).exists() == False
+        
+        # Enviar correo al cliente con instrucciones de pago
+        try:
+            # Obtener la información de pago desde settings o configuración
+            payment_info = getattr(settings, 'PAYMENT_INFO', {
+                'nombre_destinatario': 'E-Mind SpA',
+                'rut_destinatario': '77.777.777-7',
+                'banco_destinatario': 'Banco Estado',
+                'tipo_cuenta': 'Cuenta Corriente',
+                'numero_cuenta': '12345678',
+                'correo_destinatario': 'pagos@emindapp.cl'
+            })
+            
+            send_appointment_created_client_email(appointment, payment_info)
+            print(f"✅ Correo de cita agendada enviado al cliente: {client.user.email}")
+        except Exception as e:
+            print(f"❌ Error al enviar correo al cliente: {str(e)}")
+        
+        # Enviar correo al psicólogo
+        try:
+            send_appointment_created_psychologist_email(appointment, is_first_appointment)
+            print(f"✅ Correo de cita agendada enviado al psicólogo: {psychologist.user.email}")
+        except Exception as e:
+            print(f"❌ Error al enviar correo al psicólogo: {str(e)}")
         
         return appointment
     
@@ -270,6 +306,16 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                     pass
             
             payment_detail.save()
+            
+            # Enviar correo al psicólogo para notificarle que debe verificar el pago
+            try:
+                # Obtener URL del frontend desde settings o configuración
+                frontend_url = getattr(settings, 'FRONTEND_URL', 'https://emindapp.cl')
+                
+                send_payment_verification_needed_email(appointment, frontend_url)
+                print(f"✅ Correo de verificación de pago enviado al psicólogo: {appointment.psychologist.user.email}")
+            except Exception as e:
+                print(f"❌ Error al enviar correo de verificación al psicólogo: {str(e)}")
             
             return Response({
                 "detail": "Comprobante de pago subido correctamente. Un administrador verificará el pago pronto."
@@ -990,7 +1036,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['get'], url_path='is-first-appointment', permission_classes=[permissions.IsAuthenticated])
     def is_first_appointment(self, request, pk=None):
         """
         Determina si la cita especificada es la primera entre el psicólogo y el cliente.
@@ -1021,5 +1067,97 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             'client_id': appointment.client.id,
             'psychologist_id': appointment.psychologist.id
         })
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsPsychologist])
+    def psychologist_patients(self, request):
+        """
+        Obtiene la lista de pacientes que ha atendido el psicólogo autenticado,
+        junto con información de citas pasadas y futuras.
+        """
+        try:
+            user = request.user
+            
+            try:
+                psychologist = PsychologistProfile.objects.get(user=user)
+            except PsychologistProfile.DoesNotExist:
+                return Response(
+                    {"detail": "No se encontró el perfil de psicólogo para este usuario."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Obtener todas las citas confirmadas o completadas del psicólogo
+            appointments = Appointment.objects.filter(
+                psychologist=psychologist,
+                status__in=['PAYMENT_VERIFIED', 'CONFIRMED', 'COMPLETED']
+            ).select_related('client', 'client__user')
+            
+            # Agrupar por cliente
+            clients_dict = {}
+            
+            for appointment in appointments:
+                client_id = appointment.client.id
+                
+                if client_id not in clients_dict:
+                    # Si es la primera vez que vemos este cliente, inicializar sus datos
+                    clients_dict[client_id] = {
+                        'id': client_id,
+                        'user': {
+                            'id': appointment.client.user.id,
+                            'first_name': appointment.client.user.first_name,
+                            'last_name': appointment.client.user.last_name,
+                            'email': appointment.client.user.email,
+                            'is_active': appointment.client.user.is_active
+                        },
+                        'profile_image': appointment.client.profile_image.url if appointment.client.profile_image else None,
+                        'rut': appointment.client.rut,
+                        'region': appointment.client.region,
+                        'appointments': [],
+                        'total_appointments': 0
+                    }
+                
+                # Añadir esta cita a la lista de citas del cliente
+                clients_dict[client_id]['appointments'].append({
+                    'id': appointment.id,
+                    'date': appointment.date,
+                    'start_time': appointment.start_time,
+                    'status': appointment.status
+                })
+                clients_dict[client_id]['total_appointments'] += 1
+            
+            # Procesar cada cliente para obtener primera y última cita
+            result = []
+            for client_data in clients_dict.values():
+                appointments = client_data.pop('appointments')
+                
+                # Ordenar citas por fecha
+                appointments.sort(key=lambda a: (a['date'], a['start_time']))
+                
+                # Citas completadas (pasadas)
+                past_appointments = [a for a in appointments if a['status'] == 'COMPLETED']
+                
+                # Citas confirmadas (futuras)
+                future_appointments = [a for a in appointments if a['status'] in ['PAYMENT_VERIFIED', 'CONFIRMED']]
+                future_appointments.sort(key=lambda a: (a['date'], a['start_time']))
+                
+                # Última cita (la más reciente entre las completadas)
+                if past_appointments:
+                    client_data['last_appointment_date'] = past_appointments[-1]['date']
+                
+                # Próxima cita (la más cercana entre las confirmadas)
+                if future_appointments:
+                    client_data['next_appointment_date'] = future_appointments[0]['date']
+                
+                result.append(client_data)
+            
+            return Response(result)
+                
+        except Exception as e:
+            import traceback
+            print(f"Error al obtener pacientes: {str(e)}")
+            print(traceback.format_exc())
+            return Response(
+                {"detail": f"Error al obtener pacientes: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
    

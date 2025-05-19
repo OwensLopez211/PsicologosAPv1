@@ -173,7 +173,7 @@ const AdminDashboard: React.FC = () => {
         </motion.div>
       )}
       
-      {/* Contador principal de usuarios */}
+      {/* Contador principal y estadísticas de usuarios - REDISEÑADO */}
       {loading ? (
         <div className="flex justify-center items-center p-10">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#2A6877]"></div>
@@ -190,105 +190,121 @@ const AdminDashboard: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Estadísticas principales */}
+          {/* Estadísticas principales - Rediseñado en estilo ShadCN */}
           <motion.div variants={itemVariants} className="mb-6">
-            <div className="text-center mb-1">
-              <h2 className="text-5xl font-bold text-gray-800">{stats.totalUsers}</h2>
-              <p className="text-gray-600 text-sm mt-1">Usuarios activos (clientes y psicólogos)</p>
-            </div>
-            
-            {/* Tarjetas de estadísticas en formato horizontal */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-              {/* Pacientes */}
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                <div className="flex items-center space-x-2">
-                  <UserGroupIcon className="h-5 w-5 text-blue-600" />
-                  <span className="text-blue-800 font-medium">Pacientes</span>
-                  <span className="text-blue-800 font-bold ml-auto">{stats.clientUsers}</span>
+            {/* Tarjeta principal con contador total */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="flex items-center p-4 gap-3">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-500">Total usuarios</p>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{stats.totalUsers}</h2>
                 </div>
-                <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full" 
-                    style={{ width: `${getClientPercentage()}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-blue-800 mt-1 text-right">
-                  {getClientPercentage()}% del total
+                <div className="h-12 w-12 bg-[#2A6877]/10 rounded-full flex items-center justify-center">
+                  <UserGroupIcon className="h-6 w-6 text-[#2A6877]" />
                 </div>
               </div>
+              
+              {/* Métricas con diseño más compacto */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 border-t border-gray-100">
+                {/* Pacientes */}
+                <div className="p-3 flex flex-col">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-500">Pacientes</span>
+                    <div className="h-4 w-4 rounded-full bg-blue-100 flex items-center justify-center">
+                      <UserGroupIcon className="h-2.5 w-2.5 text-blue-600" />
+                    </div>
+                  </div>
+                  <div className="mt-1 flex items-end">
+                    <span className="text-lg font-semibold text-gray-800">{stats.clientUsers}</span>
+                    <span className="ml-1 text-xs text-blue-700">{getClientPercentage()}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
+                    <div 
+                      className="bg-blue-600 h-1 rounded-full" 
+                      style={{ width: `${getClientPercentage()}%` }}
+                    ></div>
+                  </div>
+                </div>
 
-              {/* Psicólogos Verificados */}
-              <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-                <div className="flex items-center space-x-2">
-                  <CheckCircleIcon className="h-5 w-5 text-green-600" />
-                  <span className="text-green-800 font-medium">Psicólogos Verificados</span>
-                  <span className="text-green-800 font-bold ml-auto">{stats.verifiedUsers}</span>
+                {/* Psicólogos Verificados */}
+                <div className="p-3 flex flex-col">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-500">Verificados</span>
+                    <div className="h-4 w-4 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircleIcon className="h-2.5 w-2.5 text-green-600" />
+                    </div>
+                  </div>
+                  <div className="mt-1 flex items-end">
+                    <span className="text-lg font-semibold text-gray-800">{stats.verifiedUsers}</span>
+                    <span className="ml-1 text-xs text-green-700">{getVerifiedPercentage()}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
+                    <div 
+                      className="bg-green-600 h-1 rounded-full" 
+                      style={{ width: `${getVerifiedPercentage()}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="w-full bg-green-200 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-green-600 h-2 rounded-full" 
-                    style={{ width: `${getVerifiedPercentage()}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-green-800 mt-1 text-right">
-                  {getVerifiedPercentage()}% del total
-                </div>
-              </div>
 
-              {/* Psicólogos Pendientes */}
-              <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
-                <div className="flex items-center space-x-2">
-                  <ClockIcon className="h-5 w-5 text-yellow-600" />
-                  <span className="text-yellow-800 font-medium">Psicólogos Pendientes</span>
-                  <span className="text-yellow-800 font-bold ml-auto">{stats.pendingUsers}</span>
+                {/* Psicólogos Pendientes */}
+                <div className="p-3 flex flex-col">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-500">Pendientes</span>
+                    <div className="h-4 w-4 rounded-full bg-yellow-100 flex items-center justify-center">
+                      <ClockIcon className="h-2.5 w-2.5 text-yellow-600" />
+                    </div>
+                  </div>
+                  <div className="mt-1 flex items-end">
+                    <span className="text-lg font-semibold text-gray-800">{stats.pendingUsers}</span>
+                    <span className="ml-1 text-xs text-yellow-700">{getPendingPercentage()}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
+                    <div 
+                      className="bg-yellow-600 h-1 rounded-full" 
+                      style={{ width: `${getPendingPercentage()}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="w-full bg-yellow-200 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-yellow-600 h-2 rounded-full" 
-                    style={{ width: `${getPendingPercentage()}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-yellow-800 mt-1 text-right">
-                  {getPendingPercentage()}% del total
-                </div>
-              </div>
 
-              {/* Psicólogos Rechazados */}
-              <div className="bg-red-50 rounded-lg p-4 border border-red-100">
-                <div className="flex items-center space-x-2">
-                  <XCircleIcon className="h-5 w-5 text-red-600" />
-                  <span className="text-red-800 font-medium">Psicólogos Rechazados</span>
-                  <span className="text-red-800 font-bold ml-auto">{stats.rejectedUsers}</span>
-                </div>
-                <div className="w-full bg-red-200 rounded-full h-2 mt-2">
-                  <div 
-                    className="bg-red-600 h-2 rounded-full" 
-                    style={{ width: `${getRejectedPercentage()}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-red-800 mt-1 text-right">
-                  {getRejectedPercentage()}% del total
+                {/* Psicólogos Rechazados */}
+                <div className="p-3 flex flex-col">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-500">Rechazados</span>
+                    <div className="h-4 w-4 rounded-full bg-red-100 flex items-center justify-center">
+                      <XCircleIcon className="h-2.5 w-2.5 text-red-600" />
+                    </div>
+                  </div>
+                  <div className="mt-1 flex items-end">
+                    <span className="text-lg font-semibold text-gray-800">{stats.rejectedUsers}</span>
+                    <span className="ml-1 text-xs text-red-700">{getRejectedPercentage()}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
+                    <div 
+                      className="bg-red-600 h-1 rounded-full" 
+                      style={{ width: `${getRejectedPercentage()}%` }}
+                    ></div>
+                  </div>
                 </div>
               </div>
             </div>
           </motion.div>
 
           {/* Barra de acciones rápidas */}
-          <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex justify-between items-center">
-            <h3 className="font-medium text-gray-800">Acciones rápidas</h3>
-            <div className="flex space-x-3">
+          <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h3 className="font-medium text-gray-800 text-sm">Acciones rápidas</h3>
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Link 
                 to="/admin/dashboard/psychologists"
-                className="px-4 py-2 bg-[#2A6877] text-white text-sm rounded-md hover:bg-[#1d4e5f] transition-colors flex items-center"
+                className="flex-1 sm:flex-none px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors flex items-center justify-center"
               >
-                <CheckCircleIcon className="h-4 w-4 mr-1.5" />
+                <CheckCircleIcon className="h-3.5 w-3.5 mr-1" />
                 Verificar psicólogos
               </Link>
               <Link 
                 to="/admin/dashboard/pacients"
-                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 transition-colors flex items-center"
+                className="flex-1 sm:flex-none px-3 py-1.5 bg-gray-100 text-gray-700 text-xs rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
               >
-                <UserGroupIcon className="h-4 w-4 mr-1.5" />
+                <UserGroupIcon className="h-3.5 w-3.5 mr-1" />
                 Ver todos los usuarios
               </Link>
             </div>
@@ -299,18 +315,18 @@ const AdminDashboard: React.FC = () => {
             className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200"
             variants={itemVariants}
           >
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="font-medium text-gray-800">Psicólogos pendientes de verificación</h3>
-              <p className="text-gray-500 text-sm">Los más recientes que requieren tu atención</p>
+            <div className="p-3 border-b border-gray-100">
+              <h3 className="font-medium text-gray-800 text-sm">Psicólogos pendientes</h3>
+              <p className="text-gray-500 text-xs">Los más recientes que requieren tu atención</p>
             </div>
 
             {pendingPsychologists.length > 0 ? (
               <>
                 <div className="divide-y divide-gray-100">
                   {pendingPsychologists.map(psychologist => (
-                    <div key={psychologist.id} className="p-4 hover:bg-gray-50 transition-colors flex justify-between items-center">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-[#2A6877]/10 flex items-center justify-center">
+                    <div key={psychologist.id} className="p-3 hover:bg-gray-50 transition-colors flex justify-between items-center">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-[#2A6877]/10 flex items-center justify-center">
                           {psychologist.profile_image ? (
                             <img 
                               src={psychologist.profile_image} 
@@ -318,47 +334,47 @@ const AdminDashboard: React.FC = () => {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <UserGroupIcon className="h-5 w-5 text-[#2A6877]" />
+                            <UserGroupIcon className="h-4 w-4 text-[#2A6877]" />
                           )}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-800">
+                          <div className="font-medium text-gray-800 text-sm">
                             {psychologist.user.first_name} {psychologist.user.last_name}
                           </div>
                           <div className="flex items-center">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                              <ClockIcon className="h-3 w-3 mr-1" />
-                              Pendiente de verificación
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <ClockIcon className="h-2.5 w-2.5 mr-0.5" />
+                              Pendiente
                             </span>
                           </div>
                         </div>
                       </div>
                       <Link 
                         to={`/admin/dashboard/psychologists/${psychologist.id}`}
-                        className="text-[#2A6877] hover:text-[#1d4e5f] text-sm font-medium flex items-center"
+                        className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium flex items-center"
                       >
                         Revisar
-                        <ArrowRightIcon className="h-4 w-4 ml-1" />
+                        <ArrowRightIcon className="h-3 w-3 ml-1" />
                       </Link>
                     </div>
                   ))}
                 </div>
 
-                <div className="p-4 text-center">
+                <div className="p-3 text-center">
                   <Link 
                     to="/admin/dashboard/psychologists" 
-                    className="text-[#2A6877] hover:text-[#1d4e5f] text-sm font-medium"
+                    className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium"
                   >
                     Ver todos los psicólogos pendientes →
                   </Link>
                 </div>
               </>
             ) : (
-              <div className="p-8 text-center text-gray-500">
-                <CheckCircleIcon className="h-12 w-12 text-green-300 mx-auto mb-2" />
-                <p className="font-medium text-gray-600 mb-1">No hay psicólogos pendientes de verificación</p>
-                <p className="text-sm text-gray-500 mb-3">
-                  ¡Todos los psicólogos han sido revisados! No hay solicitudes pendientes en este momento.
+              <div className="p-6 text-center text-gray-500">
+                <CheckCircleIcon className="h-8 w-8 text-green-300 mx-auto mb-2" />
+                <p className="font-medium text-gray-600 text-sm mb-1">No hay psicólogos pendientes</p>
+                <p className="text-xs text-gray-500 mb-3">
+                  ¡Todos los psicólogos han sido revisados!
                 </p>
                 <button 
                   onClick={async () => {
@@ -372,9 +388,9 @@ const AdminDashboard: React.FC = () => {
                       setLoading(false);
                     }
                   }}
-                  className="mt-3 text-sm text-[#2A6877] hover:underline flex items-center justify-center mx-auto"
+                  className="mt-2 text-xs text-[#2A6877] hover:underline flex items-center justify-center mx-auto"
                 >
-                  <svg className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0114 0V5a1 1 0 112 0v2.101a9.002 9.002 0 01-14.712 6.975 1 1 0 111.296-1.52A7.002 7.002 0 114 15.899V18a1 1 0 11-2 0v-2.101a7.002 7.002 0 010-13.798V2a1 1 0 011-1z" clipRule="evenodd" />
                   </svg>
                   Verificar nuevamente
@@ -388,4 +404,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

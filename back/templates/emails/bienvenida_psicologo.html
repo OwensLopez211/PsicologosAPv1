@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenido a E-Mind</title>
+  <style>
+    :root {
+      --primary-color: #4a78c4;
+      --secondary-color: #5c5c5c;
+      --accent-color: #e63946;
+      --light-bg: #f5f8fd;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+      color: #333;
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+    
+    .container {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+      margin: 10px;
+    }
+    
+    .header {
+      background-color: white;
+      padding: 15px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .logo {
+      max-width: 180px;
+      height: auto;
+      margin-bottom: 5px;
+    }
+    
+    .content {
+      padding: 15px 20px;
+    }
+    
+    h1, h2, h3 {
+      color: var(--primary-color);
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    
+    .greeting {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: var(--secondary-color);
+    }
+    
+    .brand {
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    
+    .welcome-text {
+      margin-bottom: 15px;
+    }
+    
+    p {
+      margin: 0 0 10px 0;
+    }
+    
+    .features {
+      margin: 15px 0;
+    }
+    
+    .features li {
+      margin-bottom: 8px;
+      list-style-type: none;
+      position: relative;
+      padding-left: 28px;
+    }
+    
+    .features li:before {
+      content: "•";
+      color: var(--primary-color);
+      font-size: 24px;
+      position: absolute;
+      left: 0;
+      top: -5px;
+    }
+    
+    .section {
+      background-color: var(--light-bg);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .section h3 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .important {
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+    
+    .cta-button {
+      display: block;
+      background-color: var(--primary-color);
+      color: white;
+      text-align: center;
+      padding: 10px 20px;
+      border-radius: var(--border-radius);
+      text-decoration: none;
+      font-weight: bold;
+      margin: 20px auto;
+      max-width: 200px;
+      transition: background-color 0.3s;
+    }
+    
+    .cta-button:hover {
+      background-color: #3a68b4;
+    }
+    
+    .contact {
+      text-align: center;
+      margin: 15px 0;
+    }
+    
+    .team-signature {
+      font-style: italic;
+      margin-top: 15px;
+    }
+    
+    .footer {
+      margin-top: 15px;
+      padding: 15px 0;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      border-top: 1px solid #eee;
+    }
+    
+    .support-email {
+      text-align: center;
+      padding: 10px;
+      background-color: var(--light-bg);
+      border-radius: var(--border-radius);
+      margin: 15px 0;
+    }
+    
+    .support-email a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+    
+    .support-email a:hover {
+      text-decoration: underline;
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        margin: 5px;
+      }
+      
+      .content {
+        padding: 10px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <!-- Replace with your actual logo path -->
+      <img src="https://www.emindapp.cl/logo2.webp" alt="E-Mind Logo" class="logo">
+      <h1>E-Mind</h1>
+    </div>
+    
+    <div class="content">
+      <div class="greeting">¡Hola {{ nombre }}!</div>
+      
+      <div class="welcome-text">
+        Estamos encantados de darte la bienvenida a <span class="brand">E-Mind</span>, tu plataforma
+        dedicada a la salud mental y el bienestar emocional.
+      </div>
+      
+      <p>Gracias por registrarte como psicólogo en nuestra plataforma. Estamos emocionados de que te hayas unido a nosotros y estamos ansiosos por ayudarte a conectar con pacientes que puedan beneficiarse de tus servicios profesionales.</p>
+      
+      <div class="section">
+        <h3>🔍 Proceso de validación</h3>
+        <p>Para comenzar a ofrecer tus servicios en E-Mind, tu perfil debe pasar por un proceso de validación. Este proceso nos permite garantizar a nuestros usuarios la calidad y profesionalismo de todos nuestros psicólogos.</p>
+      </div>
+      <div class="section">
+        <h3>📝 Documentos requeridos</h3>
+        <p>Debes subir los siguientes documentos obligatorios en la sección <strong>"Perfil" → "Documentos"</strong>:</p>
+        <ul class="features">
+          <li><span class="important">Video de presentación</span>: Una breve introducción personal dirigida a potenciales pacientes.</li>
+          <li><span class="important">Certificado de inscripción</span> en el Registro Nacional de Prestadores Individuales de Salud.</li>
+          <li><span class="important">Carnet de identidad</span> (anverso y reverso).</li>
+          <li><span class="important">Documento de especialidad</span> que describa el tipo de terapia que realizas, trastornos que tratas e información relevante para justificar tu tarifa.</li>
+        </ul>
+      </div>
+      <div class="section">
+        <h3>👤 Completa tu perfil</h3>
+        <p>Es <span class="important">fundamental</span> que completes toda la información en las siguientes secciones:</p>
+        <ul class="features">
+          <li><strong>Datos básicos</strong>: Información personal y de contacto.</li>
+          <li><strong>Información profesional</strong>: Educación, experiencia y especialidades.</li>
+          <li><strong>Horarios y tarifas</strong>: Define cuándo estás disponible y cuánto cobras por sesión.</li>
+          <li><strong>Datos bancarios</strong>: Información para recibir tus pagos.</li>
+        </ul>
+        <p>La completitud de <span class="important">todas estas secciones</span> es indispensable para la aprobación de tu perfil.</p>
+      </div>
+      <div class="section">
+        <h3>⏱️ Proceso de revisión</h3>
+        <p>Una vez que hayas completado tu perfil y subido todos los documentos requeridos, nuestro equipo revisará tu información y documentación. Te notificaremos por correo electrónico cuando tu perfil sea aprobado o si necesitamos información adicional.</p>
+      </div>
+      <p>Con E-Mind, podrás:</p>
+      <ul class="features">
+        <li>Conectar con pacientes que buscan profesionales de la salud mental calificados</li>
+        <li>Programar citas según tu disponibilidad</li>
+        <li>Acceder a recursos y herramientas para tu desarrollo profesional</li>
+        <li>Gestionar tus sesiones de manera sencilla</li>
+      </ul>
+      <div class="contact">
+        <p>Tu viaje hacia un mejor servicio de salud mental comienza ahora.</p>
+
+        <a href="https://emindapp.cl/login" class="cta-button">Iniciar Sesión</a>
+        
+        <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
+        
+        <div class="team-signature">
+          <p>¡Gracias por confiar en nosotros!</p>
+          <p>El Equipo de E-Mind</p>
+        </div>
+      </div>
+      
+      <div class="support-email">
+        ¿Necesitas ayuda? Escríbenos a <a href="mailto:soporte@emindapp.cl">soporte@emindapp.cl</a>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>© {% now "Y" %} E-Mind. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</body>
+</html>

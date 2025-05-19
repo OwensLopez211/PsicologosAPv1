@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 
 // Usar la misma lógica que en api.ts para la URL base
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://186.64.113.186/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://www.emindapp.cl/api';
 // Eliminar '/api' para tener la base correcta para archivos de media
 const BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 

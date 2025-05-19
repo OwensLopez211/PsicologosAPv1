@@ -21,6 +21,28 @@ DATABASES = {
     }
 }
 
+# Email configuration
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+
+# Email (SMTP) configuration — no se usará en modo API
+# EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+# EMAIL_HOST = os.getenv('EMAIL_HOST')
+# EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+# EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
+# EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL') == 'True'
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@emindapp.cl')
+
+# Configuración de Mailgun API
+MAILGUN_API_KEY = os.getenv('MAILGUN_API_KEY')
+MAILGUN_DOMAIN = os.getenv('MAILGUN_DOMAIN')
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -78,8 +100,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-# Email configuration (for development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Timezone and language settings
 LANGUAGE_CODE = 'es-cl'
@@ -93,9 +113,13 @@ USE_TZ = False
 # CORS settings
 # Update CORS settings for Vite's default port
 CORS_ALLOWED_ORIGINS = [
+    "https://emindapp.cl",
+    "https://www.emindapp.cl",
     "http://186.64.113.186",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
     "http://192.168.0.6:5173",  # Add your local IP
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -182,3 +206,16 @@ LOGGING = {
         },
     },
 }
+
+# Configuración para emails de citas
+PAYMENT_INFO = {
+    'nombre_destinatario': 'E-Mind SpA',
+    'rut_destinatario': '77.777.777-7',  # Reemplazar con el RUT real
+    'banco_destinatario': 'Banco Estado',
+    'tipo_cuenta': 'Cuenta Corriente',
+    'numero_cuenta': '12345678',  # Reemplazar con número real
+    'correo_destinatario': 'pagos@emindapp.cl'  # Reemplazar con correo real
+}
+
+# URL base del frontend para los enlaces en emails
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://emindapp.cl")

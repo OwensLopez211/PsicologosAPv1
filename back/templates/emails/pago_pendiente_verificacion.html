@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Pago pendiente de verificación</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+    h2 {
+      color: #4a86e8;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    p {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .section {
+      margin-bottom: 15px;
+      padding: 12px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }
+    .footer {
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      font-size: 14px;
+      color: #666;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #4a86e8;
+    }
+    .action-needed {
+      background-color: #ede7f6;
+      padding: 8px;
+      border-radius: 5px;
+      border-left: 4px solid #673ab7;
+      margin-top: 8px;
+    }
+    .button {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #4a86e8;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Pago pendiente de verificación</h2>
+  
+  <p>Hola {{ nombre_psicologo }},</p>
+  
+  <p>Un paciente ha subido el comprobante de pago para una de tus citas programadas.</p>
+  
+  <div class="section">
+    <h3>Detalles de la cita:</h3>
+    <p><strong>Fecha:</strong> {{ fecha_cita }}</p>
+    <p><strong>Hora:</strong> {{ hora_inicio }} - {{ hora_fin }}</p>
+    <p><strong>Paciente:</strong> {{ nombre_paciente }}</p>
+    <p><strong>Monto:</strong> ${{ monto_pago }}</p>
+    
+    <div class="action-needed">
+      <p><strong>Acción requerida:</strong> Por favor verifica el comprobante de pago.</p>
+      <p>El paciente ha subido un comprobante para esta cita. Debes revisar y confirmar que el pago es correcto para que la cita quede confirmada.</p>
+    </div>
+  </div>
+  
+  <p>Para verificar el pago, ingresa a tu panel de psicólogo, ve a la sección "Pagos" y filtra por comprobantes subidos</p>
+  
+  <a href="{{ url_panel }}" class="button">Ir a mi panel</a>
+  
+  <div class="footer">
+    <p>Saludos,<br>El equipo de E-Mind</p>
+  </div>
+</body>
+</html> 

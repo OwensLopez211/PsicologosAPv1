@@ -29,6 +29,20 @@ const toastService = {
     return toast.error(message, { id: TOAST_ID });
   },
   
+  info: (message: string) => {
+    toast.dismiss();
+    return toast(message, { 
+      id: TOAST_ID,
+      icon: '📋',
+      style: {
+        borderRadius: '10px',
+        background: '#EBF5FF',
+        color: '#1E40AF',
+        border: '1px solid #93C5FD'
+      }
+    });
+  },
+  
   loading: (message: string) => {
     toast.dismiss();
     return toast.loading(message, { id: TOAST_ID });

@@ -9,7 +9,7 @@ import toastService from '../../services/toastService';
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setUser } = useAuth();
+  const { setUser, setToken } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -51,35 +51,76 @@ const LoginPage = () => {
           // Manejar otros errores...
         }
       } else {
-      // Gestionar "recordarme"
-      if (formData.remember) {
-        localStorage.setItem('rememberedEmail', formData.email);
-      } else {
-        localStorage.removeItem('rememberedEmail');
-      }
-      
-      // Normalizar el tipo de usuario
+        // Gestionar "recordarme"
+        if (formData.remember) {
+          localStorage.setItem('rememberedEmail', formData.email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+        
+        // Normalizar el tipo de usuario
         const normalizedUserType = result.user.user_type.toLowerCase() as 'client' | 'psychologist' | 'admin';
-      
-      setUser({
+        
+        // ************* IMPORTANTE - MANEJO ESPECIAL DEL TOKEN *************
+        // Obtener token directamente después del login y asegurarse de que se establece
+        const tokenFromStorage = localStorage.getItem('token');
+        
+        // Verificación exhaustiva de token
+        if (!tokenFromStorage) {
+          console.error('⚠️ Token no encontrado en localStorage después del login. Guardando manualmente...');
+          if (result.access) {
+            // Si el token no está en localStorage pero está en la respuesta, guardarlo directamente
+            localStorage.setItem('token', result.access);
+            console.log('Token guardado manualmente en localStorage');
+          }
+        }
+        
+        // Verificar nuevamente que el token esté disponible
+        const verifiedToken = localStorage.getItem('token');
+        console.log('LoginPage: Token verificado en localStorage:', !!verifiedToken);
+        
+        // Forzar la actualización del estado en el contexto
+        if (verifiedToken) {
+          console.log('⚠️ Estableciendo token forzosamente en el contexto de autenticación');
+          setToken(verifiedToken);
+          
+          // Crear evento personalizado para notificar el cambio de token
+          const event = new CustomEvent('tokenUpdated', { detail: { token: verifiedToken } });
+          window.dispatchEvent(event);
+        }
+        
+        // Pequeño retraso para asegurar que el token se propague - más largo en producción si es necesario
+        const propagationDelay = process.env.NODE_ENV === 'production' ? 150 : 50;
+        await new Promise(resolve => setTimeout(resolve, propagationDelay));
+        
+        // Luego establecer el usuario 
+        setUser({
           ...result.user,
-        user_type: normalizedUserType
-      });
-      // Mostrar mensaje de bienvenida
-      toastService.success(`¡Bienvenido de nuevo, ${result.user.first_name || 'Usuario'}!`);
-      
-      // Navegar según el tipo de usuario
-      switch (normalizedUserType) {
-        case 'client':
-          navigate('/dashboard');
-          break;
-        case 'psychologist':
-          navigate('/psicologo/dashboard');
-          break;
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        default:
+          user_type: normalizedUserType
+        });
+        
+        // Mostrar mensaje de bienvenida
+        toastService.success(`¡Bienvenido de nuevo, ${result.user.first_name || 'Usuario'}!`);
+        
+        // Otro pequeño retraso antes de la navegación - más largo en producción si es necesario
+        await new Promise(resolve => setTimeout(resolve, propagationDelay));
+        
+        // Verificar una última vez antes de navegar
+        const finalCheck = localStorage.getItem('token');
+        console.log('LoginPage: Verificación final del token antes de navegar:', !!finalCheck);
+        
+        // Navegar según el tipo de usuario
+        switch (normalizedUserType) {
+          case 'client':
+            navigate('/dashboard');
+            break;
+          case 'psychologist':
+            navigate('/psicologo/dashboard');
+            break;
+          case 'admin':
+            navigate('/admin/dashboard');
+            break;
+          default:
             console.error('Unknown user type:', result.user.user_type);
             toastService.error('Error en el tipo de usuario');
         }
@@ -110,15 +151,26 @@ const LoginPage = () => {
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, type: "spring", stiffness: 120 }}
+            className="flex flex-col items-center"
           >
             <Link to="/" className="block relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3] rounded-lg blur opacity-25 group-hover:opacity-60 transition duration-700"></div>
-              <img
-                className="relative mx-auto h-24 w-24 rounded-xl shadow-lg transform group-hover:scale-105 transition duration-300"
-                src="/logo.jpeg"
-                alt="E-mind"
-              />
+              <div className="absolute -inset-2 bg-gradient-to-r from-[#2A6877]/60 to-[#B4E4D3]/60 rounded-full blur-md opacity-20 group-hover:opacity-50 transition duration-700"></div>
+              <div className="relative mx-auto h-32 w-32 p-1 rounded-full bg-gradient-to-tr from-white via-[#B4E4D3]/20 to-[#2A6877]/20 shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:shadow-xl">
+                <div className="h-full w-full rounded-full bg-white overflow-hidden flex items-center justify-center">
+                  <img
+                    className="h-[85%] w-[85%] object-contain transform group-hover:scale-105 transition duration-300"
+                    src="/logo2.webp"
+                    alt="E-mind"
+                    width="128"
+                    height="128"
+                  />
+                </div>
+              </div>
             </Link>
+            <div className="flex flex-col items-center mt-4">
+              <span className="text-[#2A6877] text-2xl font-bold leading-tight">E-mind</span>
+              <span className="text-gray-500 text-sm leading-tight">Encuentra tu bienestar</span>
+            </div>
           </motion.div>
 
           <motion.div

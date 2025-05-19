@@ -18,12 +18,29 @@ import DashboardHome from './pages/dashboard/DashboardHome';
 import ProfilePage from './pages/dashboard/ProfilePage';
 import SchedulePage from './pages/dashboard/psychologist/SchedulePage';
 import ClientAppointments from './pages/dashboard/client/ClientAppointments';
-import PatientsManagement from './pages/dashboard/admin/PatientsManagement';
 import PsychologistListPage from './pages/admin/PsychologistListPage';
 import PsychologistDetailPage from './pages/admin/PsychologistDetailPage';
 import VerificationsPage from './pages/dashboard/VerificationsPage';
 import ToastProvider from './components/toast/ToastProvider';
 import FAQPage from './pages/public-pages/FaqPage';
+import UnifiedPatientsPage from './pages/dashboard/UnifiedPatientsPage';
+import { useEffect } from 'react';
+import RecuperarPasswordPage from './pages/public-pages/RecuperarPasswordPage';
+import EstablecerPasswordPage from './pages/public-pages/EstablecerPasswordPage';
+
+// Componente para inicializar el token en localStorage
+function TokenInitializer() {
+  useEffect(() => {
+    // Forzar la sincronización del token al iniciar la aplicación
+    console.log('Inicializando sincronización de token en App.tsx');
+    const token = localStorage.getItem('token');
+    if (token) {
+      console.log('Token encontrado en localStorage durante inicialización de la app');
+    }
+  }, []);
+
+  return null;
+}
 
 function App() {
   return (
@@ -31,6 +48,7 @@ function App() {
       <ToastProvider />
       <Router>
         <AuthProvider>
+          <TokenInitializer />
           <TokenRefreshManager />
           <Routes>
             {/* Public routes */}
@@ -52,6 +70,16 @@ function App() {
               <Route path="/contacto" element={<ContactPage />} />
               <Route path="/terminos-y-condiciones" element={<TermsPage />} />
               <Route path="/preguntas-frecuentes" element={<FAQPage />} />
+              <Route path="/recuperar-password" element={
+                <PublicRoute>
+                  <RecuperarPasswordPage />
+                </PublicRoute>
+              } />
+              <Route path="/reset-password/:token" element={
+                <PublicRoute>
+                  <EstablecerPasswordPage />
+                </PublicRoute>
+              } />
             </Route>
 
             {/* Client Dashboard routes */}
@@ -75,6 +103,7 @@ function App() {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="schedule" element={<SchedulePage />} />
               <Route path="payments" element={<VerificationsPage />} />
+              <Route path="patients" element={<UnifiedPatientsPage />} />
             </Route>
 
             {/* Admin Dashboard routes */}
@@ -85,7 +114,7 @@ function App() {
             }>
               <Route path="" element={<DashboardHome />} />
               <Route path="profile" element={<ProfilePage />} />
-              <Route path="pacients" element={<PatientsManagement />} />
+              <Route path="pacients" element={<UnifiedPatientsPage />} />
               <Route path="psychologists" element={<PsychologistListPage />} />
               <Route path="psychologists/:id" element={<PsychologistDetailPage />} />
               <Route path="payments" element={<VerificationsPage />} />

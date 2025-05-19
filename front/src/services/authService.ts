@@ -46,6 +46,13 @@ export const login = async (email: string, password: string): Promise<AuthRespon
     localStorage.setItem('refresh_token', response.data.refresh);
     localStorage.setItem('user', JSON.stringify(response.data.user));
     
+    // Publicar un evento personalizado para notificar que el token ha cambiado
+    // Esto permitirá que otros componentes reaccionen al cambio
+    const tokenChangeEvent = new CustomEvent('tokenChange', { 
+      detail: { token: response.data.access }
+    });
+    window.dispatchEvent(tokenChangeEvent);
+    
     // Almacenar el profile_id por separado si existe
     if (response.data.user.profile_id) {
       localStorage.setItem('profile_id', response.data.user.profile_id.toString());
@@ -178,10 +185,97 @@ export const refreshToken = async (): Promise<string | null> => {
   }
 };
 
+/**
+ * Solicita un restablecimiento de contraseña para el correo electrónico proporcionado
+ * @param email El correo electrónico del usuario que quiere restablecer su contraseña
+ * @returns Una promesa que se resuelve con la respuesta del servidor
+ */
+export const requestPasswordReset = async (email: string) => {
+  try {
+    // Obtener el dominio actual para construir el base_url
+    const base_url = `${window.location.protocol}//${window.location.host}`;
+    
+    const response = await api.post('/auth/request-password-reset/', {
+      email,
+      base_url // Enviamos el base_url para que el backend pueda construir el enlace completo
+    });
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('Error al solicitar restablecimiento de contraseña:', error);
+    
+    if (!error.response) {
+      return { error: 'NETWORK_ERROR' };
+    }
+    
+    return { error: error.response?.data?.detail || 'REQUEST_FAILED' };
+  }
+};
+
+/**
+ * Establece una nueva contraseña usando un token de restablecimiento
+ * @param token Token de restablecimiento recibido por correo electrónico
+ * @param newPassword Nueva contraseña del usuario
+ * @returns Una promesa que se resuelve con la respuesta del servidor
+ */
+export const resetPassword = async (token: string, newPassword: string) => {
+  try {
+    // Primero verificamos el token para obtener el email asociado
+    const verifyResponse = await api.post('/auth/verify-reset-token/', { token });
+    const email = verifyResponse.data.email;
+    
+    if (!email) {
+      return { error: 'NO_EMAIL_FOUND' };
+    }
+    
+    const response = await api.post('/auth/reset-password/', {
+      token,
+      email,
+      new_password: newPassword
+    });
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('Error al restablecer contraseña:', error);
+    
+    if (!error.response) {
+      return { error: 'NETWORK_ERROR' };
+    }
+    
+    return { error: error.response?.data?.detail || 'RESET_FAILED' };
+  }
+};
+
+/**
+ * Verifica si un token de restablecimiento de contraseña es válido
+ * @param token Token de restablecimiento a verificar
+ * @returns Una promesa que se resuelve con la respuesta del servidor
+ */
+export const verifyResetToken = async (token: string) => {
+  try {
+    const response = await api.post('/auth/verify-reset-token/', {
+      token
+    });
+    
+    return { ...(response.data), valid: true };
+  } catch (error: any) {
+    console.error('Error al verificar token de restablecimiento:', error);
+    
+    if (!error.response) {
+      return { error: 'NETWORK_ERROR', valid: false };
+    }
+    
+    return { error: error.response?.data?.detail || 'INVALID_TOKEN', valid: false };
+  }
+};
+
 const authService = {
   login,
   register,
-  refreshToken
+  refreshToken,
+  requestPasswordReset,
+  resetPassword,
+  verifyResetToken
 };
 
 export default authService;

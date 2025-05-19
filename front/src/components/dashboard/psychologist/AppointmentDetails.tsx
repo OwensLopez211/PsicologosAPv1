@@ -1,9 +1,11 @@
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useLayoutEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import axios from 'axios';
+import { useAuth } from '../../../context/AuthContext';
+import toastService from '../../../services/toastService';
+import { updateAppointmentStatus, saveAppointmentNotes } from '../../../services/appointmentService';
 
 // Define appointment status types to match backend
 type AppointmentStatus = 'PENDING_PAYMENT' | 'PAYMENT_UPLOADED' | 'PAYMENT_VERIFIED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
@@ -40,8 +42,50 @@ const AppointmentDetails = ({
 }: AppointmentDetailsProps) => {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { token, setToken, forceTokenSync } = useAuth();
+  const [, setTokenSynced] = useState(false);
+
+  // Asegurar que el token esté siempre disponible - enfoque agresivo para producción
+  useLayoutEffect(() => {
+    if (isOpen) {
+      if (!token) {
+        // Si no hay token en el contexto, intentar forzar la sincronización
+        console.log('AppointmentDetails: No hay token en contexto, forzando sincronización...');
+        
+        // Llamar a forceTokenSync pero no usar su valor de retorno directamente
+        forceTokenSync();
+        
+        // Verificar si después de la llamada tenemos token
+        const tokenAvailable = !!localStorage.getItem('token');
+        setTokenSynced(tokenAvailable);
+        
+        if (!tokenAvailable) {
+          // Si no se pudo sincronizar, mostrar error
+          console.error('⚠️ AppointmentDetails: No se pudo sincronizar el token');
+          toastService.error('Error de autenticación. Por favor, refresca la página o inicia sesión nuevamente.');
+        }
+      } else {
+        setTokenSynced(true);
+      }
+    }
+  }, [isOpen, token, forceTokenSync]);
+
+  // Función para obtener el token más actualizado para operaciones
+  const getAuthToken = (): string | null => {
+    // Intentar obtener el token del contexto
+    if (token) return token;
+    
+    // Si no hay token en el contexto, intentar obtenerlo del localStorage
+    const localToken = localStorage.getItem('token');
+    if (localToken) {
+      // Actualizar el contexto con el token encontrado
+      setToken(localToken);
+      return localToken;
+    }
+    
+    // No hay token disponible
+    return null;
+  };
 
   // Update notes when appointment changes
   useEffect(() => {
@@ -55,6 +99,9 @@ const AppointmentDetails = ({
     if (isOpen) {
       // Disable scrolling on body when modal is open
       document.body.style.overflow = 'hidden';
+      
+      // Sincronizar token cuando se abre el modal
+      getAuthToken();
     } else {
       // Re-enable scrolling when modal is closed
       document.body.style.overflow = '';
@@ -85,66 +132,33 @@ const AppointmentDetails = ({
     }
   };
 
-  // Handle status change with API call
-  const handleStatusChange = async (status: AppointmentStatus) => {
-    if (!appointment) return;
-    
-    setIsSaving(true);
-    setError(null);
-    setSuccessMessage(null);
-    
-    try {
-      await axios.patch(`/api/appointments/${appointment.id}/update-status/`, {
-        status
-      });
-      
-      // Call the parent component's handler if provided
-      if (onStatusChange) {
-        onStatusChange(appointment.id, status);
-      }
-      
-      setSuccessMessage('Estado actualizado correctamente');
-      refreshAppointments();
-    } catch (err) {
-      console.error('Error updating appointment status:', err);
-      setError('Error al actualizar el estado. Inténtalo de nuevo.');
-    } finally {
-      setIsSaving(false);
+  // Función para mostrar el texto del estado de forma legible
+  const getStatusDisplay = (status: AppointmentStatus): string => {
+    switch (status) {
+      case 'PENDING_PAYMENT':
+        return 'Pendiente de pago';
+      case 'PAYMENT_UPLOADED':
+        return 'Pago subido';
+      case 'PAYMENT_VERIFIED':
+        return 'Pago verificado';
+      case 'CONFIRMED':
+        return 'Confirmada';
+      case 'COMPLETED':
+        return 'Completada';
+      case 'CANCELLED':
+        return 'Cancelada';
+      case 'NO_SHOW':
+        return 'No asistió';
+      default:
+        return status;
     }
   };
-
-  // Handle notes save with API call
-  const handleSaveNotes = async () => {
-    if (!appointment) return;
-    
-    setIsSaving(true);
-    setError(null);
-    setSuccessMessage(null);
-    
-    try {
-      await axios.patch(`/api/appointments/${appointment.id}/add-notes/`, {
-        psychologist_notes: notes
-      });
-      
-      // Call the parent component's handler if provided
-      if (onNotesChange) {
-        onNotesChange(appointment.id, notes);
-      }
-      
-      setSuccessMessage('Notas guardadas correctamente');
-      refreshAppointments();
-    } catch (err) {
-      console.error('Error saving appointment notes:', err);
-      setError('Error al guardar las notas. Inténtalo de nuevo.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  if (!appointment) return null;
 
   // Map backend status to display buttons
   const canChangeToStatus = (status: AppointmentStatus): boolean => {
+    // Si no hay cita, no se puede cambiar el estado
+    if (!appointment) return false;
+    
     // Only allow changing status if current status is PAYMENT_VERIFIED or CONFIRMED
     if (appointment.status !== 'PAYMENT_VERIFIED' && appointment.status !== 'CONFIRMED') {
       return false;
@@ -163,6 +177,88 @@ const AppointmentDetails = ({
     
     return allowedTransitions[appointment.status].includes(status);
   };
+
+  // Función específica para cambiar estado usando token directo y el servicio dedicado
+  const changeAppointmentStatus = async (status: AppointmentStatus) => {
+    if (!appointment) return;
+    
+    // Obtener token actualizado
+    const currentToken = getAuthToken();
+    if (!currentToken) {
+      toastService.error('No hay token de autenticación. Por favor, inicia sesión nuevamente.');
+      return;
+    }
+    
+    setIsSaving(true);
+    toastService.loading(`Cambiando estado a: ${getStatusDisplay(status)}...`);
+    
+    try {
+      console.log(`⚠️ Cambiando estado de cita ${appointment.id} a ${status} con token directo`);
+      
+      // Usar el servicio dedicado con token explícito
+      await updateAppointmentStatus(
+        appointment.id,
+        status,
+        currentToken
+      );
+      
+      // Actualizar el estado localmente para evitar recargar
+      if (onStatusChange) {
+        onStatusChange(appointment.id, status);
+      }
+      
+      // Refrescar los datos
+      refreshAppointments();
+      
+    } catch (error) {
+      console.error('Error al cambiar estado:', error);
+      // El servicio ya muestra los mensajes de error
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle notes save with API call
+  const handleSaveNotes = async () => {
+    if (!appointment) return;
+    
+    // Obtener token actualizado
+    const currentToken = getAuthToken();
+    if (!currentToken) {
+      toastService.error('No hay token de autenticación disponible. Por favor, inicia sesión nuevamente.');
+      return;
+    }
+    
+    setIsSaving(true);
+    toastService.loading('Guardando notas...');
+    
+    try {
+      console.log(`⚠️ Guardando notas de cita ${appointment.id} con token directo`);
+      
+      // Usar el servicio dedicado con token explícito
+      await saveAppointmentNotes(
+        appointment.id,
+        notes,
+        currentToken
+      );
+      
+      // Call the parent component's handler if provided
+      if (onNotesChange) {
+        onNotesChange(appointment.id, notes);
+      }
+      
+      // Refrescar citas
+      refreshAppointments();
+      
+    } catch (error) {
+      console.error('Error guardando notas:', error);
+      // El servicio ya muestra los mensajes de error
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!appointment) return null;
 
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -215,19 +311,6 @@ const AppointmentDetails = ({
                     </div>
                   </div>
                   
-                  {/* Status messages */}
-                  {error && (
-                    <div className="mx-4 mb-4 p-2 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-600">{error}</p>
-                    </div>
-                  )}
-                  
-                  {successMessage && (
-                    <div className="mx-4 mb-4 p-2 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-sm text-green-600">{successMessage}</p>
-                    </div>
-                  )}
-                  
                   <div className="flex-1 px-4 sm:px-6">
                     <div className="space-y-6">
                       <div>
@@ -261,7 +344,7 @@ const AppointmentDetails = ({
                           <div className="mt-2 flex flex-wrap gap-2">
                             {canChangeToStatus('CONFIRMED') && (
                               <button
-                                onClick={() => handleStatusChange('CONFIRMED')}
+                                onClick={() => changeAppointmentStatus('CONFIRMED')}
                                 disabled={isSaving}
                                 className={`px-3 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
@@ -271,7 +354,7 @@ const AppointmentDetails = ({
                             
                             {canChangeToStatus('COMPLETED') && (
                               <button
-                                onClick={() => handleStatusChange('COMPLETED')}
+                                onClick={() => changeAppointmentStatus('COMPLETED')}
                                 disabled={isSaving}
                                 className={`px-3 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
@@ -281,7 +364,7 @@ const AppointmentDetails = ({
                             
                             {canChangeToStatus('CANCELLED') && (
                               <button
-                                onClick={() => handleStatusChange('CANCELLED')}
+                                onClick={() => changeAppointmentStatus('CANCELLED')}
                                 disabled={isSaving}
                                 className={`px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >
@@ -291,7 +374,7 @@ const AppointmentDetails = ({
                             
                             {canChangeToStatus('NO_SHOW') && (
                               <button
-                                onClick={() => handleStatusChange('NO_SHOW')}
+                                onClick={() => changeAppointmentStatus('NO_SHOW')}
                                 disabled={isSaving}
                                 className={`px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                               >

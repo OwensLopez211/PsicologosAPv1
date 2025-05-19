@@ -64,4 +64,13 @@ urlpatterns = [
     path('<int:pk>/is-first-appointment/', AppointmentViewSet.as_view({
         'get': 'is_first_appointment',
     }), name='is-first-appointment'),
+    
+    # Nuevo endpoint para obtener pacientes del psicólogo
+    path('psychologist-patients/', AppointmentViewSet.as_view({
+        'get': 'psychologist_patients',
+    }), name='psychologist-patients'),
+    # Versión sin guion para mayor compatibilidad
+    path('psychologist_patients/', AppointmentViewSet.as_view({
+        'get': 'psychologist_patients',
+    }), name='psychologist_patients'),
 ]

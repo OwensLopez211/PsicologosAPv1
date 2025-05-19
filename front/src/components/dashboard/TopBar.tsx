@@ -8,17 +8,35 @@ import {
 } from '@heroicons/react/24/outline';
 import {  AnimatePresence } from 'framer-motion';
 
+// Evento personalizado para recargar datos
+export const triggerDataRefresh = (module: string) => {
+  console.log(`Triggering refresh event for module: ${module}`);
+  const event = new CustomEvent('refreshData', { detail: { module } });
+  window.dispatchEvent(event);
+};
+
 const TopBar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   
   const normalizedUserType = user?.user_type?.toUpperCase() || 'CLIENT';
+
+  // Efecto para detectar cambios en la ruta y actualizar datos cuando corresponda
+  useEffect(() => {
+    // Verificar si estamos en una página de pacientes (con cualquier variante)
+    const isPatientsPage = location.pathname.includes('/patients') || 
+                          location.pathname.includes('/pacients');
+    
+    // Si estamos en la página de pacientes, disparar evento de recarga
+    if (isPatientsPage) {
+      console.log('Navigated to patients page, triggering refresh');
+      triggerDataRefresh('patients');
+    }
+  }, [location.pathname]);
 
   // Detectar scroll para cambios visuales, pero no para mover la barra
   useEffect(() => {
@@ -39,6 +57,16 @@ const TopBar = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  // Manejador para clic en elementos de menú
+  const handleMenuItemClick = (path: string) => {
+    // Si es el enlace de pacientes, disparar evento de recarga
+    // Nota: verificamos ambas variantes "patients" y "pacients"
+    if (path.includes('/patients') || path.includes('/pacients')) {
+      console.log('Patient module clicked, triggering refresh');
+      triggerDataRefresh('patients');
+    }
   };
 
   const getMenuItems = () => {
@@ -71,23 +99,20 @@ const TopBar = () => {
   // Improved outside click handling
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
       }
     };
 
     // Add a small delay to prevent immediate closure when opening
-    if (isMenuOpen || isProfileOpen) {
+    if (isProfileOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isMenuOpen, isProfileOpen]);
+  }, [isProfileOpen]);
 
   // Obtener iniciales para el avatar
   const getInitials = () => {
@@ -119,43 +144,65 @@ const TopBar = () => {
       >
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo & Brand Section */}
-            <div className="flex items-center">
+            {/* Logo & Brand Section - Versión escritorio (a la izquierda) */}
+            <div className="hidden md:flex flex-shrink-0 items-center">
               <Link 
                 to="/" 
-                className="flex items-center group mr-6"
+                className="flex items-center group"
                 title="Volver a la página principal"
               >
                 <div className="relative group">
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3] rounded-full opacity-40 group-hover:opacity-60 blur-sm transition duration-300"></div>
-                  <img 
-                    src="/logo.jpeg" 
-                    alt="E-mind" 
-                    className="relative h-9 w-9 rounded-full border-2 border-white object-cover transform group-hover:scale-105 transition-transform duration-300" 
-                  />
+                  <div className="relative h-9 w-9 rounded-full border-2 border-white overflow-hidden flex items-center justify-center bg-white">
+                    <img 
+                      src="/logo2.webp" 
+                      alt="E-mind" 
+                      className="h-7 w-7 object-contain transform group-hover:scale-105 transition-transform duration-300" 
+                    />
+                  </div>
                 </div>
-                <span className="ml-2.5 text-xl font-semibold text-[#2A6877] hidden sm:block">
+                <span className="ml-2.5 text-xl font-semibold text-[#2A6877]">
                 E-mind
                 </span>
-                <div 
-                  className="ml-2 hidden sm:flex"
-                >
+                <div className="ml-2 flex">
                   <ArrowLeftIcon className="h-4 w-4 text-gray-400 group-hover:text-[#2A6877] transition-colors" />
                 </div>
               </Link>
-              
-              {/* Back to main site - Mobile version */}
+            </div>
+            
+            {/* Versión móvil - Flecha a la izquierda */}
+            <div className="flex md:hidden items-center justify-start w-1/4">
               <Link 
                 to="/" 
-                className="sm:hidden flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                 title="Volver a la página principal"
               >
                 <ArrowLeftIcon className="h-4 w-4 text-gray-600" />
               </Link>
             </div>
             
+            {/* Versión móvil - Logo centrado */}
+            <div className="flex md:hidden items-center justify-center w-2/4">
+              <Link 
+                to="/" 
+                className="flex items-center group"
+                title="E-mind"
+              >
+                <div className="relative group">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#2A6877] to-[#B4E4D3] rounded-full opacity-40 group-hover:opacity-60 blur-sm transition duration-300"></div>
+                  <div className="relative h-9 w-9 rounded-full border-2 border-white overflow-hidden flex items-center justify-center bg-white">
+                    <img 
+                      src="/logo2.webp" 
+                      alt="E-mind" 
+                      className="h-7 w-7 object-contain transform group-hover:scale-105 transition-transform duration-300" 
+                    />
+                  </div>
+                </div>
+              </Link>
+            </div>
+            
             {/* Desktop Navigation - Improved active styles */}
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden md:flex items-center justify-center flex-1">
               {getMenuItems().map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -164,6 +211,7 @@ const TopBar = () => {
                   <Link
                     key={item.path}
                     to={item.path}
+                    onClick={() => handleMenuItemClick(item.path)}
                     className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                       isActive 
                         ? 'text-[#2A6877] bg-[#2A6877]/10 shadow-sm' 
@@ -177,71 +225,8 @@ const TopBar = () => {
               })}
             </div>
             
-            <div className="flex items-center space-x-2">
-              
-              {/* Mobile menu button - Improved animation */}
-              <div className="md:hidden relative" ref={menuRef}>
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-1.5 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none transition-colors"
-                  aria-expanded={isMenuOpen ? 'true' : 'false'}
-                  aria-label="Menu principal"
-                >
-                  <svg 
-                    className={`h-6 w-6 transition-transform duration-300 ${isMenuOpen ? 'rotate-90' : ''}`}
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-                
-                {/* Mobile menu dropdown - Improved animation and positioning */}
-                <AnimatePresence>
-                  {isMenuOpen && (
-                    <div 
-                      className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-1.5 z-50 border border-gray-100"
-                      style={{
-                        animation: 'fadeIn 0.2s ease-out',
-                      }}
-                    >
-                      {/* Back to main site - Mobile menu option */}
-                      <Link
-                        to="/"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-[#2A6877]/5 border-b border-gray-100"
-                      >
-                        <ArrowLeftIcon className="h-5 w-5 mr-2 text-gray-400" />
-                        Página principal
-                      </Link>
-                      
-                      {getMenuItems().map((item) => {
-                        const Icon = item.icon;
-                        const isActive = location.pathname === item.path;
-                        
-                        return (
-                          <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={() => setIsMenuOpen(false)}
-                            className={`flex items-center px-4 py-2.5 text-sm ${
-                              isActive 
-                                ? 'text-[#2A6877] bg-[#2A6877]/10 font-medium' 
-                                : 'text-gray-700 hover:bg-[#2A6877]/5'
-                            }`}
-                          >
-                            <Icon className={`h-5 w-5 mr-3 ${isActive ? 'text-[#2A6877]' : 'text-gray-500'}`} />
-                            {item.label}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </AnimatePresence>
-              </div>
-              
-              {/* User profile dropdown - Improved animation and responsiveness */}
+            {/* User profile dropdown - Para escritorio es normal, para móvil a la derecha */}
+            <div className="flex items-center space-x-2 md:w-auto w-1/4 justify-end">
               <div className="relative ml-2" ref={profileRef}>
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -349,6 +334,7 @@ const TopBar = () => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => handleMenuItemClick(item.path)}
               className={`flex flex-1 flex-col items-center justify-center px-1 py-1.5 text-[9px] ${
                 isActive ? 'text-[#2A6877]' : 'text-gray-600'
               }`}

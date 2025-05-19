@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny  # Add this import
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
+from backend.email_utils import send_verification_status_email
 
 from ..models import PsychologistProfile, ProfessionalDocument, ProfessionalExperience
 
@@ -256,6 +257,16 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Si está cambiando a REJECTED, verificar si se proporciona un motivo
+        if new_status == 'REJECTED' and 'rejection_reason' not in request.data:
+            return Response(
+                {"detail": "Se requiere un motivo de rechazo cuando el estado es REJECTED."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Guardar el estado anterior para verificar si cambió
+        previous_status = profile.verification_status
+        
         # Actualizar el estado de verificación
         profile.verification_status = new_status
         
@@ -264,6 +275,14 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
             profile.rejection_reason = request.data.get('rejection_reason')
         
         profile.save()
+        
+        # Si el estado cambió, enviar notificación por correo
+        if previous_status != new_status:
+            try:
+                send_verification_status_email(profile)
+                print(f"Correo de actualización de estado enviado a {profile.user.email}")
+            except Exception as e:
+                print(f"Error al enviar correo de actualización de estado: {str(e)}")
         
         # Devolver el perfil actualizado
         serializer = self.get_serializer(profile)
@@ -925,6 +944,16 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Si está cambiando a REJECTED, verificar si se proporciona un motivo
+        if new_status == 'REJECTED' and 'rejection_reason' not in request.data:
+            return Response(
+                {"detail": "Se requiere un motivo de rechazo cuando el estado es REJECTED."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Guardar el estado anterior para verificar si cambió
+        previous_status = profile.verification_status
+        
         # Actualizar el estado de verificación
         profile.verification_status = new_status
         
@@ -933,6 +962,14 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
             profile.rejection_reason = request.data.get('rejection_reason')
         
         profile.save()
+        
+        # Si el estado cambió, enviar notificación por correo
+        if previous_status != new_status:
+            try:
+                send_verification_status_email(profile)
+                print(f"Correo de actualización de estado enviado a {profile.user.email}")
+            except Exception as e:
+                print(f"Error al enviar correo de actualización de estado: {str(e)}")
         
         # Devolver el perfil actualizado
         serializer = self.get_serializer(profile)
