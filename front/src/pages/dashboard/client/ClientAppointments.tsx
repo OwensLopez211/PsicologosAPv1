@@ -32,6 +32,7 @@ interface Appointment {
   meeting_link?: string;
   psychologist_id?: number;
   payment_amount?: number;
+  is_first_appointment?: boolean;
 }
 
 const ClientAppointments = () => {
@@ -164,27 +165,6 @@ const ClientAppointments = () => {
     }
   };
 
-  // Función para verificar si es primera cita con el psicólogo
-  const checkIfFirstAppointment = async (psychologistId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `/api/appointments/has-confirmed-appointments/${psychologistId}/`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      return !response.data.has_confirmed_appointments;
-    } catch (err) {
-      console.error('Error verificando si es primera cita:', err);
-      return true; // Por defecto asumimos que es primera cita si hay error
-    }
-  };
-
   // Función para obtener la información bancaria
   const fetchBankInfo = async (appointment: Appointment) => {
     if (!appointment.psychologist_id) return;
@@ -192,18 +172,17 @@ const ClientAppointments = () => {
     setIsLoadingBankInfo(true);
     try {
       const token = localStorage.getItem('token');
-      const isFirst = await checkIfFirstAppointment(appointment.psychologist_id);
+      const isFirst = appointment.is_first_appointment === true;
       setIsFirstAppointment(isFirst);
       
       if (isFirst) {
-        // Si es primera cita, obtener datos del admin
+        // Datos del admin
         const response = await axios.get('/api/profiles/bank-info/', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
-        
         const adminData = response.data;
         setBankInfo({
           bankName: adminData.bank_name || 'No especificado',
@@ -215,7 +194,7 @@ const ClientAppointments = () => {
           isAdmin: true
         });
       } else {
-        // Si no es primera cita, obtener datos del psicólogo
+        // Datos del psicólogo
         const response = await axios.get(
           `/api/profiles/psychologist-profiles/${appointment.psychologist_id}/`,
           {
@@ -225,7 +204,6 @@ const ClientAppointments = () => {
             }
           }
         );
-        
         const psychData = response.data;
         setBankInfo({
           bankName: psychData.bank_name || 'No especificado',
