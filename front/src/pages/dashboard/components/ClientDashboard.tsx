@@ -262,32 +262,47 @@ const ClientDashboard: React.FC = () => {
           {/* Sección principal: próximas citas */}
           <motion.div variants={itemVariants}>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-3 border-b border-gray-100">
+              <div className="p-3 border-b border-gray-100 flex justify-between items-center">
                 <h3 className="font-medium text-gray-800 text-sm">Mis próximas citas</h3>
+                <span className="text-xs text-gray-500">{upcomingAppointments.length} pendiente(s)</span>
               </div>
 
               {upcomingAppointments.length > 0 ? (
                 <>
                   <div className="divide-y divide-gray-100">
                     {upcomingAppointments.map(appointment => (
-                      <div key={appointment.id} className="p-3 hover:bg-gray-50 transition-colors">
-                        <div className="flex justify-between items-start mb-2">
+                      <div key={appointment.id} className="p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex justify-between items-start mb-3">
                           <div>
-                            <div className="font-medium text-gray-800 text-sm">
+                            <div className="font-medium text-gray-800">
                               {appointment.psychologistName}
                             </div>
-                            <div className="text-xs text-gray-500">
-                              {formatDate(appointment.date)} - {appointment.time}
+                            <div className="text-sm text-gray-600 mt-1 flex items-center">
+                              <CalendarIcon className="h-4 w-4 mr-1 text-gray-400" />
+                              {formatDate(appointment.date)}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1 flex items-center">
+                              <ClockIcon className="h-4 w-4 mr-1 text-gray-400" />
+                              {appointment.time}
                             </div>
                           </div>
-                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getAppointmentStatusColor(appointment.status)}`}>
+                          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getAppointmentStatusColor(appointment.status)}`}>
                             {getAppointmentStatusText(appointment.status)}
                           </span>
                         </div>
+                        
+                        {appointment.status === 'PENDING_PAYMENT' && (
+                          <div className="bg-yellow-50 p-2 rounded-md mb-3">
+                            <p className="text-xs text-yellow-700">
+                              Esta cita requiere que completes el pago para confirmarla.
+                            </p>
+                          </div>
+                        )}
+                        
                         <div className="flex justify-end">
                           <Link 
-                            to={`/dashboard/appointments/${appointment.id}`}
-                            className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium flex items-center"
+                            to={`/dashboard/appointments`}
+                            className="px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors flex items-center"
                           >
                             Ver detalles
                             <ArrowRightIcon className="h-3 w-3 ml-1" />
@@ -300,10 +315,14 @@ const ClientDashboard: React.FC = () => {
                   <div className="p-3 text-center border-t border-gray-100">
                     <Link 
                       to="/dashboard/appointments" 
-                      className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium"
+                      className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium flex items-center justify-center"
                     >
-                      Ver todas mis citas →
+                      Ver todas mis citas
+                      <ArrowRightIcon className="h-3 w-3 ml-1" />
                     </Link>
+                    <p className="text-xs text-gray-500 mt-2">
+                      En el panel de citas podrás ver todos los detalles, gestionar pagos y cancelaciones.
+                    </p>
                   </div>
                 </>
               ) : (
@@ -315,7 +334,7 @@ const ClientDashboard: React.FC = () => {
                   </p>
                   <Link 
                     to="/dashboard/new-appointment"
-                    className="inline-flex items-center text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium"
+                    className="inline-flex items-center px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors"
                   >
                     Agendar cita
                     <ArrowRightIcon className="h-3 w-3 ml-1" />
