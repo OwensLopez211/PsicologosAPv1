@@ -331,7 +331,7 @@ const LoginPage = () => {
           </div>
 
           <p className="mt-5 text-center text-xs text-gray-500">
-            Al iniciar sesión, aceptas nuestros <Link to="/terminos" className="underline hover:text-gray-700 transition-colors">Términos y Condiciones</Link> y <Link to="/privacidad" className="underline hover:text-gray-700 transition-colors">Política de Privacidad</Link>.
+            Al iniciar sesión, aceptas nuestros <Link to="/terminos-y-condiciones" className="underline hover:text-gray-700 transition-colors">Términos y Condiciones.</Link>
           </p>
         </motion.div>
       </div>
