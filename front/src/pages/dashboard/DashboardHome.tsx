@@ -3,17 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import AdminDashboard from './components/AdminDashboard';
 import PsychologistDashboard from './components/PsychologistDashboard';
-
-// Componente específico para cliente (por implementar)
-const ClientDashboard = () => (
-  <div className="p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm">
-    <h2 className="text-xl font-semibold text-gray-800 mb-4">Bienvenido a tu Panel de Cliente</h2>
-    <p className="text-gray-600">
-      Aquí podrás gestionar tus citas, ver tu historial y conectar con profesionales.
-    </p>
-    {/* Aquí se añadirán más componentes específicos para clientes */}
-  </div>
-);
+import ClientDashboard from './components/ClientDashboard';
 
 // Componente de estadísticas genérico (ejemplo)
 const StatsCard = ({ title, value, icon, color }: { title: string, value: string, icon: string, color: string }) => (
@@ -88,18 +78,11 @@ const DashboardHome = () => {
   // Estadísticas de ejemplo (personalizar según tipo de usuario)
   const renderStats = () => {
     // No mostramos las estadísticas genéricas para los paneles especializados
-    if (!user || ['admin', 'psychologist'].includes(user.user_type?.toLowerCase() || '')) return null;
+    if (!user || ['admin', 'psychologist', 'client'].includes(user.user_type?.toLowerCase() || '')) return null;
     
     const statsItems = [];
     
     switch(user.user_type?.toLowerCase()) {
-      case 'client':
-        statsItems.push(
-          { title: 'Citas Pendientes', value: '2', icon: '📅', color: 'bg-blue-100' },
-          { title: 'Mensajes', value: '5', icon: '💬', color: 'bg-green-100' },
-          { title: 'Psicólogos Favoritos', value: '3', icon: '⭐', color: 'bg-yellow-100' }
-        );
-        break;
       default:
         return null;
     }
@@ -121,7 +104,7 @@ const DashboardHome = () => {
   
   // No renderizamos las secciones adicionales para los dashboards especializados
   const shouldShowAdditionalSections = () => {
-    return !user || !['admin', 'psychologist'].includes(user.user_type?.toLowerCase() || '');
+    return !user || !['admin', 'psychologist', 'client'].includes(user.user_type?.toLowerCase() || '');
   };
   
   return (
