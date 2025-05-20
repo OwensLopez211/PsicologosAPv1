@@ -8,6 +8,10 @@ import datetime as dt
 from appointments.models import Appointment
 from profiles.models import AdminProfile
 from urllib.parse import quote
+import uuid
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.core.mail import EmailMessage
 
 # Configurar logger
 logger = logging.getLogger(__name__)
@@ -414,10 +418,6 @@ def send_appointment_confirmed_client_email(appointment, frontend_url=None):
         appointment: Instancia del modelo Appointment
         frontend_url: URL base del frontend (opcional)
     """
-    import uuid
-    from django.core.files.base import ContentFile
-    from django.core.files.storage import default_storage
-    
     client = appointment.client
     user = client.user
     psychologist = appointment.psychologist
@@ -474,28 +474,67 @@ def send_appointment_confirmed_client_email(appointment, frontend_url=None):
     # Nombre del archivo adjunto
     file_name = f"Cita-EMind-{fecha_cita}.ics"
     
-    # Enviar el correo incluyendo el archivo .ics directamente en el correo
-    from django.core.mail import EmailMessage
-    from django.template.loader import render_to_string
+    # Verificar que tengamos las credenciales necesarias
+    if not MAILGUN_API_KEY:
+        logger.error("❌ Error: MAILGUN_API_KEY no está configurada")
+        return False
+        
+    if not MAILGUN_DOMAIN:
+        logger.error("❌ Error: MAILGUN_DOMAIN no está configurada")
+        return False
     
+    # Renderizar la plantilla HTML
     try:
         html_content = render_to_string(template_name, context)
-        email = EmailMessage(
-            subject=subject,
-            body=html_content,
-            from_email=f"E-Mind <{DEFAULT_FROM_EMAIL}>",
-            to=[user.email]
+    except Exception as e:
+        logger.error(f"❌ Error al renderizar la plantilla {template_name}: {str(e)}")
+        return False
+    
+    # URL de la API de Mailgun
+    url = f"https://api.mailgun.net/v3/{MAILGUN_DOMAIN}/messages"
+    
+    # Preparar los datos del mensaje con archivo adjunto
+    data = {
+        "from": f"E-Mind <{DEFAULT_FROM_EMAIL}>",
+        "to": [user.email],
+        "subject": subject,
+        "html": html_content
+    }
+    
+    # Crear archivo adjunto
+    files = [
+        ("attachment", (file_name, ics_content, "text/calendar"))
+    ]
+    
+    # Enviar el correo usando la API de Mailgun
+    try:
+        response = requests.post(
+            url,
+            auth=("api", MAILGUN_API_KEY),
+            data=data,
+            files=files,
+            timeout=10
         )
-        email.content_subtype = "html"
         
-        # Adjuntar el archivo .ics
-        email.attach(file_name, ics_content, 'text/calendar')
-        
-        # Enviar el correo
-        email.send()
-        
-        logger.info(f"✅ Correo con archivo .ics enviado correctamente a {user.email}")
-        return True
+        # Verificar la respuesta
+        if response.status_code == 200:
+            logger.info(f"✅ Correo con archivo .ics enviado correctamente a {user.email} vía Mailgun API")
+            return True
+        else:
+            logger.error(f"❌ Fallo al enviar correo a {user.email}: Código {response.status_code} - {response.text}")
+            # Intentar decodificar el mensaje de error para más información
+            try:
+                error_data = response.json()
+                logger.error(f"Detalles del error: {error_data}")
+            except:
+                pass
+            return False
+    except requests.exceptions.Timeout:
+        logger.error(f"❌ Timeout al enviar correo a {user.email}: La petición a Mailgun tardó demasiado")
+        return False
+    except requests.exceptions.ConnectionError:
+        logger.error(f"❌ Error de conexión al enviar correo a {user.email}: No se pudo conectar con Mailgun")
+        return False
     except Exception as e:
         logger.error(f"❌ Error al enviar correo con archivo .ics a {user.email}: {str(e)}")
         return False
