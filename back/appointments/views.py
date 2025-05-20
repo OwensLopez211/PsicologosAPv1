@@ -18,7 +18,8 @@ from django.http import HttpResponse
 from backend.email_utils import (
     send_appointment_created_client_email,
     send_appointment_created_psychologist_email,
-    send_payment_verification_needed_email
+    send_payment_verification_needed_email,
+    send_appointment_confirmed_client_email
 )
 from django.conf import settings
 
@@ -905,6 +906,18 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 appointment.psychologist_notes = notes
         
         appointment.save()
+        
+        # Si la cita ha sido confirmada, enviar correo con enlace a Google Calendar
+        if new_status == 'CONFIRMED':
+            try:
+                # Obtener URL del frontend desde settings o configuración
+                frontend_url = getattr(settings, 'FRONTEND_URL', 'https://emindapp.cl')
+                
+                # Enviar correo de confirmación al cliente con enlace a Google Calendar
+                send_appointment_confirmed_client_email(appointment, frontend_url)
+                print(f"✅ Correo de confirmación enviado al cliente: {appointment.client.user.email}")
+            except Exception as e:
+                print(f"❌ Error al enviar correo de confirmación al cliente: {str(e)}")
         
         return Response({
             "detail": f"Estado actualizado a '{appointment.get_status_display()}'.",
