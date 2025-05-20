@@ -8,6 +8,10 @@ import datetime as dt
 from appointments.models import Appointment
 from profiles.models import AdminProfile
 from urllib.parse import quote
+import uuid
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from django.core.mail import EmailMessage
 
 # Configurar logger
 logger = logging.getLogger(__name__)
@@ -408,7 +412,7 @@ def send_payment_verification_needed_email(appointment, frontend_url=None):
 
 def send_appointment_confirmed_client_email(appointment, frontend_url=None):
     """
-    Envía correo al cliente cuando el psicólogo confirma la cita, incluyendo enlace para Google Calendar
+    Envía correo al cliente cuando el psicólogo confirma la cita, incluyendo un archivo .ics para agregar a cualquier calendario
     
     Args:
         appointment: Instancia del modelo Appointment
@@ -423,30 +427,36 @@ def send_appointment_confirmed_client_email(appointment, frontend_url=None):
     hora_inicio = appointment.start_time.strftime('%H:%M')
     hora_fin = appointment.end_time.strftime('%H:%M')
     
-    # Generar enlace para Google Calendar
-    # Formato de fecha para Google Calendar: YYYYMMDDTHHMMSSZ
-    cita_fecha = appointment.date
+    # Generar archivo .ics
+    uid = str(uuid.uuid4())
+    start_datetime = dt.datetime.combine(appointment.date, appointment.start_time)
+    end_datetime = dt.datetime.combine(appointment.date, appointment.end_time)
     
-    # Convertir datetime.time a datetime completo para poder formatear correctamente
-    start_datetime = dt.datetime.combine(cita_fecha, appointment.start_time)
-    end_datetime = dt.datetime.combine(cita_fecha, appointment.end_time)
+    # Formatear fechas para .ics (formato UTC)
+    start_utc = start_datetime.strftime('%Y%m%dT%H%M%SZ')
+    end_utc = end_datetime.strftime('%Y%m%dT%H%M%SZ')
     
-    # Formatear fechas para Google Calendar (sin zona horaria)
-    start_formatted = start_datetime.strftime('%Y%m%dT%H%M%S')
-    end_formatted = end_datetime.strftime('%Y%m%dT%H%M%S')
+    # Datos para el evento
+    summary = f"Sesión con {psychologist.user.first_name} {psychologist.user.last_name}"
+    description = f"Cita de terapia a través de E-Mind con {psychologist.user.first_name} {psychologist.user.last_name}."
+    location = "Videollamada"
     
-    # Crear el título y detalles del evento
-    event_title = f"Sesión con {psychologist.user.first_name} {psychologist.user.last_name}"
-    event_details = f"Cita de terapia a través de E-Mind con {psychologist.user.first_name} {psychologist.user.last_name}."
-    
-    # Generar el enlace completo
-    google_calendar_url = (
-        f"https://calendar.google.com/calendar/render?"
-        f"action=TEMPLATE&"
-        f"text={quote(event_title)}&"
-        f"dates={start_formatted}/{end_formatted}&"
-        f"details={quote(event_details)}"
-    )
+    # Contenido del archivo .ics
+    ics_content = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Mind//Appointment Calendar//ES
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:{uid}
+SUMMARY:{summary}
+DESCRIPTION:{description}
+LOCATION:{location}
+DTSTART:{start_utc}
+DTEND:{end_utc}
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
+"""
     
     # Preparar el contexto para la plantilla
     context = {
@@ -454,13 +464,35 @@ def send_appointment_confirmed_client_email(appointment, frontend_url=None):
         'nombre_psicologo': f"{psychologist.user.first_name} {psychologist.user.last_name}",
         'fecha_cita': fecha_cita,
         'hora_inicio': hora_inicio,
-        'hora_fin': hora_fin,
-        'google_calendar_url': google_calendar_url
+        'hora_fin': hora_fin
     }
     
     # Definir asunto y plantilla
     subject = f'Tu cita del {fecha_cita} ha sido confirmada'
     template_name = 'emails/cita_confirmada_paciente.html'
     
-    # Enviar el correo
-    return send_email(user.email, subject, template_name, context)
+    # Nombre del archivo adjunto
+    file_name = f"Cita-EMind-{fecha_cita}.ics"
+    
+    # Enviar el correo incluyendo el archivo .ics directamente en el correo
+    try:
+        html_content = render_to_string(template_name, context)
+        email = EmailMessage(
+            subject=subject,
+            body=html_content,
+            from_email=f"E-Mind <{DEFAULT_FROM_EMAIL}>",
+            to=[user.email]
+        )
+        email.content_subtype = "html"
+        
+        # Adjuntar el archivo .ics
+        email.attach(file_name, ics_content, 'text/calendar')
+        
+        # Enviar el correo
+        email.send()
+        
+        logger.info(f"✅ Correo con archivo .ics enviado correctamente a {user.email}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Error al enviar correo con archivo .ics a {user.email}: {str(e)}")
+        return False
