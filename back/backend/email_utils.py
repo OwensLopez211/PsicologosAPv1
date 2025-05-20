@@ -432,31 +432,67 @@ def send_appointment_confirmed_client_email(appointment, frontend_url=None):
     start_datetime = dt.datetime.combine(appointment.date, appointment.start_time)
     end_datetime = dt.datetime.combine(appointment.date, appointment.end_time)
     
-    # Formatear fechas para .ics (formato UTC)
+    # Formatear fechas para .ics y URLs (formato UTC e ISO)
     start_utc = start_datetime.strftime('%Y%m%dT%H%M%SZ')
     end_utc = end_datetime.strftime('%Y%m%dT%H%M%SZ')
+    
+    # Formatear fechas para Google Calendar (formato ISO)
+    # Google Calendar necesita fechas en formato ISO 8601
+    start_iso = start_datetime.strftime('%Y%m%dT%H%M%S')
+    end_iso = end_datetime.strftime('%Y%m%dT%H%M%S')
     
     # Datos para el evento
     summary = f"Sesión con {psychologist.user.first_name} {psychologist.user.last_name}"
     description = f"Cita de terapia a través de E-Mind con {psychologist.user.first_name} {psychologist.user.last_name}."
     location = "Videollamada"
     
+    # Crear enlaces para diferentes calendarios
+    # Google Calendar
+    google_cal_params = {
+        'action': 'TEMPLATE',
+        'text': quote(summary),
+        'dates': f"{start_iso}/{end_iso}",
+        'details': quote(description),
+        'location': quote(location),
+    }
+    google_calendar_url = "https://calendar.google.com/calendar/render?" + "&".join([f"{k}={v}" for k, v in google_cal_params.items()])
+    
+    # Outlook Web
+    outlook_params = {
+        'subject': quote(summary),
+        'startdt': start_iso,
+        'enddt': end_iso,
+        'body': quote(description),
+        'location': quote(location),
+    }
+    outlook_calendar_url = "https://outlook.live.com/calendar/0/deeplink/compose?" + "&".join([f"{k}={v}" for k, v in outlook_params.items()])
+    
+    # Yahoo Calendar 
+    yahoo_params = {
+        'title': quote(summary),
+        'st': start_iso,
+        'et': end_iso,
+        'desc': quote(description),
+        'in_loc': quote(location),
+    }
+    yahoo_calendar_url = "https://calendar.yahoo.com/?" + "&".join([f"{k}={v}" for k, v in yahoo_params.items()])
+    
     # Contenido del archivo .ics
     ics_content = f"""BEGIN:VCALENDAR
-    VERSION:2.0
-    PRODID:-//E-Mind//Appointment Calendar//ES
-    CALSCALE:GREGORIAN
-    BEGIN:VEVENT
-    UID:{uid}
-    SUMMARY:{summary}
-    DESCRIPTION:{description}
-    LOCATION:{location}
-    DTSTART:{start_utc}
-    DTEND:{end_utc}
-    STATUS:CONFIRMED
-    END:VEVENT
-    END:VCALENDAR
-    """
+VERSION:2.0
+PRODID:-//E-Mind//Appointment Calendar//ES
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:{uid}
+SUMMARY:{summary}
+DESCRIPTION:{description}
+LOCATION:{location}
+DTSTART:{start_utc}
+DTEND:{end_utc}
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR
+"""
     
     # Preparar el contexto para la plantilla
     context = {
@@ -464,7 +500,10 @@ def send_appointment_confirmed_client_email(appointment, frontend_url=None):
         'nombre_psicologo': f"{psychologist.user.first_name} {psychologist.user.last_name}",
         'fecha_cita': fecha_cita,
         'hora_inicio': hora_inicio,
-        'hora_fin': hora_fin
+        'hora_fin': hora_fin,
+        'google_calendar_url': google_calendar_url,
+        'outlook_calendar_url': outlook_calendar_url,
+        'yahoo_calendar_url': yahoo_calendar_url
     }
     
     # Definir asunto y plantilla

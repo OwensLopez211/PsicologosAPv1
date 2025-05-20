@@ -57,7 +57,20 @@
       text-decoration: none;
       border-radius: 5px;
       margin-top: 10px;
+      margin-right: 10px;
       font-weight: bold;
+    }
+    .google-button {
+      background-color: #4285f4;
+    }
+    .outlook-button {
+      background-color: #0078d4;
+    }
+    .yahoo-button {
+      background-color: #6001d2;
+    }
+    .apple-button {
+      background-color: #555555;
     }
     .calendar-section {
       background-color: #f0f8ff;
@@ -65,6 +78,16 @@
       border-radius: 5px;
       margin-top: 15px;
       border-left: 4px solid #4a86e8;
+    }
+    .calendar-buttons {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .calendar-note {
+      font-size: 13px;
+      color: #666;
+      margin-top: 15px;
+      font-style: italic;
     }
   </style>
 </head>
@@ -89,15 +112,17 @@
   
   <div class="calendar-section">
     <h3>Agregar a tu calendario</h3>
-    <p>Hemos adjuntado a este correo un archivo de evento (.ics) que puedes abrir para agregar esta cita a tu calendario.</p>
-    <p style="margin-top: 10px;">El archivo adjunto es compatible con:</p>
-    <ul style="margin-top: 5px; padding-left: 20px;">
-      <li>Google Calendar</li>
-      <li>Apple Calendar</li>
-      <li>Microsoft Outlook</li>
-      <li>Y la mayoría de aplicaciones de calendario</li>
-    </ul>
-    <p style="margin-top: 10px; font-size: 14px;">* Simplemente abre el archivo adjunto y tu aplicación de calendario te mostrará cómo importarlo.</p>
+    <p>Haz clic en uno de los siguientes botones para agregar esta cita a tu calendario favorito:</p>
+    
+    <div class="calendar-buttons">
+      <a href="{{ google_calendar_url }}" target="_blank" class="calendar-button google-button">Google Calendar</a>
+      <a href="{{ outlook_calendar_url }}" target="_blank" class="calendar-button outlook-button">Outlook</a>
+      <a href="{{ yahoo_calendar_url }}" target="_blank" class="calendar-button yahoo-button">Yahoo</a>
+    </div>
+    
+    <div class="calendar-note">
+      <p>* También hemos adjuntado un archivo .ics a este correo que puedes usar con Apple Calendar u otra aplicación.</p>
+    </div>
   </div>
   
   <div class="section">
