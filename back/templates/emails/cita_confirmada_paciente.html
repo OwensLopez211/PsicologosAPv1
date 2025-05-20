@@ -89,9 +89,9 @@
   
   <div class="calendar-section">
     <h3>Agregar a tu calendario</h3>
-    <p>Para no olvidar tu cita, agrégala a tu calendario haciendo clic en el siguiente botón:</p>
-    <a href="{{ google_calendar_url }}" class="calendar-button" target="_blank">Agregar a Google Calendar</a>
-    <p style="margin-top: 10px; font-size: 14px;">* Se abrirá en una nueva ventana para que puedas configurar el recordatorio.</p>
+    <p>Para no olvidar tu cita, puedes agregarla a tu calendario haciendo clic en el siguiente botón:</p>
+    <a href="{{ ics_file_path }}" class="calendar-button" target="_blank" download="Cita-EMind-{{ fecha_cita }}.ics">Descargar para Calendario</a>
+    <p style="margin-top: 10px; font-size: 14px;">* El archivo .ics puede importarse en Google Calendar, Apple Calendar, Outlook y la mayoría de las aplicaciones de calendario.</p>
   </div>
   
   <div class="section">
