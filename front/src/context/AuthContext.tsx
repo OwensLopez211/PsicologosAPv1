@@ -233,7 +233,7 @@ export const useAuth = () => {
   
   // Modo producción: verificación más agresiva
   if (process.env.NODE_ENV === 'production' && !context.token) {
-    logAuth('⚠️ useAuth en PRODUCCIÓN sin token, intentando resincronizar...', false, true);
+    // Eliminamos el log pero mantenemos la funcionalidad
     setTimeout(() => {
       context.forceTokenSync();
     }, 100);
