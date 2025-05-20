@@ -432,9 +432,10 @@ def send_appointment_confirmed_client_email(appointment, frontend_url=None):
     start_datetime = dt.datetime.combine(appointment.date, appointment.start_time)
     end_datetime = dt.datetime.combine(appointment.date, appointment.end_time)
     
-    # Formatear fechas para .ics y URLs (formato UTC e ISO)
-    start_utc = start_datetime.strftime('%Y%m%dT%H%M%SZ')
-    end_utc = end_datetime.strftime('%Y%m%dT%H%M%SZ')
+    # Formatear fechas para .ics (formato local, sin UTC)
+    # Quitamos el sufijo Z para indicar que es hora local y no UTC
+    start_local = start_datetime.strftime('%Y%m%dT%H%M%S')
+    end_local = end_datetime.strftime('%Y%m%dT%H%M%S')
     
     # Formatear fechas para Google Calendar (formato ISO)
     # Google Calendar necesita fechas en formato ISO 8601
@@ -487,8 +488,8 @@ UID:{uid}
 SUMMARY:{summary}
 DESCRIPTION:{description}
 LOCATION:{location}
-DTSTART:{start_utc}
-DTEND:{end_utc}
+DTSTART:{start_local}
+DTEND:{end_local}
 STATUS:CONFIRMED
 END:VEVENT
 END:VCALENDAR
