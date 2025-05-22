@@ -26,6 +26,12 @@ interface UpcomingAppointment {
   status: 'CONFIRMED' | 'PENDING_PAYMENT' | 'CANCELED' | string;
 }
 
+const getSaludo = (hora: number) => {
+  if (hora >= 6 && hora < 12) return 'Buenos días';
+  if (hora >= 12 && hora < 20) return 'Buenas tardes';
+  return 'Buenas noches';
+};
+
 const ClientDashboard: React.FC = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState<ClientStats>({
@@ -37,6 +43,8 @@ const ClientDashboard: React.FC = () => {
   const [, setUpcomingAppointments] = useState<UpcomingAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,6 +117,33 @@ const ClientDashboard: React.FC = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    // Obtener nombre del usuario desde localStorage si no está en el contexto
+    if (user && user.first_name) {
+      // Tomar solo el primer nombre y la inicial del primer apellido
+      const firstName = user.first_name.split(' ')[0];
+      const firstLastName = user.last_name ? user.last_name.split(' ')[0] : '';
+      const lastInitial = firstLastName ? firstLastName.charAt(0).toUpperCase() + '.' : '';
+      setUserName(`${firstName} ${lastInitial}`.trim());
+    } else {
+      try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const userObj = JSON.parse(userStr);
+          const firstName = userObj.first_name ? userObj.first_name.split(' ')[0] : '';
+          const firstLastName = userObj.last_name ? userObj.last_name.split(' ')[0] : '';
+          const lastInitial = firstLastName ? firstLastName.charAt(0).toUpperCase() + '.' : '';
+          setUserName(`${firstName} ${lastInitial}`.trim());
+        }
+      } catch (e) {
+        setUserName('');
+      }
+    }
+    // Actualizar la hora cada minuto
+    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   // Variantes para animaciones
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -144,6 +179,12 @@ const ClientDashboard: React.FC = () => {
       initial="hidden"
       animate="visible"
     >
+      {/* Mensaje de bienvenida */}
+      <div className="mb-2">
+        <h2 className="text-2xl font-bold text-[#2A6877]">
+          {getSaludo(currentTime.getHours())}, {userName}
+        </h2>
+      </div>
       {loading ? (
         <div className="flex justify-center items-center p-10">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#2A6877]"></div>

@@ -10,6 +10,12 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import AdminService, { AdminStats, PendingPsychologist } from '../../../services/AdminService';
 
+const getSaludo = (hora: number) => {
+  if (hora >= 6 && hora < 12) return 'Buenos días';
+  if (hora >= 12 && hora < 20) return 'Buenas tardes';
+  return 'Buenas noches';
+};
+
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -23,6 +29,8 @@ const AdminDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [apiBaseUrl, setApiBaseUrl] = useState<string>('');
   const [showDebug, setShowDebug] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +68,25 @@ const AdminDashboard: React.FC = () => {
     };
 
     fetchData();
+
+    // Obtener nombre del usuario desde localStorage
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userObj = JSON.parse(userStr);
+        // Tomar solo el primer nombre y la inicial del primer apellido
+        const firstName = userObj.first_name ? userObj.first_name.split(' ')[0] : '';
+        const firstLastName = userObj.last_name ? userObj.last_name.split(' ')[0] : '';
+        const lastInitial = firstLastName ? firstLastName.charAt(0).toUpperCase() + '.' : '';
+        setUserName(`${firstName} ${lastInitial}`.trim());
+      }
+    } catch (e) {
+      setUserName('');
+    }
+
+    // Actualizar la hora cada minuto
+    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(interval);
   }, []);
 
   // Variantes para animaciones
@@ -104,6 +131,12 @@ const AdminDashboard: React.FC = () => {
       initial="hidden"
       animate="visible"
     >
+      {/* Mensaje de bienvenida */}
+      <div className="mb-2">
+        <h2 className="text-2xl font-bold text-[#2A6877]">
+          {getSaludo(currentTime.getHours())}, {userName}
+        </h2>
+      </div>
       {/* Panel de depuración básico */}
       {(error || showDebug) && (
         <motion.div 

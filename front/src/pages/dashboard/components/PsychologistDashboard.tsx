@@ -29,6 +29,12 @@ const STATUS_CONFIG = {
   }
 };
 
+const getSaludo = (hora: number) => {
+  if (hora >= 6 && hora < 12) return 'Buenos días';
+  if (hora >= 12 && hora < 20) return 'Buenas tardes';
+  return 'Buenas noches';
+};
+
 const PsychologistDashboard: React.FC = () => {
   const [stats, setStats] = useState<PsychologistStats>({
     totalAppointments: 0,
@@ -43,6 +49,8 @@ const PsychologistDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,6 +69,26 @@ const PsychologistDashboard: React.FC = () => {
       }
     };
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    // Obtener nombre del usuario desde localStorage
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const userObj = JSON.parse(userStr);
+        // Tomar solo el primer nombre y la inicial del primer apellido
+        const firstName = userObj.first_name ? userObj.first_name.split(' ')[0] : '';
+        const firstLastName = userObj.last_name ? userObj.last_name.split(' ')[0] : '';
+        const lastInitial = firstLastName ? firstLastName.charAt(0).toUpperCase() + '.' : '';
+        setUserName(`${firstName} ${lastInitial}`.trim());
+      }
+    } catch (e) {
+      setUserName('');
+    }
+    // Actualizar la hora cada minuto
+    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(interval);
   }, []);
 
   // Variantes para animaciones
@@ -113,6 +141,13 @@ const PsychologistDashboard: React.FC = () => {
       initial="hidden"
       animate="visible"
     >
+      {/* Mensaje de bienvenida */}
+      <div className="mb-2">
+        <h2 className="text-2xl font-bold text-[#2A6877]">
+          {getSaludo(currentTime.getHours())}, {userName}
+        </h2>
+      </div>
+
       {/* Estado de verificación */}
       {verificationStatus.verification_status !== 'VERIFIED' && (
         <motion.div 
@@ -194,14 +229,14 @@ const PsychologistDashboard: React.FC = () => {
         <h3 className="font-medium text-gray-800 text-sm">Acciones rápidas</h3>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Link 
-            to="/dashboard/appointments"
+            to="/psicologo/dashboard/schedule"
             className="flex-1 sm:flex-none px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors flex items-center justify-center"
           >
             <CalendarIcon className="h-3.5 w-3.5 mr-1" />
             Gestionar citas
           </Link>
           <Link 
-            to="/dashboard/clients"
+            to="/psicologo/dashboard/patients"
             className="flex-1 sm:flex-none px-3 py-1.5 bg-gray-100 text-gray-700 text-xs rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
           >
             <UsersIcon className="h-3.5 w-3.5 mr-1" />
