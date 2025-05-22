@@ -5,7 +5,6 @@ import {
 
   DocumentCheckIcon,
   ClockIcon,
-  ArrowRightIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
@@ -23,6 +22,8 @@ const STATUS_CONFIG = {
   appointment: {
     CONFIRMED: { color: 'bg-green-50 text-green-700', text: 'Confirmada' },
     PENDING_PAYMENT: { color: 'bg-amber-50 text-amber-700', text: 'Pendiente pago' },
+    PAYMENT_UPLOADED: { color: 'bg-amber-50 text-amber-700', text: 'Pendiente de verificación' },
+    PAYMENT_VERIFIED: { color: 'bg-green-50 text-green-700', text: 'Pago verificado' },
     CANCELED: { color: 'bg-red-50 text-red-700', text: 'Cancelada' }
   }
 };
@@ -265,13 +266,6 @@ const PsychologistDashboard: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <Link 
-                      to={`/dashboard/appointments/${appointment.id}`}
-                      className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium flex items-center"
-                    >
-                      Ver detalles
-                      <ArrowRightIcon className="h-3 w-3 ml-1" />
-                    </Link>
                   </div>
                 );
               })}
