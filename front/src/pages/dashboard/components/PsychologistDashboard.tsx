@@ -5,7 +5,6 @@ import {
   CurrencyDollarIcon,
   DocumentCheckIcon,
   ClockIcon,
-  StarIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
