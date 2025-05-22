@@ -10,31 +10,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import axios from 'axios';
-
-// Interfaz para las estadísticas del psicólogo
-interface PsychologistStats {
-  totalAppointments: number;
-  pendingAppointments: number;
-  completedAppointments: number;
-  activeClients: number;
-  pendingPayments: number;
-  verificationStatus: 'VERIFIED' | 'PENDING' | 'DOCUMENTS_SUBMITTED' | 'REJECTED' | string;
-  rating: number;
-}
-
-// Interfaz para citas próximas
-interface UpcomingAppointment {
-  id: number;
-  clientName: string;
-  date: string;
-  time: string;
-  status: 'CONFIRMED' | 'PENDING_PAYMENT' | 'CANCELED' | string;
-}
+import PsychologistDashboardService, { PsychologistStats, UpcomingAppointment } from '../../../services/PsychologistDashboardService';
 
 const PsychologistDashboard: React.FC = () => {
-  useAuth();
   const [stats, setStats] = useState<PsychologistStats>({
     totalAppointments: 0,
     pendingAppointments: 0,
@@ -52,28 +30,12 @@ const PsychologistDashboard: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Obtener estadísticas del psicólogo
-        const statsResponse = await axios.get('/appointments/psychologist-stats/');
-        setStats(statsResponse.data);
+        const statsData = await PsychologistDashboardService.getDashboardStats();
+        setStats(statsData);
 
-        // Obtener citas próximas
-        const appointmentsResponse = await axios.get('/appointments/my-appointments/', {
-          params: {
-            status: 'CONFIRMED,PAYMENT_VERIFIED',
-            start_date: new Date().toISOString().split('T')[0]
-          }
-        });
+        const appointmentsData = await PsychologistDashboardService.getUpcomingAppointments();
+        setUpcomingAppointments(appointmentsData);
 
-        // Transformar los datos de las citas al formato requerido
-        const transformedAppointments = appointmentsResponse.data.results?.map((appointment: any) => ({
-          id: appointment.id,
-          clientName: appointment.client_name,
-          date: appointment.date,
-          time: appointment.start_time,
-          status: appointment.status
-        })) || [];
-
-        setUpcomingAppointments(transformedAppointments);
         setLoading(false);
       } catch (err) {
         console.error('Error al cargar datos del dashboard:', err);
