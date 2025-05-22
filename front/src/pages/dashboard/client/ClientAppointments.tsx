@@ -167,23 +167,23 @@ const ClientAppointments = () => {
 
   // Handle payment upload
   const handleUploadPayment = async () => {
-    if (!selectedAppointment || !paymentFile) return;
-    
+    if (!selectedAppointment) return;
+    if (!paymentFile) {
+      setUploadError('Debes seleccionar un archivo antes de subir el comprobante.');
+      return;
+    }
     setIsUploading(true);
     setUploadError(null);
-    
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('payment_proof', paymentFile);
-      
       await axios.post(`/api/appointments/${selectedAppointment.id}/upload-payment/`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
-      
       setUploadSuccess(true);
       fetchAppointments(); // Refresh appointments
     } catch (err) {
