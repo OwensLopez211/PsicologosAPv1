@@ -6,8 +6,6 @@ export interface PsychologistStats {
   completedAppointments: number;
   activeClients: number;
   pendingPayments: number;
-  verificationStatus: string;
-  rating: number;
 }
 
 export interface UpcomingAppointment {
@@ -34,9 +32,7 @@ class PsychologistDashboardService {
         pendingAppointments: 0,
         completedAppointments: 0,
         activeClients: 0,
-        pendingPayments: 0,
-        verificationStatus: 'PENDING',
-        rating: 0
+        pendingPayments: 0
       };
     }
   }
@@ -64,6 +60,22 @@ class PsychologistDashboardService {
     } catch (error) {
       console.error('Error al obtener próximas citas del psicólogo:', error);
       return [];
+    }
+  }
+
+  /**
+   * Obtiene el estado de verificación real del psicólogo autenticado
+   */
+  async getVerificationStatus(): Promise<{ verification_status: string, verification_status_display: string }> {
+    try {
+      const response = await api.get('/profiles/psychologist-profiles/me/verification-status/');
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener el estado de verificación:', error);
+      return {
+        verification_status: 'PENDING',
+        verification_status_display: 'Pendiente'
+      };
     }
   }
 }

@@ -1340,8 +1340,6 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 "completedAppointments": completed_appointments,
                 "activeClients": active_clients,
                 "pendingPayments": pending_payments,
-                "verificationStatus": psychologist.verification_status,
-                "rating": psychologist.rating or 0
             }
             
             return Response(response_data)
@@ -1354,9 +1352,6 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 "pendingAppointments": 0,
                 "completedAppointments": 0,
                 "activeClients": 0,
-                "pendingPayments": 0,
-                "verificationStatus": "PENDING",
-                "rating": 0
             })
         except Exception as e:
             return Response({
@@ -1367,8 +1362,6 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 "completedAppointments": 0,
                 "activeClients": 0,
                 "pendingPayments": 0,
-                "verificationStatus": "PENDING",
-                "rating": 0
             })
 
    

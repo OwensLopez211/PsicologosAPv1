@@ -160,5 +160,9 @@ urlpatterns = [
           PsychologistProfileViewSet.as_view({'delete': 'delete_experience', 'put': 'update_experience'}), 
           name='psychologist-experience-detail'),
 
+     path('psychologist-profiles/me/verification-status/', 
+     PsychologistProfileViewSet.as_view({'get': 'my_verification_status'}), 
+     name='psychologist-verification-status'),
+
 ]
 

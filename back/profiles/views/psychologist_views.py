@@ -988,5 +988,20 @@ class PsychologistProfileViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(profile)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'])
+    def my_verification_status(self, request):
+        """Devuelve el estado de verificación del psicólogo autenticado"""
+        user = request.user
+        if user.user_type != 'psychologist':
+            return Response({"detail": "Solo para psicólogos."}, status=403)
+        try:
+            profile = PsychologistProfile.objects.get(user=user)
+            return Response({
+                "verification_status": profile.verification_status,
+                "verification_status_display": profile.get_verification_status_display()
+            })
+        except PsychologistProfile.DoesNotExist:
+            return Response({"detail": "No se encontró el perfil de psicólogo."}, status=404)
+
 
     
