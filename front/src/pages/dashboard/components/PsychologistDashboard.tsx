@@ -5,7 +5,8 @@ import {
   CurrencyDollarIcon,
   DocumentCheckIcon,
   ClockIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -113,21 +114,55 @@ const PsychologistDashboard: React.FC = () => {
     fetchData();
   }, []);
 
+  // Variantes para animaciones
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.4 }
+    }
+  };
+
+  // Calcular porcentajes para las barras de progreso
+  const getTotalPercentage = () => {
+    const total = stats.totalAppointments + stats.pendingAppointments + stats.completedAppointments;
+    return total > 0 ? Math.round((stats.totalAppointments / total) * 100) : 0;
+  };
+
+  const getPendingPercentage = () => {
+    const total = stats.totalAppointments + stats.pendingAppointments + stats.completedAppointments;
+    return total > 0 ? Math.round((stats.pendingAppointments / total) * 100) : 0;
+  };
+
+  const getCompletedPercentage = () => {
+    const total = stats.totalAppointments + stats.pendingAppointments + stats.completedAppointments;
+    return total > 0 ? Math.round((stats.completedAppointments / total) * 100) : 0;
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#2A6877] border-t-transparent"></div>
+      <div className="flex justify-center items-center p-10">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#2A6877]"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-600 mb-4">{error}</p>
+      <div className="p-5 text-center text-red-500">
+        <p>{error}</p>
         <button 
           onClick={() => window.location.reload()} 
-          className="text-[#2A6877] hover:text-[#1d4e5f] font-medium"
+          className="mt-2 text-[#2A6877] hover:underline"
         >
           Intentar nuevamente
         </button>
@@ -139,15 +174,18 @@ const PsychologistDashboard: React.FC = () => {
     { color: 'bg-gray-50 text-gray-700 border-gray-200', text: verificationStatus.verification_status_display };
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
     >
       {/* Estado de verificación */}
       {verificationStatus.verification_status !== 'VERIFIED' && (
-        <div className={`p-4 rounded-xl border ${verificationConfig.color} flex items-center justify-between`}>
+        <motion.div 
+          variants={itemVariants}
+          className={`p-4 rounded-xl border ${verificationConfig.color} flex items-center justify-between`}
+        >
           <div className="flex items-center gap-3">
             <DocumentCheckIcon className="h-5 w-5" />
             <span className="font-medium">Estado: {verificationStatus.verification_status_display}</span>
@@ -158,106 +196,163 @@ const PsychologistDashboard: React.FC = () => {
           >
             Completar verificación
           </Link>
-        </div>
+        </motion.div>
       )}
 
-      {/* Métricas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-[#2A6877]/10 rounded-xl">
-              <CalendarIcon className="h-8 w-8 text-[#2A6877]" />
+      {/* Estadísticas principales */}
+      <motion.div variants={itemVariants} className="mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="flex items-center p-4 gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-500">Total de citas</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{stats.totalAppointments}</h2>
             </div>
-            <div>
-              <p className="text-sm text-gray-600">Citas atendidas</p>
-              <h2 className="text-3xl font-bold text-gray-900">{stats.totalAppointments}</h2>
+            <div className="h-12 w-12 bg-[#2A6877]/10 rounded-full flex items-center justify-center">
+              <CalendarIcon className="h-6 w-6 text-[#2A6877]" />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y sm:divide-y-0 border-t border-gray-100">
+            {/* Citas Completadas */}
+            <div className="p-3 flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-500">Completadas</span>
+                <div className="h-4 w-4 rounded-full bg-green-100 flex items-center justify-center">
+                  <CheckCircleIcon className="h-2.5 w-2.5 text-green-600" />
+                </div>
+              </div>
+              <div className="mt-1 flex items-end">
+                <span className="text-lg font-semibold text-gray-800">{stats.completedAppointments}</span>
+                <span className="ml-1 text-xs text-green-700">{getCompletedPercentage()}%</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
+                <div 
+                  className="bg-green-600 h-1 rounded-full" 
+                  style={{ width: `${getCompletedPercentage()}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Citas Pendientes */}
+            <div className="p-3 flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-500">Pendientes</span>
+                <div className="h-4 w-4 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <ClockIcon className="h-2.5 w-2.5 text-yellow-600" />
+                </div>
+              </div>
+              <div className="mt-1 flex items-end">
+                <span className="text-lg font-semibold text-gray-800">{stats.pendingAppointments}</span>
+                <span className="ml-1 text-xs text-yellow-700">{getPendingPercentage()}%</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
+                <div 
+                  className="bg-yellow-600 h-1 rounded-full" 
+                  style={{ width: `${getPendingPercentage()}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Pacientes Activos */}
+            <div className="p-3 flex flex-col">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-500">Pacientes activos</span>
+                <div className="h-4 w-4 rounded-full bg-blue-100 flex items-center justify-center">
+                  <UsersIcon className="h-2.5 w-2.5 text-blue-600" />
+                </div>
+              </div>
+              <div className="mt-1 flex items-end">
+                <span className="text-lg font-semibold text-gray-800">{stats.activeClients}</span>
+              </div>
             </div>
           </div>
         </div>
+      </motion.div>
 
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <MetricCard 
-            icon={UsersIcon}
-            label="Pacientes activos"
-            value={stats.activeClients}
-            iconBg="bg-blue-50 text-blue-600"
-          />
-        </div>
-      </div>
-
-      {/* Métricas secundarias */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <MetricCard 
-            icon={ClockIcon}
-            label="Citas próximas"
-            value={stats.pendingAppointments}
-            iconBg="bg-purple-50 text-purple-600"
-          />
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <MetricCard 
-            icon={CurrencyDollarIcon}
-            label="Pagos pendientes"
-            value={stats.pendingPayments}
-            iconBg="bg-green-50 text-green-600"
-          />
-        </div>
-      </div>
-
-      {/* Acciones rápidas */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Acciones rápidas</h3>
-        <div className="flex gap-3">
+      {/* Barra de acciones rápidas */}
+      <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h3 className="font-medium text-gray-800 text-sm">Acciones rápidas</h3>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Link 
             to="/dashboard/appointments"
-            className="flex items-center gap-2 px-4 py-2 bg-[#2A6877] text-white rounded-lg hover:bg-[#1d4e5f] transition-colors"
+            className="flex-1 sm:flex-none px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors flex items-center justify-center"
           >
-            <CalendarIcon className="h-4 w-4" />
+            <CalendarIcon className="h-3.5 w-3.5 mr-1" />
             Gestionar citas
           </Link>
           <Link 
             to="/dashboard/clients"
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="flex-1 sm:flex-none px-3 py-1.5 bg-gray-100 text-gray-700 text-xs rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
           >
-            <UsersIcon className="h-4 w-4" />
+            <UsersIcon className="h-3.5 w-3.5 mr-1" />
             Ver pacientes
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {/* Próximas citas */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900">Próximas citas</h3>
-          <p className="text-sm text-gray-600">Tus citas más cercanas</p>
+      <motion.div 
+        className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200"
+        variants={itemVariants}
+      >
+        <div className="p-3 border-b border-gray-100">
+          <h3 className="font-medium text-gray-800 text-sm">Próximas citas</h3>
+          <p className="text-gray-500 text-xs">Tus citas más cercanas</p>
         </div>
 
         {upcomingAppointments.length > 0 ? (
           <>
             <div className="divide-y divide-gray-100">
               {upcomingAppointments.map(appointment => (
-                <AppointmentCard key={appointment.id} appointment={appointment} />
+                <div key={appointment.id} className="p-3 hover:bg-gray-50 transition-colors flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-[#2A6877]/10 flex items-center justify-center">
+                      <UsersIcon className="h-4 w-4 text-[#2A6877]" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-800 text-sm">
+                        {appointment.clientName}
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-xs text-gray-500">
+                          {new Date(appointment.date).toLocaleDateString('es-ES', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })} • {appointment.time}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Link 
+                    to={`/dashboard/appointments/${appointment.id}`}
+                    className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium flex items-center"
+                  >
+                    Ver detalles
+                    <ArrowRightIcon className="h-3 w-3 ml-1" />
+                  </Link>
+                </div>
               ))}
             </div>
-            <div className="p-6 text-center border-t border-gray-100">
+
+            <div className="p-3 text-center">
               <Link 
                 to="/dashboard/appointments" 
-                className="text-[#2A6877] hover:text-[#1d4e5f] font-medium"
+                className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium"
               >
                 Ver todas las citas →
               </Link>
             </div>
           </>
         ) : (
-          <div className="p-12 text-center">
-            <CalendarIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h4 className="font-medium text-gray-900 mb-2">No hay citas próximas</h4>
-            <p className="text-sm text-gray-600">Tu agenda está libre por ahora</p>
+          <div className="p-6 text-center text-gray-500">
+            <CalendarIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+            <p className="font-medium text-gray-600 text-sm mb-1">No hay citas próximas</p>
+            <p className="text-xs text-gray-500">
+              Tu agenda está libre por ahora
+            </p>
           </div>
         )}
-      </div>
+      </motion.div>
     </motion.div>
   );
 };
