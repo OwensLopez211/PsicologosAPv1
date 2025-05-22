@@ -24,6 +24,7 @@ const STATUS_CONFIG = {
     PENDING_PAYMENT: { color: 'bg-amber-50 text-amber-700', text: 'Pendiente pago' },
     PAYMENT_UPLOADED: { color: 'bg-amber-50 text-amber-700', text: 'Pendiente de verificación' },
     PAYMENT_VERIFIED: { color: 'bg-green-50 text-green-700', text: 'Pago verificado' },
+    COMPLETED: { color: 'bg-green-50 text-green-700', text: 'Completada' },
     CANCELED: { color: 'bg-red-50 text-red-700', text: 'Cancelada' }
   }
 };
