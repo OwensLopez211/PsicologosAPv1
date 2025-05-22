@@ -1307,18 +1307,11 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             # Citas totales
             total_appointments = all_appointments.count()
             
-            # Citas pendientes (próximas)
-            pending_appointments = all_appointments.filter(
-                Q(date__gt=today) | 
-                (Q(date=today) & Q(start_time__gt=current_time))
-            ).exclude(
-                status__in=['COMPLETED', 'CANCELLED', 'NO_SHOW']
-            ).count()
-            
             # Citas completadas
-            completed_appointments = all_appointments.filter(
-                status='COMPLETED'
-            ).count()
+            completed_appointments = all_appointments.filter(status='COMPLETED').count()
+            
+            # Citas con pago pendiente
+            pending_payment_appointments = all_appointments.filter(status='PENDING_PAYMENT').count()
             
             # Clientes activos (clientes con citas confirmadas o completadas en los últimos 30 días)
             thirty_days_ago = today - timedelta(days=30)
@@ -1328,18 +1321,31 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 appointments__status__in=['CONFIRMED', 'COMPLETED']
             ).distinct().count()
             
-            # Pagos pendientes (citas con estado PAYMENT_UPLOADED)
-            pending_payments = all_appointments.filter(
-                status='PAYMENT_UPLOADED'
-            ).count()
+            # Próximas citas (hoy o futuras, no canceladas, ordenadas por fecha y hora)
+            upcoming_appointments_qs = all_appointments.filter(
+                Q(date__gt=today) | (Q(date=today) & Q(start_time__gt=current_time))
+            ).exclude(
+                status__in=['CANCELLED', 'NO_SHOW']
+            ).order_by('date', 'start_time')[:5]  # Limitar a las 5 más próximas
+            
+            upcoming_appointments = [
+                {
+                    "id": appt.id,
+                    "client_name": f"{appt.client.user.first_name} {appt.client.user.last_name}",
+                    "date": appt.date,
+                    "time": appt.start_time,
+                    "status": appt.status
+                }
+                for appt in upcoming_appointments_qs
+            ]
             
             # Construir respuesta
             response_data = {
                 "totalAppointments": total_appointments,
-                "pendingAppointments": pending_appointments,
                 "completedAppointments": completed_appointments,
+                "pendingPaymentAppointments": pending_payment_appointments,
                 "activeClients": active_clients,
-                "pendingPayments": pending_payments,
+                "upcomingAppointments": upcoming_appointments,
             }
             
             return Response(response_data)
@@ -1349,19 +1355,20 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 "success": False,
                 "message": "No se encontró el perfil de psicólogo para este usuario.",
                 "totalAppointments": 0,
-                "pendingAppointments": 0,
                 "completedAppointments": 0,
+                "pendingPaymentAppointments": 0,
                 "activeClients": 0,
+                "upcomingAppointments": [],
             })
         except Exception as e:
             return Response({
                 "success": False,
                 "error": str(e),
                 "totalAppointments": 0,
-                "pendingAppointments": 0,
                 "completedAppointments": 0,
+                "pendingPaymentAppointments": 0,
                 "activeClients": 0,
-                "pendingPayments": 0,
+                "upcomingAppointments": [],
             })
 
    

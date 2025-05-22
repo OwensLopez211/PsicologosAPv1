@@ -1,19 +1,19 @@
 import api from './api';
 
-export interface PsychologistStats {
-  totalAppointments: number;
-  pendingAppointments: number;
-  completedAppointments: number;
-  activeClients: number;
-  pendingPayments: number;
-}
-
 export interface UpcomingAppointment {
   id: number;
-  clientName: string;
+  client_name: string;
   date: string;
   time: string;
   status: string;
+}
+
+export interface PsychologistStats {
+  totalAppointments: number;
+  completedAppointments: number;
+  pendingPaymentAppointments: number;
+  activeClients: number;
+  upcomingAppointments: UpcomingAppointment[];
 }
 
 class PsychologistDashboardService {
@@ -29,10 +29,10 @@ class PsychologistDashboardService {
       // Devolver datos vacíos en caso de error
       return {
         totalAppointments: 0,
-        pendingAppointments: 0,
         completedAppointments: 0,
+        pendingPaymentAppointments: 0,
         activeClients: 0,
-        pendingPayments: 0
+        upcomingAppointments: []
       };
     }
   }
@@ -52,7 +52,7 @@ class PsychologistDashboardService {
       const results = response.data.results || response.data;
       return (results as any[]).map((appointment: any) => ({
         id: appointment.id,
-        clientName: appointment.client_name,
+        client_name: appointment.client_name,
         date: appointment.date,
         time: appointment.start_time,
         status: appointment.status
