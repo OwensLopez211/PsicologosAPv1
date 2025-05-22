@@ -248,7 +248,7 @@ const PsychologistDashboard: React.FC = () => {
             </div>
             <div className="p-3 text-center">
               <Link 
-                to="/dashboard/appointments" 
+                to="/psicologo/dashboard/schedule" 
                 className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium"
               >
                 Ver todas las citas →
