@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import PsychologistDashboardService, { PsychologistStats, UpcomingAppointment } from '../../../services/PsychologistDashboardService';
+import PsychologistDashboardService, { PsychologistStats } from '../../../services/PsychologistDashboardService';
 
 // Configuración de estados
 const STATUS_CONFIG = {
@@ -80,10 +80,6 @@ const PsychologistDashboard: React.FC = () => {
   };
 
   // Calcular porcentajes para las barras de progreso
-  const getTotalPercentage = () => {
-    const total = stats.totalAppointments + stats.pendingPaymentAppointments + stats.completedAppointments;
-    return total > 0 ? Math.round((stats.totalAppointments / total) * 100) : 0;
-  };
 
   const getPendingPercentage = () => {
     const total = stats.totalAppointments + stats.pendingPaymentAppointments + stats.completedAppointments;
