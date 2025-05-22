@@ -81,18 +81,6 @@ const PsychologistDashboard: React.FC = () => {
     }
   };
 
-  // Calcular porcentajes para las barras de progreso
-
-  const getPendingPercentage = () => {
-    const total = stats.totalAppointments + stats.pendingPaymentAppointments + stats.completedAppointments;
-    return total > 0 ? Math.round((stats.pendingPaymentAppointments / total) * 100) : 0;
-  };
-
-  const getCompletedPercentage = () => {
-    const total = stats.totalAppointments + stats.pendingPaymentAppointments + stats.completedAppointments;
-    return total > 0 ? Math.round((stats.completedAppointments / total) * 100) : 0;
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center p-10">
@@ -168,13 +156,6 @@ const PsychologistDashboard: React.FC = () => {
               </div>
               <div className="mt-1 flex items-end">
                 <span className="text-lg font-semibold text-gray-800">{stats.completedAppointments}</span>
-                <span className="ml-1 text-xs text-green-700">{getCompletedPercentage()}%</span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
-                <div 
-                  className="bg-green-600 h-1 rounded-full" 
-                  style={{ width: `${getCompletedPercentage()}%` }}
-                ></div>
               </div>
             </div>
 
@@ -188,14 +169,8 @@ const PsychologistDashboard: React.FC = () => {
               </div>
               <div className="mt-1 flex items-end">
                 <span className="text-lg font-semibold text-gray-800">{stats.pendingPaymentAppointments}</span>
-                <span className="ml-1 text-xs text-yellow-700">{getPendingPercentage()}%</span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-1 mt-2">
-                <div 
-                  className="bg-yellow-600 h-1 rounded-full" 
-                  style={{ width: `${getPendingPercentage()}%` }}
-                ></div>
-              </div>
+
             </div>
 
             {/* Pacientes Activos */}
