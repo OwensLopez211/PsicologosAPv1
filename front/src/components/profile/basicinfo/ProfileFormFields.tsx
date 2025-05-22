@@ -3,6 +3,27 @@ import { UserIcon, EnvelopeIcon, PhoneIcon, IdentificationIcon, MapPinIcon, Info
 import { useState, useEffect } from 'react';
 import regionesComunas, { getComunasByRegion } from '../../../utils/regionesComunas';
 
+// Función para formatear RUT chileno
+const formatRut = (rut: string): string => {
+  // Eliminar puntos y guión
+  const cleanRut = rut.replace(/[^0-9kK]/g, '');
+  
+  if (cleanRut.length === 0) return '';
+  
+  // Separar número y dígito verificador
+  const rutNumber = cleanRut.slice(0, -1);
+  const dv = cleanRut.slice(-1).toUpperCase();
+  
+  // Formatear número con puntos
+  let formattedNumber = '';
+  for (let i = rutNumber.length; i > 0; i -= 3) {
+    const start = Math.max(0, i - 3);
+    formattedNumber = rutNumber.slice(start, i) + (formattedNumber ? '.' + formattedNumber : '');
+  }
+  
+  return `${formattedNumber}-${dv}`;
+};
+
 // Interface para los datos del formulario
 interface FormData {
   first_name: string;
@@ -313,6 +334,16 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
       return;
     }
     
+    // Si es el campo de RUT, aplicar formateo
+    if (id === 'rut') {
+      const formattedRut = formatRut(value);
+      onChange({
+        ...formData,
+        [id]: formattedRut
+      });
+      return;
+    }
+    
     onChange({
       ...formData,
       [id]: value
@@ -419,9 +450,9 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
       return;
     }
     
-    // Limitar a 8 dígitos después del prefijo
+    // Limitar a 9 dígitos después del prefijo
     const currentDigits = formData.phone.replace(/\D/g, '').substring(2); // Quitamos el '56'
-    if (currentDigits.length >= 8) {
+    if (currentDigits.length >= 9) {
       e.preventDefault();
       return;
     }
@@ -497,6 +528,7 @@ const ProfileFormFields = ({ formData, isEditing, onChange, disabledFields = [] 
         disabled={!isEditing || disabledFields.includes('rut')}
         optional={true}
         icon={<IdentificationIcon className="w-4 h-4" />}
+        infoMessage="Ingrese su RUT sin puntos y con guión (ejemplo: 12345678-9)"
       />
 
       <motion.div 

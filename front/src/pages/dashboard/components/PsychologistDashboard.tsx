@@ -11,6 +11,7 @@ import {
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import axios from 'axios';
 
 // Interfaz para las estadísticas del psicólogo
 interface PsychologistStats {
@@ -51,49 +52,29 @@ const PsychologistDashboard: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Aquí se realizarían las llamadas a la API para obtener datos reales
-        // Por ahora, simulamos datos de ejemplo
-        
-        // Simulación de carga de estadísticas
-        setTimeout(() => {
-          setStats({
-            totalAppointments: 28,
-            pendingAppointments: 3,
-            completedAppointments: 25,
-            activeClients: 8,
-            pendingPayments: 2,
-            verificationStatus: 'VERIFIED',
-            rating: 4.8
-          });
-          
-          // Simulación de citas próximas
-          setUpcomingAppointments([
-            {
-              id: 1,
-              clientName: 'María García',
-              date: '2023-12-05',
-              time: '15:30',
-              status: 'CONFIRMED'
-            },
-            {
-              id: 2,
-              clientName: 'Juan Pérez',
-              date: '2023-12-07',
-              time: '10:00',
-              status: 'PENDING_PAYMENT'
-            },
-            {
-              id: 3,
-              clientName: 'Ana Rodríguez',
-              date: '2023-12-08',
-              time: '17:15',
-              status: 'CONFIRMED'
-            }
-          ]);
-          
-          setLoading(false);
-        }, 1000);
-        
+        // Obtener estadísticas del psicólogo
+        const statsResponse = await axios.get('/appointments/psychologist-stats/');
+        setStats(statsResponse.data);
+
+        // Obtener citas próximas
+        const appointmentsResponse = await axios.get('/appointments/my-appointments/', {
+          params: {
+            status: 'CONFIRMED,PAYMENT_VERIFIED',
+            start_date: new Date().toISOString().split('T')[0]
+          }
+        });
+
+        // Transformar los datos de las citas al formato requerido
+        const transformedAppointments = appointmentsResponse.data.results?.map((appointment: any) => ({
+          id: appointment.id,
+          clientName: appointment.client_name,
+          date: appointment.date,
+          time: appointment.start_time,
+          status: appointment.status
+        })) || [];
+
+        setUpcomingAppointments(transformedAppointments);
+        setLoading(false);
       } catch (err) {
         console.error('Error al cargar datos del dashboard:', err);
         setError('No se pudieron cargar tus datos. Por favor, intenta nuevamente más tarde.');

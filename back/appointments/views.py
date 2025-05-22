@@ -1290,4 +1290,85 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         
         return Response(result)
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsPsychologist])
+    def psychologist_stats(self, request):
+        """Endpoint para obtener estadísticas del psicólogo para el dashboard"""
+        user = request.user
+        try:
+            psychologist = PsychologistProfile.objects.get(user=user)
+            
+            # Fecha actual para comparar
+            today = timezone.now().date()
+            current_time = timezone.now().time()
+            
+            # Obtener todas las citas del psicólogo
+            all_appointments = Appointment.objects.filter(psychologist=psychologist)
+            
+            # Citas totales
+            total_appointments = all_appointments.count()
+            
+            # Citas pendientes (próximas)
+            pending_appointments = all_appointments.filter(
+                Q(date__gt=today) | 
+                (Q(date=today) & Q(start_time__gt=current_time))
+            ).exclude(
+                status__in=['COMPLETED', 'CANCELLED', 'NO_SHOW']
+            ).count()
+            
+            # Citas completadas
+            completed_appointments = all_appointments.filter(
+                status='COMPLETED'
+            ).count()
+            
+            # Clientes activos (clientes con citas confirmadas o completadas en los últimos 30 días)
+            thirty_days_ago = today - timedelta(days=30)
+            active_clients = ClientProfile.objects.filter(
+                appointments__psychologist=psychologist,
+                appointments__date__gte=thirty_days_ago,
+                appointments__status__in=['CONFIRMED', 'COMPLETED']
+            ).distinct().count()
+            
+            # Pagos pendientes (citas con estado PAYMENT_UPLOADED)
+            pending_payments = all_appointments.filter(
+                status='PAYMENT_UPLOADED'
+            ).count()
+            
+            # Construir respuesta
+            response_data = {
+                "totalAppointments": total_appointments,
+                "pendingAppointments": pending_appointments,
+                "completedAppointments": completed_appointments,
+                "activeClients": active_clients,
+                "pendingPayments": pending_payments,
+                "verificationStatus": psychologist.verification_status,
+                "rating": psychologist.rating or 0
+            }
+            
+            return Response(response_data)
+            
+        except PsychologistProfile.DoesNotExist:
+            return Response({
+                "success": False,
+                "message": "No se encontró el perfil de psicólogo para este usuario.",
+                "totalAppointments": 0,
+                "pendingAppointments": 0,
+                "completedAppointments": 0,
+                "activeClients": 0,
+                "pendingPayments": 0,
+                "verificationStatus": "PENDING",
+                "rating": 0
+            })
+        except Exception as e:
+            return Response({
+                "success": False,
+                "error": str(e),
+                "totalAppointments": 0,
+                "pendingAppointments": 0,
+                "completedAppointments": 0,
+                "activeClients": 0,
+                "pendingPayments": 0,
+                "verificationStatus": "PENDING",
+                "rating": 0
+            })
+
    

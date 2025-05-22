@@ -77,5 +77,8 @@ urlpatterns = [
     path('psychologist_patients/', AppointmentViewSet.as_view({
         'get': 'psychologist_patients',
     }), name='psychologist_patients'),
+    path('psychologist-stats/', AppointmentViewSet.as_view({
+        'get': 'psychologist_stats',
+    }), name='psychologist-stats'),
     path('', include(router.urls)),
 ]
