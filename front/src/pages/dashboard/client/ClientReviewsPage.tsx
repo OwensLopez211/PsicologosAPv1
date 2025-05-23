@@ -20,7 +20,7 @@ interface Appointment {
 }
 
 const ClientReviewsPage = () => {
-  const { user } = useAuth();
+  useAuth();
   const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([]);
   const [completedReviews, setCompletedReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
