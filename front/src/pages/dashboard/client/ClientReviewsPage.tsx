@@ -18,7 +18,7 @@ interface Appointment {
     };
   };
 }
-
+ 
 const ClientReviewsPage = () => {
   useAuth();
   const [pendingAppointments, setPendingAppointments] = useState<Appointment[]>([]);
