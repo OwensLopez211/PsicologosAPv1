@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import {
   HomeIcon, UserIcon, CalendarIcon, UsersIcon, 
   UserGroupIcon, MagnifyingGlassIcon, ArrowRightOnRectangleIcon,
-  ArrowLeftIcon, CreditCardIcon,
+  ArrowLeftIcon, CreditCardIcon, StarIcon,
 } from '@heroicons/react/24/outline';
 import {  AnimatePresence } from 'framer-motion';
 
@@ -75,7 +75,7 @@ const TopBar = () => {
         { path: '/dashboard', label: 'Inicio', icon: HomeIcon },
         { path: '/dashboard/profile', label: 'Perfil', icon: UserIcon },
         { path: '/dashboard/appointments', label: 'Citas', icon: CalendarIcon },
-        { path: '/dashboard/psychologists', label: 'Buscar', icon: MagnifyingGlassIcon },
+        { path: '/especialistas', label: 'Buscar', icon: MagnifyingGlassIcon },
       ],
       PSYCHOLOGIST: [
         { path: '/psicologo/dashboard', label: 'Inicio', icon: HomeIcon },
@@ -83,6 +83,7 @@ const TopBar = () => {
         { path: '/psicologo/dashboard/schedule', label: 'Agenda', icon: CalendarIcon },
         { path: '/psicologo/dashboard/patients', label: 'Pacientes', icon: UsersIcon },
         { path: '/psicologo/dashboard/payments', label: 'Pagos', icon: CreditCardIcon },
+        { path: '/psicologo/dashboard/reviews', label: 'Reviews', icon: StarIcon },
       ],
       ADMIN: [
         { path: '/admin/dashboard', label: 'Inicio', icon: HomeIcon },
@@ -90,6 +91,7 @@ const TopBar = () => {
         { path: '/admin/dashboard/payments', label: 'Pagos', icon: CreditCardIcon },
         { path: '/admin/dashboard/pacients', label: 'Pacientes', icon: UsersIcon },
         { path: '/admin/dashboard/psychologists', label: 'Psicólogos', icon: UserGroupIcon },
+        { path: '/admin/dashboard/reviews', label: 'Reviews', icon: StarIcon },
       ],
     };
 

@@ -27,6 +27,7 @@ import UnifiedPatientsPage from './pages/dashboard/UnifiedPatientsPage';
 import { useEffect } from 'react';
 import RecuperarPasswordPage from './pages/public-pages/RecuperarPasswordPage';
 import EstablecerPasswordPage from './pages/public-pages/EstablecerPasswordPage';
+import ReviewsPage from './pages/dashboard/ReviewsPage';
 
 // Componente para inicializar el token en localStorage
 function TokenInitializer() {
@@ -91,6 +92,7 @@ function App() {
               <Route path="" element={<DashboardHome />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="appointments" element={<ClientAppointments />} />
+              <Route path="reviews" element={<ReviewsPage />} />
             </Route>
 
             {/* Psychologist Dashboard routes */}
@@ -104,6 +106,7 @@ function App() {
               <Route path="schedule" element={<SchedulePage />} />
               <Route path="payments" element={<VerificationsPage />} />
               <Route path="patients" element={<UnifiedPatientsPage />} />
+              <Route path="reviews" element={<ReviewsPage />} />
             </Route>
 
             {/* Admin Dashboard routes */}
@@ -118,6 +121,7 @@ function App() {
               <Route path="psychologists" element={<PsychologistListPage />} />
               <Route path="psychologists/:id" element={<PsychologistDetailPage />} />
               <Route path="payments" element={<VerificationsPage />} />
+              <Route path="reviews" element={<ReviewsPage />} />
             </Route>
 
             {/* Catch all route */}
