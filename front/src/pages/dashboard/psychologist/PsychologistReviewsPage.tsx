@@ -6,7 +6,7 @@ import { es } from 'date-fns/locale';
 import ReviewService, { Review, ReviewStats } from '../../../services/ReviewService';
 
 const PsychologistReviewsPage = () => {
-  const { user } = useAuth();
+  useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ const PsychologistReviewsPage = () => {
     try {
       const data = await ReviewService.getPsychologistReviews();
       setReviews(data.reviews);
-      setStats(data.stats);
+      setStats(data.stats as ReviewStats | null);
     } catch (err) {
       setError('Error al cargar las valoraciones');
     } finally {

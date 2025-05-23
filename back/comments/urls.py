@@ -10,21 +10,21 @@ urlpatterns = [
     # Incluir rutas del router
     path('', include(router.urls)),
     
-    # Rutas para psicólogos
-    path('psychologist/reviews/', 
-         views.PsychologistReviewsView.as_view(), 
-         name='psychologist-reviews'),
-    
-    # Rutas para clientes
+    # Rutas para clientes (mover al principio para darles prioridad)
     path('client/reviews/', 
          views.ClientCommentListView.as_view(), 
          name='client-reviews'),
     path('client/pending-appointments/', 
          views.PendingAppointmentsView.as_view(), 
          name='pending-appointments'),
-    path('client/reviews/submit/', 
+    path('client/submit/', 
          views.CommentCreateView.as_view(), 
          name='submit-review'),
+         
+    # Rutas para psicólogos
+    path('psychologist/reviews/', 
+         views.PsychologistReviewsView.as_view(), 
+         name='psychologist-reviews'),
     
     # Rutas públicas
     path('public/psychologist/<int:psychologist_id>/reviews/', 

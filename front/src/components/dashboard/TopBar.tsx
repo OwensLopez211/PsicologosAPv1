@@ -75,7 +75,7 @@ const TopBar = () => {
         { path: '/dashboard', label: 'Inicio', icon: HomeIcon },
         { path: '/dashboard/profile', label: 'Perfil', icon: UserIcon },
         { path: '/dashboard/appointments', label: 'Citas', icon: CalendarIcon },
-        { path: '/psicologo/dashboard/reviews', label: 'Valoraciones', icon: StarIcon },
+        { path: '/dashboard/reviews', label: 'Valoraciones', icon: StarIcon },
         { path: '/especialistas', label: 'Buscar', icon: MagnifyingGlassIcon },
       ],
       PSYCHOLOGIST: [

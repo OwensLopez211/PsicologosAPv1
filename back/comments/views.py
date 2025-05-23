@@ -14,7 +14,8 @@ class IsClientOwner(permissions.BasePermission):
     Permiso personalizado que solo permite a los usuarios pacientes comentar sus propias citas.
     """
     def has_permission(self, request, view):
-        return request.user.is_authenticated and hasattr(request.user, 'clientprofile_profile')
+        print(f"Checking client permission for user: {request.user}, type: {request.user.user_type}")
+        return request.user.is_authenticated and request.user.user_type == 'client'
     
     def has_object_permission(self, request, view, obj):
         return obj.patient.user == request.user
@@ -24,14 +25,14 @@ class IsPsychologistOwner(permissions.BasePermission):
     Permiso que solo permite a los psicólogos ver sus propias valoraciones.
     """
     def has_permission(self, request, view):
-        return request.user.is_authenticated and hasattr(request.user, 'psychologistprofile_profile')
+        return request.user.is_authenticated and request.user.user_type == 'psychologist'
 
 class IsAdminUser(permissions.BasePermission):
     """
     Permiso que solo permite a administradores acceder a las vistas.
     """
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_staff
+        return request.user.is_authenticated and request.user.user_type == 'admin'
 
 class PsychologistReviewsView(generics.ListAPIView):
     """
@@ -71,6 +72,7 @@ class PendingAppointmentsView(generics.ListAPIView):
     permission_classes = [IsClientOwner]
     
     def get_queryset(self):
+        print(f"Getting pending appointments for user: {self.request.user}")
         client_profile = get_object_or_404(ClientProfile, user=self.request.user)
         three_days_ago = timezone.now() - timedelta(days=3)
         
@@ -94,6 +96,18 @@ class CommentCreateView(generics.CreateAPIView):
         client_profile = get_object_or_404(ClientProfile, user=self.request.user)
         serializer.save(patient=client_profile)
 
+class ClientCommentListView(generics.ListAPIView):
+    """
+    Vista para que los clientes vean sus propias valoraciones.
+    """
+    serializer_class = CommentReadSerializer
+    permission_classes = [IsClientOwner]
+    
+    def get_queryset(self):
+        print(f"Getting reviews for client: {self.request.user}")
+        client_profile = get_object_or_404(ClientProfile, user=self.request.user)
+        return Comment.objects.filter(patient=client_profile).order_by('-created_at')
+
 class CommentListByPsychologistView(generics.ListAPIView):
     """
     Vista para listar comentarios aprobados por psicólogo.
@@ -106,19 +120,8 @@ class CommentListByPsychologistView(generics.ListAPIView):
         psychologist_id = self.kwargs.get('psychologist_id')
         return Comment.objects.filter(
             psychologist_id=psychologist_id,
-            approved=True
+            status='APPROVED'
         ).order_by('-created_at')
-
-class ClientCommentListView(generics.ListAPIView):
-    """
-    Vista para que los clientes vean sus propias valoraciones.
-    """
-    serializer_class = CommentReadSerializer
-    permission_classes = [IsClientOwner]
-    
-    def get_queryset(self):
-        client_profile = get_object_or_404(ClientProfile, user=self.request.user)
-        return Comment.objects.filter(patient=client_profile).order_by('-created_at')
 
 class CommentAdminViewSet(viewsets.ModelViewSet):
     """

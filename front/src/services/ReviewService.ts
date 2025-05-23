@@ -64,7 +64,7 @@ class ReviewService {
 
   // Cliente: enviar valoración
   async submitReview(appointmentId: number, review: { rating: number; comment: string }) {
-    const { data } = await api.post('/comments/client/reviews/submit/', {
+    const { data } = await api.post('/comments/client/submit/', {
       appointment: appointmentId,
       ...review
     });
