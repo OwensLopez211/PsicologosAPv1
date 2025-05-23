@@ -75,6 +75,7 @@ const TopBar = () => {
         { path: '/dashboard', label: 'Inicio', icon: HomeIcon },
         { path: '/dashboard/profile', label: 'Perfil', icon: UserIcon },
         { path: '/dashboard/appointments', label: 'Citas', icon: CalendarIcon },
+        { path: '/psicologo/dashboard/reviews', label: 'Valoraciones', icon: StarIcon },
         { path: '/especialistas', label: 'Buscar', icon: MagnifyingGlassIcon },
       ],
       PSYCHOLOGIST: [
@@ -83,7 +84,7 @@ const TopBar = () => {
         { path: '/psicologo/dashboard/schedule', label: 'Agenda', icon: CalendarIcon },
         { path: '/psicologo/dashboard/patients', label: 'Pacientes', icon: UsersIcon },
         { path: '/psicologo/dashboard/payments', label: 'Pagos', icon: CreditCardIcon },
-        { path: '/psicologo/dashboard/reviews', label: 'Reviews', icon: StarIcon },
+        { path: '/psicologo/dashboard/reviews', label: 'Valoraciones', icon: StarIcon },
       ],
       ADMIN: [
         { path: '/admin/dashboard', label: 'Inicio', icon: HomeIcon },
@@ -91,7 +92,7 @@ const TopBar = () => {
         { path: '/admin/dashboard/payments', label: 'Pagos', icon: CreditCardIcon },
         { path: '/admin/dashboard/pacients', label: 'Pacientes', icon: UsersIcon },
         { path: '/admin/dashboard/psychologists', label: 'Psicólogos', icon: UserGroupIcon },
-        { path: '/admin/dashboard/reviews', label: 'Reviews', icon: StarIcon },
+        { path: '/admin/dashboard/reviews', label: 'Valoraciones', icon: StarIcon },
       ],
     };
 
