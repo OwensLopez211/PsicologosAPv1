@@ -3,8 +3,8 @@ from .models import Comment
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'get_patient_name', 'get_psychologist_name', 'rating', 'created_at', 'approved')
-    list_filter = ('approved', 'rating', 'created_at')
+    list_display = ('id', 'get_patient_name', 'get_psychologist_name', 'rating', 'created_at', 'status')
+    list_filter = ('status', 'rating', 'created_at')
     search_fields = ('patient__user__email', 'psychologist__user__email', 'text')
     date_hierarchy = 'created_at'
     actions = ['approve_comments', 'reject_comments']
@@ -17,7 +17,7 @@ class CommentAdmin(admin.ModelAdmin):
             'fields': ('text', 'rating')
         }),
         ('Estado', {
-            'fields': ('approved', 'created_at')
+            'fields': ('status', 'created_at')
         }),
     )
     
@@ -32,9 +32,9 @@ class CommentAdmin(admin.ModelAdmin):
     get_psychologist_name.short_description = 'Psicólogo'
     
     def approve_comments(self, request, queryset):
-        queryset.update(approved=True)
+        queryset.update(status='APPROVED')
     approve_comments.short_description = "Aprobar comentarios seleccionados"
     
     def reject_comments(self, request, queryset):
-        queryset.update(approved=False)
+        queryset.update(status='REJECTED')
     reject_comments.short_description = "Rechazar comentarios seleccionados"

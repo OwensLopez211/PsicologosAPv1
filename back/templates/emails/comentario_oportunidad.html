@@ -1,0 +1,34 @@
+<!-- back/templates/emails/comentario_oportunidad.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>¡Valora tu sesión en E-Mind!</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 15px; }
+    h2 { color: #4a86e8; }
+    .cta-button {
+      display: inline-block;
+      background-color: #4a86e8;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+    .footer { margin-top: 20px; font-size: 14px; color: #666; }
+  </style>
+</head>
+<body>
+  <h2>¡Queremos conocer tu experiencia!</h2>
+  <p>Hola {{ nombre_paciente }},</p>
+  <p>Tu sesión con <strong>{{ nombre_psicologo }}</strong> el <strong>{{ fecha_cita }}</strong> ya ha finalizado.</p>
+  <p>Ahora puedes dejar una valoración y comentario sobre tu experiencia. Tu opinión es muy importante para nosotros y ayuda a otros usuarios a tomar mejores decisiones.</p>
+  <a href="{{ url_valoracion }}" class="cta-button">Valorar mi sesión</a>
+  <p><strong>Recuerda:</strong> Solo tienes 3 días para dejar tu comentario.</p>
+  <div class="footer">
+    <p>Gracias por confiar en E-Mind.<br>El equipo de E-Mind</p>
+  </div>
+</body>
+</html>
