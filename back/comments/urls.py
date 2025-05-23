@@ -2,20 +2,32 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
-# Router para las vistas de administración
+# Router para las vistas principales
 router = DefaultRouter()
-router.register(r'admin', views.CommentAdminViewSet)
+router.register(r'admin/reviews', views.CommentAdminViewSet, basename='admin-reviews')
 
 urlpatterns = [
-    # Ruta para crear un comentario
-    path('create/', views.CommentCreateView.as_view(), name='comment-create'),
-    
-    # Ruta para listar comentarios por psicólogo
-    path('psychologist/<int:psychologist_id>/', views.CommentListByPsychologistView.as_view(), name='comment-by-psychologist'),
-    
-    # Ruta para que el cliente vea sus propios comentarios
-    path('my-comments/', views.ClientCommentListView.as_view(), name='my-comments'),
-    
-    # Incluir rutas del router para administración
+    # Incluir rutas del router
     path('', include(router.urls)),
+    
+    # Rutas para psicólogos
+    path('psychologist/reviews/', 
+         views.PsychologistReviewsView.as_view(), 
+         name='psychologist-reviews'),
+    
+    # Rutas para clientes
+    path('client/reviews/', 
+         views.ClientCommentListView.as_view(), 
+         name='client-reviews'),
+    path('client/pending-appointments/', 
+         views.PendingAppointmentsView.as_view(), 
+         name='pending-appointments'),
+    path('client/reviews/submit/', 
+         views.CommentCreateView.as_view(), 
+         name='submit-review'),
+    
+    # Rutas públicas
+    path('public/psychologist/<int:psychologist_id>/reviews/', 
+         views.CommentListByPsychologistView.as_view(), 
+         name='public-psychologist-reviews'),
 ]

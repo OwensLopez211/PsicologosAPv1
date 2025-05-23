@@ -578,3 +578,32 @@ END:VCALENDAR
     except Exception as e:
         logger.error(f"❌ Error al enviar correo con archivo .ics a {user.email}: {str(e)}")
         return False
+
+def send_review_opportunity_email(appointment, frontend_url=None):
+    """
+    Envía un correo al paciente notificando que puede dejar un comentario/review.
+    """
+    client = appointment.client
+    user = client.user
+    psychologist = appointment.psychologist
+
+    # Formatear la fecha para presentación
+    fecha_cita = appointment.date.strftime('%d/%m/%Y')
+
+    # Construir la URL para dejar la valoración (ajusta según tu frontend)
+    if frontend_url:
+        url_valoracion = f"{frontend_url}/mis-citas/{appointment.id}/valorar"
+    else:
+        url_valoracion = "#"
+
+    context = {
+        'nombre_paciente': f"{user.first_name} {user.last_name}",
+        'nombre_psicologo': f"{psychologist.user.first_name} {psychologist.user.last_name}",
+        'fecha_cita': fecha_cita,
+        'url_valoracion': url_valoracion,
+    }
+
+    subject = '¡Valora tu sesión en E-Mind!'
+    template_name = 'emails/comentario_oportunidad.html'
+
+    return send_email(user.email, subject, template_name, context)
