@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const VisionSection = () => {
   // Animation variants
@@ -201,9 +202,12 @@ const VisionSection = () => {
                   <h3 className="text-xl font-bold mb-2">¿Listo para construir tu futuro?</h3>
                   <p className="text-blue-100">Descubre cómo podemos ayudarte a alcanzar tu máximo potencial.</p>
                 </div>
-                <button className="mt-4 md:mt-0 px-6 py-3 bg-white text-[#0066FF] rounded-lg font-medium hover:bg-blue-50 transition-colors shadow-md">
+                <Link
+                  to="/registro"
+                  className="mt-4 md:mt-0 px-6 py-3 bg-white text-[#0066FF] rounded-lg font-medium hover:bg-blue-50 transition-colors shadow-md"
+                >
                   Comenzar ahora
-                </button>
+                </Link>
               </div>
             </motion.div>
           </motion.div>
