@@ -53,7 +53,7 @@ class ReviewService {
   // Cliente: citas pendientes de valorar
   async getPendingAppointments() {
     const { data } = await api.get('/comments/client/pending-appointments/');
-    return Array.isArray(data) ? data : data.results || [];
+    return Array.isArray(data.results) ? data.results : [];
   }
 
   // Cliente: valoraciones realizadas
