@@ -105,11 +105,18 @@ class CommentCreateView(generics.CreateAPIView):
         try:
             client_profile = get_object_or_404(ClientProfile, user=self.request.user)
             logger.info(f"Found client profile: {client_profile.id}")
-            serializer.save(patient=client_profile)
+
+            # Obtener el objeto Appointment completo desde los datos validados
+            appointment = serializer.validated_data['appointment']
+            # Obtener el psicólogo de la cita
+            psychologist_profile = appointment.psychologist
+
+            # Guardar el comentario, pasando tanto el paciente como el psicólogo
+            serializer.save(patient=client_profile, psychologist=psychologist_profile)
             logger.info("Comment saved successfully.")
         except Exception as e:
             logger.error(f"Error during perform_create: {e}", exc_info=True)
-            # Relanzar la excepción o manejarla
+            # Relanzar la excepción para que DRF la maneje (resultará en un 500)
             raise e
 
 class ClientCommentListView(generics.ListAPIView):
