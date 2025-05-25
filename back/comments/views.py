@@ -8,6 +8,7 @@ from .models import Comment
 from .serializers import CommentSerializer, CommentReadSerializer
 from profiles.models import ClientProfile, PsychologistProfile
 from appointments.models import Appointment
+from appointments.serializers import AppointmentSerializer
 
 class IsClientOwner(permissions.BasePermission):
     """
@@ -68,7 +69,7 @@ class PendingAppointmentsView(generics.ListAPIView):
     """
     Vista para obtener las citas pendientes de valorar por el cliente.
     """
-    serializer_class = CommentSerializer
+    serializer_class = AppointmentSerializer
     permission_classes = [IsClientOwner]
     
     def get_queryset(self):
