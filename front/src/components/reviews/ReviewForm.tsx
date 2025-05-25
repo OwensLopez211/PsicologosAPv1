@@ -7,11 +7,8 @@ interface ReviewFormProps {
   appointment?: {
     id: number;
     date: string;
-    psychologist: {
-      user: {
-        first_name: string;
-        last_name: string;
-      };
+    psychologist_data: {
+      name: string;
     };
   };
   onSubmit: (review: { rating: number; comment: string }) => void;
@@ -43,7 +40,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       {appointment && (
         <div className="mb-4">
           <h3 className="text-lg font-medium text-gray-900">
-            Sesión con {appointment.psychologist.user.first_name} {appointment.psychologist.user.last_name}
+            Sesión con {appointment.psychologist_data.name}
           </h3>
           <p className="text-sm text-gray-500">
             Fecha: {new Date(appointment.date).toLocaleDateString()}

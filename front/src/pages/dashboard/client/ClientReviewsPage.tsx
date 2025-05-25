@@ -11,11 +11,8 @@ interface Appointment {
   id: number;
   date: string;
   status: string;
-  psychologist: {
-    user: {
-      first_name: string;
-      last_name: string;
-    };
+  psychologist_data: {
+    name: string;
   };
 }
  
@@ -113,10 +110,10 @@ const ClientReviewsPage = () => {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <h3 className="font-medium text-gray-900">
-                      {review.appointment?.psychologist.user.first_name} {review.appointment?.psychologist.user.last_name}
+                      {review.psychologist_name}
                     </h3>
                     <p className="text-sm text-gray-500">
-                      {review.appointment && format(new Date(review.appointment.date), "d 'de' MMMM 'de' yyyy", { locale: es })}
+                      {review.appointment_date && format(new Date(review.appointment_date), "d 'de' MMMM 'de' yyyy", { locale: es })}
                     </p>
                   </div>
                   <div className="flex items-center">
