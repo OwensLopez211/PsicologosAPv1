@@ -32,6 +32,7 @@ const ClientReviewsPage = () => {
       const data = await ReviewService.getPendingAppointments();
       setPendingAppointments(data);
     } catch (err) {
+      setPendingAppointments([]);
       setError('Error al cargar las citas pendientes de valoración');
     }
   };
