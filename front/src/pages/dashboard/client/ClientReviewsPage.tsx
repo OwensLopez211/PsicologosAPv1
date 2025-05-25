@@ -84,11 +84,11 @@ const ClientReviewsPage = () => {
       {/* Sección de citas pendientes de valorar */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Citas por Valorar</h2>
-        {pendingAppointments.length === 0 ? (
+        {Array.isArray(pendingAppointments) && pendingAppointments.length === 0 ? (
           <p className="text-gray-500">No tienes citas pendientes de valorar</p>
         ) : (
           <div className="space-y-6">
-            {pendingAppointments.map((appointment) => (
+            {Array.isArray(pendingAppointments) && pendingAppointments.map((appointment) => (
               <ReviewForm
                 key={appointment.id}
                 appointment={appointment}
