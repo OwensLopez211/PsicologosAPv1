@@ -101,7 +101,7 @@ const AdminReviewsPage = () => {
                 <div className="flex items-center justify-between mb-2">
                   <div>
                     <h3 className="font-medium text-gray-900">
-                      {review.patient?.user.first_name} {review.patient?.user.last_name} &rarr; {review.psychologist?.user.first_name} {review.psychologist?.user.last_name}
+                      {review.patient_name} &rarr; {review.psychologist_name}
                     </h3>
                     <p className="text-sm text-gray-500">
                       {format(new Date(review.created_at), "d 'de' MMMM 'de' yyyy", { locale: es })}
