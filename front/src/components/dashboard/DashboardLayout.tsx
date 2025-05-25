@@ -93,7 +93,7 @@ const DashboardLayout = () => {
             >
               {/* Logo or loading spinner */}
               <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#2A6877] to-[#B4E4D3] flex items-center justify-center text-white text-2xl font-bold">
-                B
+                E
               </div>
               <p className="mt-4 text-gray-600 font-medium">Cargando...</p>
             </motion.div>
