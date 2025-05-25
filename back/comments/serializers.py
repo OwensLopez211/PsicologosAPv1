@@ -11,35 +11,64 @@ logger = logging.getLogger(__name__)
 class CommentSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
     rating = serializers.IntegerField(min_value=1, max_value=5)
+    appointment = serializers.PrimaryKeyRelatedField(
+        queryset=Appointment.objects.all(),
+        write_only=True
+    )
     
     class Meta:
         model = Comment
         fields = ['id', 'psychologist', 'patient', 'appointment', 'comment', 'rating', 'created_at', 'status']
-        read_only_fields = ['created_at', 'status', 'patient']
+        read_only_fields = ['id', 'psychologist', 'patient', 'created_at', 'status']
     
     def validate(self, data):
         logger.info(f"Validating data for CommentSerializer: {data}")
         appointment = data.get('appointment')
         if not appointment:
-            logger.error("Validation failed: Appointment is required.")
-            raise serializers.ValidationError({"appointment": "La cita es requerida."})
+            logger.error("Validation failed: Appointment object not loaded.")
+            raise serializers.ValidationError(
+                {"appointment": "No se pudo cargar la información de la cita proporcionada."}
+            )
             
         logger.info(f"Validating appointment: {appointment.id} with status {appointment.status}")
+        
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            try:
+                client_profile = ClientProfile.objects.get(user=request.user)
+                if appointment.client != client_profile:
+                    logger.error("Validation failed: Appointment does not belong to the authenticated client.")
+                    raise serializers.ValidationError(
+                        {"appointment": "No tienes permiso para valorar esta cita."}
+                    )
+            except ClientProfile.DoesNotExist:
+                logger.error("Validation failed: Client profile not found for authenticated user.")
+                raise serializers.ValidationError(
+                    {"non_field_errors": "No se encontró tu perfil de cliente."}
+                )
+        else:
+            logger.error("Validation failed: User not authenticated or request context missing.")
+            raise serializers.ValidationError(
+                {"non_field_errors": "Usuario no autenticado."}
+            )
+            
         if appointment.status != 'COMPLETED':
             logger.error(f"Validation failed: Appointment status is not COMPLETED ({appointment.status}).")
-            raise serializers.ValidationError({"appointment": "Solo se puede valorar una cita que haya sido completada."})
+            raise serializers.ValidationError(
+                {"appointment": "Solo se puede valorar una cita que haya sido completada."}
+            )
             
-        # Verificar que la valoración se realice dentro de los 3 días posteriores a la cita
         completed_date = appointment.date
         now = timezone.now().date()
         if (now - completed_date) > timedelta(days=3):
+            logger.error(f"Validation failed: Comment period expired. Completed date: {completed_date}, today: {now}")
             raise serializers.ValidationError(
-                {"appointment": "Solo puedes valorar dentro de los 3 días posteriores a la cita completada."}
+                {"appointment": f"Solo puedes valorar dentro de los 3 días posteriores a la cita completada (hasta {completed_date + timedelta(days=3)})."}
             )
             
-        # Verificar que no existe una valoración para esta cita
-        if self.instance is None:  # Solo para creación, no para actualización
+        if self.instance is None:
             if Comment.objects.filter(appointment=appointment).exists():
+                logger.error(f"Validation failed: Comment already exists for appointment {appointment.id}.")
                 raise serializers.ValidationError(
                     {"appointment": "Ya existe una valoración para esta cita."}
                 )
