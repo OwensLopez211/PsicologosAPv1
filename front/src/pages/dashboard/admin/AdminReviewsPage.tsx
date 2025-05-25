@@ -13,7 +13,7 @@ const AdminReviewsPage = () => {
   const loadReviews = async () => {
     try {
       const data = await ReviewService.getAdminReviews();
-      setReviews(data.reviews || []);
+      setReviews(Array.isArray(data.results) ? data.results : data);
     } catch (err) {
       setError('Error al cargar las valoraciones');
     } finally {
