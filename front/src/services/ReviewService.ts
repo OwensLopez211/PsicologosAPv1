@@ -59,7 +59,7 @@ class ReviewService {
   // Cliente: valoraciones realizadas
   async getClientReviews() {
     const { data } = await api.get('/comments/client/reviews/');
-    return data;
+    return Array.isArray(data.results) ? data.results : [];
   }
 
   // Cliente: enviar valoración

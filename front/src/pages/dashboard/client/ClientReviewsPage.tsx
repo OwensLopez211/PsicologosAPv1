@@ -43,6 +43,7 @@ const ClientReviewsPage = () => {
       const data = await ReviewService.getClientReviews();
       setCompletedReviews(data);
     } catch (err) {
+      setCompletedReviews([]);
       setError('Error al cargar las valoraciones realizadas');
     }
   };
