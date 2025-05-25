@@ -4,6 +4,9 @@ from appointments.models import Appointment
 from profiles.models import PsychologistProfile, ClientProfile
 from django.utils import timezone
 from datetime import timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CommentSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
@@ -15,17 +18,16 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'status', 'patient']
     
     def validate(self, data):
-        # Verificar que la cita existe y está completada
+        logger.info(f"Validating data for CommentSerializer: {data}")
         appointment = data.get('appointment')
         if not appointment:
-            raise serializers.ValidationError(
-                {"appointment": "La cita es requerida."}
-            )
+            logger.error("Validation failed: Appointment is required.")
+            raise serializers.ValidationError({"appointment": "La cita es requerida."})
             
+        logger.info(f"Validating appointment: {appointment.id} with status {appointment.status}")
         if appointment.status != 'COMPLETED':
-            raise serializers.ValidationError(
-                {"appointment": "Solo se puede valorar una cita que haya sido completada."}
-            )
+            logger.error(f"Validation failed: Appointment status is not COMPLETED ({appointment.status}).")
+            raise serializers.ValidationError({"appointment": "Solo se puede valorar una cita que haya sido completada."})
             
         # Verificar que la valoración se realice dentro de los 3 días posteriores a la cita
         completed_date = appointment.date

@@ -9,6 +9,9 @@ from .serializers import CommentSerializer, CommentReadSerializer
 from profiles.models import ClientProfile, PsychologistProfile
 from appointments.models import Appointment
 from appointments.serializers import AppointmentSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 class IsClientOwner(permissions.BasePermission):
     """
@@ -93,9 +96,21 @@ class CommentCreateView(generics.CreateAPIView):
     serializer_class = CommentSerializer
     permission_classes = [IsClientOwner]
     
+    def post(self, request, *args, **kwargs):
+        logger.info(f"Received data for CommentCreateView: {request.data}")
+        return super().post(request, *args, **kwargs) # Esto llama a perform_create si es válido
+
     def perform_create(self, serializer):
-        client_profile = get_object_or_404(ClientProfile, user=self.request.user)
-        serializer.save(patient=client_profile)
+        logger.info("Serializer is valid. Performing create.")
+        try:
+            client_profile = get_object_or_404(ClientProfile, user=self.request.user)
+            logger.info(f"Found client profile: {client_profile.id}")
+            serializer.save(patient=client_profile)
+            logger.info("Comment saved successfully.")
+        except Exception as e:
+            logger.error(f"Error during perform_create: {e}", exc_info=True)
+            # Relanzar la excepción o manejarla
+            raise e
 
 class ClientCommentListView(generics.ListAPIView):
     """
