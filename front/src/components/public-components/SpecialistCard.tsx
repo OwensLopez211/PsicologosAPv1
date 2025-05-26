@@ -25,7 +25,7 @@ const SpecialistCard: FC<SpecialistCardProps> = ({
   specialties, 
   imageUrl,
   verification_status,
-  rating = 4.8,
+  rating,
   availabilityStatus = 'available'
 }) => {
   const navigate = useNavigate();
@@ -142,7 +142,7 @@ const SpecialistCard: FC<SpecialistCardProps> = ({
                     
                     {/* Verification Badge */}
                     {verification_status === "VERIFIED" && (
-                      <span className="bg-teal-50 text-teal-700 text-xs px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+                      <span className="bg-teal-50 text-teal-700 text-xs px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 mx-auto sm:mx-0">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
