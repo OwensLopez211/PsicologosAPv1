@@ -462,15 +462,15 @@ Este proyecto está licenciado bajo la [Licencia MIT](LICENSE) - consulta el arc
 
 **[⬆ Volver al inicio](#e-mind)**
 
-╔═══════════════════════════════════════════════════════════╗
-║                      E-Mind Backend                       ║
-║                                                           ║
-║   Author: Owens López                                     ║
-║   Email: owenslopez211@gmail.com                          ║
-║   GitHub: @OwensLopez211                                  ║
-║                                                           ║
-║   "Building the future with the power of IA"              ║
-╚═══════════════════════════════════════════════════════════╝  
+
+E-Mind Backend                       
+                                                           
+Author: Owens López                                     
+Email: owenslopez211@gmail.com                          
+GitHub: @OwensLopez211                                  
+                                                           
+"Building the future with the power of IA"              
+
 
 [![Frontend](https://img.shields.io/badge/📖_Frontend-Documentation-blue?style=for-the-badge)](./front)
 [![Backend](https://img.shields.io/badge/📖_Backend-Documentation-green?style=for-the-badge)](./back)
