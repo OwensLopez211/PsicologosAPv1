@@ -96,3 +96,12 @@ Thumbs.db
 
 # Deployment script
 deploy.sh
+
+#extras
+Diagramas/
+Diagramas\
+Diagramas\Diagrama-Flujo-Proceso-Pago-Validacion.md
+Diagramas\Diagrama-Flujo-Registro-Psicologos.md
+Diagramas\Flujo-Agendamiento.md
+Diagramas\Flujo-Liquidacion-mensual.md
+Diagramas\

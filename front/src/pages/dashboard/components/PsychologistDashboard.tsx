@@ -129,7 +129,7 @@ const PsychologistDashboard: React.FC = () => {
         </button>
       </div>
     );
-  }
+    }
 
   const verificationConfig = STATUS_CONFIG.verification[verificationStatus.verification_status as keyof typeof STATUS_CONFIG.verification] || 
     { color: 'bg-gray-50 text-gray-700 border-gray-200', text: verificationStatus.verification_status_display };
@@ -146,7 +146,7 @@ const PsychologistDashboard: React.FC = () => {
         <h2 className="text-2xl font-bold text-[#2A6877]">
           {getSaludo(currentTime.getHours())}, {userName}
         </h2>
-      </div>
+        </div>
 
       {/* Estado de verificación */}
       {verificationStatus.verification_status !== 'VERIFIED' && (
@@ -157,106 +157,106 @@ const PsychologistDashboard: React.FC = () => {
           <div className="flex items-center gap-3">
             <DocumentCheckIcon className="h-5 w-5" />
             <span className="font-medium">Estado: {verificationStatus.verification_status_display}</span>
-          </div>
-          <Link 
+              </div>
+                <Link 
             to="/psicologo/dashboard/profile" 
             className="text-sm font-medium hover:underline"
-          >
-            Completar verificación
-          </Link>
+                >
+                  Completar verificación
+                </Link>
         </motion.div>
-      )}
+              )}
 
-      {/* Estadísticas principales */}
-      <motion.div variants={itemVariants} className="mb-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="flex items-center p-4 gap-3">
-            <div className="flex-1">
+          {/* Estadísticas principales */}
+          <motion.div variants={itemVariants} className="mb-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="flex items-center p-4 gap-3">
+                <div className="flex-1">
               <p className="text-sm font-medium text-gray-500">Total de citas</p>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{stats.totalAppointments}</h2>
-            </div>
-            <div className="h-12 w-12 bg-[#2A6877]/10 rounded-full flex items-center justify-center">
-              <CalendarIcon className="h-6 w-6 text-[#2A6877]" />
-            </div>
-          </div>
-          
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">{stats.totalAppointments}</h2>
+                </div>
+                <div className="h-12 w-12 bg-[#2A6877]/10 rounded-full flex items-center justify-center">
+                  <CalendarIcon className="h-6 w-6 text-[#2A6877]" />
+                </div>
+              </div>
+              
           <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y sm:divide-y-0 border-t border-gray-100">
             {/* Citas Completadas */}
-            <div className="p-3 flex flex-col">
-              <div className="flex items-center justify-between">
+                <div className="p-3 flex flex-col">
+                  <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-500">Completadas</span>
                 <div className="h-4 w-4 rounded-full bg-green-100 flex items-center justify-center">
                   <CheckCircleIcon className="h-2.5 w-2.5 text-green-600" />
-                </div>
-              </div>
+                    </div>
+                  </div>
               <div className="mt-1 flex items-end">
                 <span className="text-lg font-semibold text-gray-800">{stats.completedAppointments}</span>
-              </div>
-            </div>
+                  </div>
+                </div>
 
             {/* Citas Pendientes */}
-            <div className="p-3 flex flex-col">
-              <div className="flex items-center justify-between">
+                <div className="p-3 flex flex-col">
+                  <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-500">Pendientes</span>
-                <div className="h-4 w-4 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <div className="h-4 w-4 rounded-full bg-yellow-100 flex items-center justify-center">
                   <ClockIcon className="h-2.5 w-2.5 text-yellow-600" />
                 </div>
-              </div>
+                    </div>
               <div className="mt-1 flex items-end">
                 <span className="text-lg font-semibold text-gray-800">{stats.pendingPaymentAppointments}</span>
-              </div>
+                  </div>
 
-            </div>
+                </div>
 
             {/* Pacientes Activos */}
-            <div className="p-3 flex flex-col">
-              <div className="flex items-center justify-between">
+                <div className="p-3 flex flex-col">
+                  <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-500">Pacientes activos</span>
                 <div className="h-4 w-4 rounded-full bg-blue-100 flex items-center justify-center">
                   <UsersIcon className="h-2.5 w-2.5 text-blue-600" />
-                </div>
-              </div>
+                    </div>
+                  </div>
               <div className="mt-1 flex items-end">
                 <span className="text-lg font-semibold text-gray-800">{stats.activeClients}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </motion.div>
+          </motion.div>
 
-      {/* Barra de acciones rápidas */}
-      <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <h3 className="font-medium text-gray-800 text-sm">Acciones rápidas</h3>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Link 
+          {/* Barra de acciones rápidas */}
+          <motion.div variants={itemVariants} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h3 className="font-medium text-gray-800 text-sm">Acciones rápidas</h3>
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+              <Link 
             to="/psicologo/dashboard/schedule"
-            className="flex-1 sm:flex-none px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors flex items-center justify-center"
-          >
-            <CalendarIcon className="h-3.5 w-3.5 mr-1" />
-            Gestionar citas
-          </Link>
-          <Link 
+                className="flex-1 sm:flex-none px-3 py-1.5 bg-[#2A6877] text-white text-xs rounded-md hover:bg-[#1d4e5f] transition-colors flex items-center justify-center"
+              >
+                <CalendarIcon className="h-3.5 w-3.5 mr-1" />
+                Gestionar citas
+              </Link>
+              <Link 
             to="/psicologo/dashboard/patients"
-            className="flex-1 sm:flex-none px-3 py-1.5 bg-gray-100 text-gray-700 text-xs rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
-          >
-            <UsersIcon className="h-3.5 w-3.5 mr-1" />
-            Ver pacientes
-          </Link>
-        </div>
-      </motion.div>
+                className="flex-1 sm:flex-none px-3 py-1.5 bg-gray-100 text-gray-700 text-xs rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center"
+              >
+                <UsersIcon className="h-3.5 w-3.5 mr-1" />
+                Ver pacientes
+              </Link>
+            </div>
+          </motion.div>
 
       {/* Próximas citas */}
-      <motion.div 
-        className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200"
-        variants={itemVariants}
-      >
-        <div className="p-3 border-b border-gray-100">
-          <h3 className="font-medium text-gray-800 text-sm">Próximas citas</h3>
+          <motion.div 
+            className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200"
+            variants={itemVariants}
+          >
+            <div className="p-3 border-b border-gray-100">
+              <h3 className="font-medium text-gray-800 text-sm">Próximas citas</h3>
           <p className="text-gray-500 text-xs">Tus citas más cercanas</p>
-        </div>
+            </div>
         {stats.upcomingAppointments.length > 0 ? (
-          <>
-            <div className="divide-y divide-gray-100">
+              <>
+                <div className="divide-y divide-gray-100">
               {stats.upcomingAppointments.map(appointment => {
                 const statusConfig = STATUS_CONFIG.appointment[appointment.status as keyof typeof STATUS_CONFIG.appointment] || { color: 'bg-gray-50 text-gray-700', text: appointment.status };
                 return (
@@ -265,43 +265,43 @@ const PsychologistDashboard: React.FC = () => {
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-[#2A6877]/10 flex items-center justify-center">
                         <UsersIcon className="h-4 w-4 text-[#2A6877]" />
                       </div>
-                      <div>
-                        <div className="font-medium text-gray-800 text-sm">
+                        <div>
+                          <div className="font-medium text-gray-800 text-sm">
                           {appointment.client_name}
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">
                             {new Date(appointment.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })} • {appointment.time}
-                          </span>
+                        </span>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig.color}`}>{statusConfig.text}</span>
-                        </div>
+                      </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
-            </div>
-            <div className="p-3 text-center">
-              <Link 
+                </div>
+                <div className="p-3 text-center">
+                  <Link 
                 to="/psicologo/dashboard/schedule" 
-                className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium"
-              >
+                    className="text-[#2A6877] hover:text-[#1d4e5f] text-xs font-medium"
+                  >
                 Ver todas las citas →
-              </Link>
-            </div>
-          </>
-        ) : (
-          <div className="p-6 text-center text-gray-500">
-            <CalendarIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <div className="p-6 text-center text-gray-500">
+                <CalendarIcon className="h-8 w-8 text-gray-300 mx-auto mb-2" />
             <p className="font-medium text-gray-600 text-sm mb-1">No hay citas próximas</p>
             <p className="text-xs text-gray-500">
-              Tu agenda está libre por ahora
-            </p>
-          </div>
-        )}
-      </motion.div>
+                  Tu agenda está libre por ahora
+                </p>
+              </div>
+            )}
+          </motion.div>
     </motion.div>
   );
 };
 
-export default PsychologistDashboard;
+export default PsychologistDashboard; 

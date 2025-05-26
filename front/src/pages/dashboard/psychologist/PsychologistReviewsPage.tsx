@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ReviewService, { Review, ReviewStats } from '../../../services/ReviewService';
 import { CheckCircleIcon, XCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { motion } from 'framer-motion';
 
 const PsychologistReviewsPage = () => {
   useAuth();
@@ -107,22 +108,28 @@ const PsychologistReviewsPage = () => {
             </div>
           </div>
 
-          {/* Distribución de valoraciones */}
+          {/* Distribución de valoraciones - MEJORADO */}
           <div className="mt-8">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Distribución de Valoraciones</h3>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {[5, 4, 3, 2, 1].map((rating) => (
                 <div key={rating} className="flex items-center">
-                  <span className="w-8 text-sm text-gray-600">{rating} estrellas</span>
-                  <div className="flex-1 h-3 bg-gray-200 rounded-full mx-2">
-                    <div
-                      className="h-3 bg-yellow-400 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${(stats.rating_distribution[rating] / stats.total_reviews) * 100}%`
-                      }}
+                  {/* Estrellas */}
+                  <div className="flex items-center w-16 mr-4 justify-end">
+                    <span className="text-sm font-medium text-gray-700 mr-1">{rating}</span>
+                    <StarIcon className="h-4 w-4 text-yellow-400" />
+                  </div>
+                  {/* Barra de progreso */}
+                  <div className="flex-1 h-4 bg-gray-200 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(stats.rating_distribution[rating] / stats.total_reviews) * 100}%` }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
                     />
                   </div>
-                  <span className="w-12 text-sm text-gray-600">
+                  {/* Conteo */}
+                  <span className="w-10 text-sm text-gray-700 font-medium ml-3 text-right">
                     {stats.rating_distribution[rating] || 0}
                   </span>
                 </div>

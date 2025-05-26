@@ -25,8 +25,12 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
 
   // Funciones para controlar el desplazamiento automático
   const startAutoScroll = () => {
-    // Solo iniciar si hay 3 o más reseñas
+    // Solo iniciar si hay 3 o más reseñas Y no estamos en móvil
     if (reviews.length < 3 || !scrollContainerRef.current) return;
+    
+    // Detectar si es móvil basado en el ancho de pantalla
+    const isMobile = window.innerWidth < 640; // 640px es el breakpoint sm: de Tailwind
+    if (isMobile) return; // No auto-scroll en móvil
 
     intervalRef.current = window.setInterval(() => {
       if (scrollContainerRef.current) {
@@ -127,7 +131,7 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
   if (loading) {
     return (
       <motion.section 
-        className="bg-white rounded-lg shadow-md p-6 border border-gray-100"
+        className="bg-white rounded-lg shadow-md p-4 sm:p-6 border border-gray-100"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -157,11 +161,12 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
   // Determinar las clases CSS según el número de reseñas
   const getContainerClasses = () => {
     if (reviews.length <= 2) {
-      // Para 1-2 reseñas: layout estático sin scroll
-      return "flex space-x-6 justify-center";
+      // Para 1-2 reseñas: layout estático
+      // En móvil: stack vertical, en desktop: horizontal
+      return "flex flex-col sm:flex-row sm:space-x-6 space-y-4 sm:space-y-0 sm:justify-center";
     } else {
-      // Para 3+ reseñas: carrusel con scroll
-      return "flex space-x-6 overflow-x-hidden pb-4";
+      // Para 3+ reseñas: carrusel con scroll horizontal
+      return "flex space-x-4 overflow-x-hidden pb-4";
     }
   };
 
@@ -169,10 +174,10 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
     if (reviews.length === 1) {
       return "w-full max-w-md mx-auto";
     } else if (reviews.length === 2) {
-      return "w-full max-w-sm";
+      return "w-full sm:max-w-sm";
     } else {
-      // Para carrusel
-      return "min-w-[85%] md:min-w-[55%] lg:min-w-[40%] flex-shrink-0";
+      // Para carrusel - optimizado para móvil
+      return "min-w-[90%] sm:min-w-[70%] md:min-w-[55%] lg:min-w-[40%] flex-shrink-0";
     }
   };
 
@@ -195,18 +200,18 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-4 sm:mb-6">
           <motion.div
-            className="w-10 h-10 rounded-full bg-[#2A6877]/10 flex items-center justify-center mr-3"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#2A6877]/10 flex items-center justify-center mr-3"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#2A6877]" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-[#2A6877]" viewBox="0 0 20 20" fill="currentColor">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
           </motion.div>
-          <h2 className="text-xl font-bold text-gray-800">Reseñas de Pacientes</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800">Reseñas de Pacientes</h2>
         </div>
 
         {reviews.length === 0 ? (
@@ -223,28 +228,30 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
             {reviews.map((review) => (
               <motion.div
                 key={review.id}
-                className={`${getCardClasses()} bg-gradient-to-r from-gray-50 to-white p-5 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow`}
+                className={`${getCardClasses()} bg-gradient-to-r from-gray-50 to-white p-4 sm:p-5 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-semibold text-gray-800">{review.patient_name}</h3>
-                    <div className="flex items-center mt-1">
-                      {renderStars(review.rating)}
-                      <span className="ml-2 text-sm text-gray-500">
-                        {formatDate(review.created_at)}
-                      </span>
+                <div className="mb-3">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
+                    <div className="mb-2 sm:mb-0">
+                      <h3 className="font-semibold text-gray-800 text-base">{review.patient_name}</h3>
+                      <div className="flex items-center mt-1">
+                        {renderStars(review.rating)}
+                        <span className="ml-2 text-sm text-gray-500">
+                          {formatDate(review.created_at)}
+                        </span>
+                      </div>
                     </div>
+                    {review.appointment_date && (
+                      <span className="text-sm text-gray-500 self-start">
+                        Cita: {formatDate(review.appointment_date)}
+                      </span>
+                    )}
                   </div>
-                  {review.appointment_date && (
-                    <span className="text-sm text-gray-500">
-                      Cita: {formatDate(review.appointment_date)}
-                    </span>
-                  )}
                 </div>
-                <p className="text-gray-700 mt-2">{review.comment}</p>
+                <p className="text-gray-700 mt-2 text-sm sm:text-base leading-relaxed">{review.comment}</p>
               </motion.div>
             ))}
           </div>
