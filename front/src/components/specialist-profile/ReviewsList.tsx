@@ -26,7 +26,7 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
       try {
         setLoading(true);
         const response = await axios.get(`/api/comments/public/psychologist/${psychologistId}/reviews/`);
-        setReviews(Array.isArray(response.data) ? response.data : []);
+        setReviews(Array.isArray(response.data.results) ? response.data.results : []);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching reviews:', err);
