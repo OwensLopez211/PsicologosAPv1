@@ -17,7 +17,7 @@ interface Specialist {
 interface SpecialistListProps {
   specialists: Specialist[];
 }
-
+ 
 export const SpecialistList: React.FC<SpecialistListProps> = ({ specialists }) => {
   if (specialists.length === 0) {
     return (
