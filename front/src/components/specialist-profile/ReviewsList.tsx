@@ -20,66 +20,87 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null); // Referencia para el contenedor desplazable
-  const intervalRef = useRef<number | null>(null); // Referencia para el intervalo de desplazamiento
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<number | null>(null);
 
   // Funciones para controlar el desplazamiento automático
   const startAutoScroll = () => {
-    if (scrollContainerRef.current) {
-      intervalRef.current = window.setInterval(() => {
-        if (scrollContainerRef.current) {
-          const container = scrollContainerRef.current;
-          const scrollWidth = container.scrollWidth;
-          const clientWidth = container.clientWidth;
-          const currentScrollLeft = container.scrollLeft;
+    // Solo iniciar si hay 3 o más reseñas
+    if (reviews.length < 3 || !scrollContainerRef.current) return;
 
-          // Si llegamos al final, volver al principio
-          if (currentScrollLeft + clientWidth >= scrollWidth) {
-            container.scrollTo({ left: 0, behavior: 'smooth' });
-          } else {
-            // Desplazarse una pequeña cantidad. Ajusta 100 para cambiar la velocidad.
-            container.scrollBy({ left: 150, behavior: 'smooth' });
-          }
+    intervalRef.current = window.setInterval(() => {
+      if (scrollContainerRef.current) {
+        const container = scrollContainerRef.current;
+        const scrollWidth = container.scrollWidth;
+        const clientWidth = container.clientWidth;
+        const currentScrollLeft = container.scrollLeft;
+
+        // Si llegamos al final, volver al principio suavemente
+        if (currentScrollLeft + clientWidth >= scrollWidth - 10) {
+          container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          // Desplazarse lentamente - reducimos la velocidad
+          container.scrollBy({ left: 120, behavior: 'smooth' });
         }
-      }, 3000); // Ajusta 3000ms (3 segundos) para cambiar la frecuencia de desplazamiento
-    }
+      }
+    }, 2500); // Intervalo más lento para scroll suave
   };
 
   const stopAutoScroll = () => {
     if (intervalRef.current !== null) {
       clearInterval(intervalRef.current);
-      intervalRef.current = null; // Restablecer la referencia
+      intervalRef.current = null;
     }
   };
 
-  // Manejar pausa y reanudación al pasar el ratón
-  const handleMouseEnter = () => { stopAutoScroll(); };
-  const handleMouseLeave = () => { startAutoScroll(); };
+  // Manejar pausa y reanudación solo si es un carrusel activo
+  const handleMouseEnter = () => {
+    if (reviews.length >= 3) {
+      stopAutoScroll();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (reviews.length >= 3) {
+      startAutoScroll();
+    }
+  };
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         setLoading(true);
         const response = await axios.get(`/api/comments/public/psychologist/${psychologistId}/reviews/`);
-        setReviews(Array.isArray(response.data.results) ? response.data.results : []);
+        const reviewsData = Array.isArray(response.data.results) ? response.data.results : [];
+        setReviews(reviewsData);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching reviews:', err);
         setError('No se pudieron cargar las reseñas');
         setLoading(false);
-      } finally {
-         // Asegurarse de que el carrusel inicia solo si hay reseñas después de la carga
-         if (reviews.length > 0 && scrollContainerRef.current) {
-             startAutoScroll();
-         }
-        }
+      }
     };
 
     fetchReviews();
 
     // Limpiar el intervalo al desmontar el componente
     return () => { stopAutoScroll(); };
-  }, [psychologistId, reviews.length]); // Dependencia reviews.length para reiniciar si cambian las reseñas
+  }, [psychologistId]);
+
+  // Efecto separado para manejar el auto-scroll cuando las reseñas cambian
+  useEffect(() => {
+    // Esperar un momento para que el DOM se actualice
+    const timer = setTimeout(() => {
+      if (reviews.length >= 3) {
+        startAutoScroll();
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      stopAutoScroll();
+    };
+  }, [reviews.length]);
 
   // Formatear fecha
   const formatDate = (dateString: string) => {
@@ -133,71 +154,104 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
     );
   }
 
-  return (
-    <motion.section 
-      className="bg-white rounded-lg shadow-md p-6 border border-gray-100"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="flex items-center mb-6">
-        <motion.div
-          className="w-10 h-10 rounded-full bg-[#2A6877]/10 flex items-center justify-center mr-3"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#2A6877]" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-          </svg>
-        </motion.div>
-        <h2 className="text-xl font-bold text-gray-800">Reseñas de Pacientes</h2>
-      </div>
+  // Determinar las clases CSS según el número de reseñas
+  const getContainerClasses = () => {
+    if (reviews.length <= 2) {
+      // Para 1-2 reseñas: layout estático sin scroll
+      return "flex space-x-6 justify-center";
+    } else {
+      // Para 3+ reseñas: carrusel con scroll
+      return "flex space-x-6 overflow-x-hidden pb-4";
+    }
+  };
 
-      {reviews.length === 0 ? (
-        <div className="text-center text-gray-500 py-8">
-          <p>No hay reseñas disponibles aún.</p>
+  const getCardClasses = () => {
+    if (reviews.length === 1) {
+      return "w-full max-w-md mx-auto";
+    } else if (reviews.length === 2) {
+      return "w-full max-w-sm";
+    } else {
+      // Para carrusel
+      return "min-w-[85%] md:min-w-[55%] lg:min-w-[40%] flex-shrink-0";
+    }
+  };
+
+  return (
+    <>
+      {/* Estilos CSS para ocultar scroll bars */}
+      <style>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+
+      <motion.section 
+        className="bg-white rounded-lg shadow-md p-6 border border-gray-100"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex items-center mb-6">
+          <motion.div
+            className="w-10 h-10 rounded-full bg-[#2A6877]/10 flex items-center justify-center mr-3"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#2A6877]" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </motion.div>
+          <h2 className="text-xl font-bold text-gray-800">Reseñas de Pacientes</h2>
         </div>
-      ) : (
-        // Contenedor desplazable con estilos para carrusel
-        <div 
-          ref={scrollContainerRef} 
-          className="flex space-x-6 overflow-x-auto pb-4 no-scrollbar" // Añadir no-scrollbar class
-          onMouseEnter={handleMouseEnter} // Pausar al pasar el ratón
-          onMouseLeave={handleMouseLeave} // Reanudar al quitar el ratón
-        >
-          {reviews.map((review) => (
-            <motion.div
-              key={review.id}
-              // Ajustar ancho para que no ocupe todo el espacio y permita ver el siguiente
-              className="min-w-[85%] md:min-w-[55%] lg:min-w-[40%] bg-gradient-to-r from-gray-50 to-white p-5 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex-shrink-0" // flex-shrink-0 es importante
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="font-semibold text-gray-800">{review.patient_name}</h3>
-                  <div className="flex items-center mt-1">
-                    {renderStars(review.rating)}
-                    <span className="ml-2 text-sm text-gray-500">
-                      {formatDate(review.created_at)}
-                    </span>
+
+        {reviews.length === 0 ? (
+          <div className="text-center text-gray-500 py-8">
+            <p>No hay reseñas disponibles aún.</p>
+          </div>
+        ) : (
+          <div 
+            ref={scrollContainerRef} 
+            className={`${getContainerClasses()} hide-scrollbar`}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            {reviews.map((review) => (
+              <motion.div
+                key={review.id}
+                className={`${getCardClasses()} bg-gradient-to-r from-gray-50 to-white p-5 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-semibold text-gray-800">{review.patient_name}</h3>
+                    <div className="flex items-center mt-1">
+                      {renderStars(review.rating)}
+                      <span className="ml-2 text-sm text-gray-500">
+                        {formatDate(review.created_at)}
+                      </span>
+                    </div>
                   </div>
+                  {review.appointment_date && (
+                    <span className="text-sm text-gray-500">
+                      Cita: {formatDate(review.appointment_date)}
+                    </span>
+                  )}
                 </div>
-                {review.appointment_date && (
-                  <span className="text-sm text-gray-500">
-                    Cita: {formatDate(review.appointment_date)}
-                  </span>
-                )}
-              </div>
-              <p className="text-gray-700 mt-2">{review.comment}</p>
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </motion.section>
+                <p className="text-gray-700 mt-2">{review.comment}</p>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </motion.section>
+    </>
   );
 };
 
-export default ReviewsList; 
+export default ReviewsList;
