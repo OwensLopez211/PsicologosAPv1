@@ -10,7 +10,7 @@ import {
   updateAppointmentPaymentStatus,
   isFirstAppointment
 } from '../../services/appointmentPaymentService';
-import  api  from '../../services/api';
+
 import toastService from '../../services/toastService';
 
 const VerificationsPage = () => {
