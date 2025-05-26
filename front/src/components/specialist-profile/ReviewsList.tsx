@@ -26,7 +26,7 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
       try {
         setLoading(true);
         const response = await axios.get(`/api/comments/public/psychologist/${psychologistId}/reviews/`);
-        setReviews(response.data);
+        setReviews(Array.isArray(response.data) ? response.data : []);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching reviews:', err);
@@ -40,6 +40,7 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
 
   // Formatear fecha
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'Fecha no disponible';
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
@@ -134,9 +135,11 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
                     </span>
                   </div>
                 </div>
-                <span className="text-sm text-gray-500">
-                  Cita: {formatDate(review.appointment_date)}
-                </span>
+                {review.appointment_date && (
+                  <span className="text-sm text-gray-500">
+                    Cita: {formatDate(review.appointment_date)}
+                  </span>
+                )}
               </div>
               <p className="text-gray-700 mt-2">{review.comment}</p>
             </motion.div>
