@@ -20,7 +20,8 @@ from backend.email_utils import (
     send_appointment_created_psychologist_email,
     send_payment_verification_needed_email,
     send_appointment_confirmed_client_email,
-    send_appointment_confirmed_psychologist_email
+    send_appointment_confirmed_psychologist_email,
+    send_review_opportunity_email
 )
 from django.conf import settings
 
@@ -528,9 +529,22 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
+            # Guardar el estado anterior antes de actualizar
+            old_status = appointment.status
+
             # Actualizar el estado
             appointment.status = new_status
             appointment.save()
+            
+            # Si el estado cambió a COMPLETED y antes no lo estaba, enviar correo
+            if new_status == 'COMPLETED' and old_status != 'COMPLETED':
+                try:
+                    frontend_url = getattr(settings, 'FRONTEND_URL', 'https://emindapp.cl')
+                    send_review_opportunity_email(appointment, frontend_url)
+                    print(f"✅ Correo de oportunidad de comentario enviado al cliente: {appointment.client.user.email}")
+                except Exception as e:
+                    print(f"❌ Error al enviar correo de oportunidad de comentario: {str(e)}")
+
             
             return Response({
                 "detail": f"Estado actualizado a '{appointment.get_status_display()}'."
