@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class CommentSerializer(serializers.ModelSerializer):
-    status = serializers.CharField()
+    status = serializers.CharField(default='PENDING')
     rating = serializers.IntegerField(min_value=1, max_value=5)
     appointment = serializers.PrimaryKeyRelatedField(
         queryset=Appointment.objects.all(),
