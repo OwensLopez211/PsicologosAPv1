@@ -736,11 +736,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsAdminUser], url_path='admin-payment-verification')
     def admin_payment_verification(self, request):
-        """Endpoint para que los administradores vean todas las citas con pagos pendientes de verificación y confirmación"""
-        # Filtrar citas con los mismos estados que ven los psicólogos
-        appointments = Appointment.objects.filter(
-            status__in=['PAYMENT_UPLOADED', 'PAYMENT_VERIFIED', 'CONFIRMED']
-        ).order_by('-created_at')
+        """Endpoint para que los administradores vean todas las citas"""
+        # Obtener todas las citas sin filtrar por estado por defecto
+        appointments = Appointment.objects.all().order_by('-created_at')
         
         # Opción de filtrado por psicólogo
         psychologist_id = request.query_params.get('psychologist_id')
