@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { StarIcon } from '@heroicons/react/24/solid';
@@ -20,6 +20,41 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null); // Referencia para el contenedor desplazable
+  const intervalRef = useRef<number | null>(null); // Referencia para el intervalo de desplazamiento
+
+  // Funciones para controlar el desplazamiento automático
+  const startAutoScroll = () => {
+    if (scrollContainerRef.current) {
+      intervalRef.current = window.setInterval(() => {
+        if (scrollContainerRef.current) {
+          const container = scrollContainerRef.current;
+          const scrollWidth = container.scrollWidth;
+          const clientWidth = container.clientWidth;
+          const currentScrollLeft = container.scrollLeft;
+
+          // Si llegamos al final, volver al principio
+          if (currentScrollLeft + clientWidth >= scrollWidth) {
+            container.scrollTo({ left: 0, behavior: 'smooth' });
+          } else {
+            // Desplazarse una pequeña cantidad. Ajusta 100 para cambiar la velocidad.
+            container.scrollBy({ left: 150, behavior: 'smooth' });
+          }
+        }
+      }, 3000); // Ajusta 3000ms (3 segundos) para cambiar la frecuencia de desplazamiento
+    }
+  };
+
+  const stopAutoScroll = () => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null; // Restablecer la referencia
+    }
+  };
+
+  // Manejar pausa y reanudación al pasar el ratón
+  const handleMouseEnter = () => { stopAutoScroll(); };
+  const handleMouseLeave = () => { startAutoScroll(); };
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -32,11 +67,19 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
         console.error('Error fetching reviews:', err);
         setError('No se pudieron cargar las reseñas');
         setLoading(false);
-      }
+      } finally {
+         // Asegurarse de que el carrusel inicia solo si hay reseñas después de la carga
+         if (reviews.length > 0 && scrollContainerRef.current) {
+             startAutoScroll();
+         }
+        }
     };
 
     fetchReviews();
-  }, [psychologistId]);
+
+    // Limpiar el intervalo al desmontar el componente
+    return () => { stopAutoScroll(); };
+  }, [psychologistId, reviews.length]); // Dependencia reviews.length para reiniciar si cambian las reseñas
 
   // Formatear fecha
   const formatDate = (dateString: string) => {
@@ -116,11 +159,18 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
           <p>No hay reseñas disponibles aún.</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        // Contenedor desplazable con estilos para carrusel
+        <div 
+          ref={scrollContainerRef} 
+          className="flex space-x-6 overflow-x-auto pb-4 no-scrollbar" // Añadir no-scrollbar class
+          onMouseEnter={handleMouseEnter} // Pausar al pasar el ratón
+          onMouseLeave={handleMouseLeave} // Reanudar al quitar el ratón
+        >
           {reviews.map((review) => (
             <motion.div
               key={review.id}
-              className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+              // Ajustar ancho para que no ocupe todo el espacio y permita ver el siguiente
+              className="min-w-[85%] md:min-w-[55%] lg:min-w-[40%] bg-gradient-to-r from-gray-50 to-white p-5 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex-shrink-0" // flex-shrink-0 es importante
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
