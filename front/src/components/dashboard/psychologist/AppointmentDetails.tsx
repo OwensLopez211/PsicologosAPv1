@@ -473,7 +473,7 @@ const AppointmentDetails = ({
 
       {/* Confirmation Modal */}
       <Transition.Root show={confirmation.isOpen} as={Fragment}>
-        <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={handleCancelStatusChange}>
+        <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={handleCancelStatusChange} style={{ zIndex: 100000 }}>
           <div className="flex items-center justify-center min-h-screen px-4 text-center">
             <Transition.Child
               as={Fragment}

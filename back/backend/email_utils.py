@@ -21,7 +21,7 @@ MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
 MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@emindapp.cl")
 
-def send_email(to_email, subject, template_name=None, context=None, template_content=None, is_html_template=False):
+def send_email(to_email, subject, template_name=None, context=None, template_content=None, is_html_template=False, attachments=None):
     """
     Envía un correo electrónico usando la API de Mailgun
     
@@ -32,6 +32,7 @@ def send_email(to_email, subject, template_name=None, context=None, template_con
         context (dict, optional): Contexto para renderizar la plantilla
         template_content (str, optional): Contenido HTML directo para el correo
         is_html_template (bool, optional): Indica si el template_content es HTML
+        attachments: Lista de tuplas (filename, content, content_type) para adjuntos
     """
     # Verificar que tengamos las credenciales necesarias
     if not MAILGUN_API_KEY:
@@ -89,6 +90,7 @@ def send_email(to_email, subject, template_name=None, context=None, template_con
             url,
             auth=("api", MAILGUN_API_KEY),
             data=data,
+            files=attachments,
             timeout=10  # Añadir timeout para evitar que se quede esperando indefinidamente
         )
         
@@ -596,6 +598,62 @@ def send_appointment_confirmed_psychologist_email(appointment, frontend_url=None
     hora_inicio = appointment.start_time.strftime('%H:%M')
     hora_fin = appointment.end_time.strftime('%H:%M')
 
+    # --- Lógica para generar archivo .ics y URLs de calendario ---
+    uid = str(uuid.uuid4())
+    start_datetime = dt.datetime.combine(appointment.date, appointment.start_time)
+    end_datetime = dt.datetime.combine(appointment.date, appointment.end_time)
+    
+    # Formatear fechas para .ics (formato local, sin UTC)
+    start_local = start_datetime.strftime('%Y%m%dT%H%M%S')
+    end_local = end_datetime.strftime('%Y%m%dT%H%M%S')
+    
+    # Formatear fechas para Google Calendar (formato ISO)
+    start_iso = start_datetime.strftime('%Y%m%dT%H%M%S')
+    end_iso = end_datetime.strftime('%Y%m%dT%H%M%S')
+    
+    # Datos para el evento
+    summary = f"Sesión con {client.user.first_name} {client.user.last_name}"
+    description = f"Cita de terapia a través de E-Mind con {client.user.first_name} {client.user.last_name}."
+    location = "Videollamada"
+    
+    # Crear enlaces para diferentes calendarios
+    # Google Calendar
+    google_cal_params = {
+        'action': 'TEMPLATE',
+        'text': quote(summary),
+        'dates': f"{start_iso}/{end_iso}",
+        'details': quote(description),
+        'location': quote(location),
+    }
+    google_calendar_url = "https://calendar.google.com/calendar/render?" + "&".join([f"{k}={v}" for k, v in google_cal_params.items()])
+    
+    # Outlook Web
+    outlook_params = {
+        'subject': quote(summary),
+        'startdt': start_iso,
+        'enddt': end_iso,
+        'body': quote(description),
+        'location': quote(location),
+    }
+    outlook_calendar_url = "https://outlook.live.com/calendar/0/deeplink/compose?" + "&".join([f"{k}={v}" for k, v in outlook_params.items()])
+    
+    # Yahoo Calendar 
+    yahoo_params = {
+        'title': quote(summary),
+        'st': start_iso,
+        'et': end_iso,
+        'desc': quote(description),
+        'in_loc': quote(location),
+    }
+    yahoo_calendar_url = "https://calendar.yahoo.com/?" + "&".join([f"{k}={v}" for k, v in yahoo_params.items()])
+    
+    # Contenido del archivo .ics
+    ics_content = f"""BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//E-Mind//Appointment Calendar//ES\nCALSCALE:GREGORIAN\nBEGIN:VEVENT\nUID:{uid}\nSUMMARY:{summary}\nDESCRIPTION:{description}\nLOCATION:{location}\nDTSTART:{start_local}\nDTEND:{end_local}\nSTATUS:CONFIRMED\nEND:VEVENT\nEND:VCALENDAR\n"""
+    
+    # Nombre del archivo adjunto
+    file_name = f"Cita-EMind-{fecha_cita}.ics"
+    # --- Fin de la lógica de calendario ---
+
     # Preparar el contexto para la plantilla
     context = {
         'nombre_psicologo': f"{user_psy.first_name} {user_psy.last_name}",
@@ -603,18 +661,24 @@ def send_appointment_confirmed_psychologist_email(appointment, frontend_url=None
         'fecha_cita': fecha_cita,
         'hora_inicio': hora_inicio,
         'hora_fin': hora_fin,
+        'google_calendar_url': google_calendar_url,
+        'outlook_calendar_url': outlook_calendar_url,
+        'yahoo_calendar_url': yahoo_calendar_url
     }
 
     # Definir asunto y plantilla
     subject = f'Cita confirmada con {client.user.first_name} {client.user.last_name} - {fecha_cita}'
     template_name = 'emails/cita_confirmada_psicologo.html'
 
-    # Enviar el correo
+    # Preparar archivos adjuntos para Mailgun (formato tuple list: [(filename, content, content_type)])
+    mailgun_attachments = [(file_name, ics_content, "text/calendar")]
+
     return send_email(
         user_psy.email,
         subject,
         template_name,
-        context
+        context,
+        attachments=mailgun_attachments
     )
 
 def send_review_opportunity_email(appointment, frontend_url=None):
@@ -630,9 +694,9 @@ def send_review_opportunity_email(appointment, frontend_url=None):
 
     # Construir la URL para dejar la valoración (ajusta según tu frontend)
     if frontend_url:
-        url_valoracion = f"{frontend_url}/mis-citas/{appointment.id}/valorar"
+        url_valoracion = f"https://emindapp.cl/dashboard/reviews"
     else:
-        url_valoracion = "#"
+        url_valoracion = "https://emindapp.cl/dashboard/reviews"
 
     context = {
         'nombre_paciente': f"{user.first_name} {user.last_name}",

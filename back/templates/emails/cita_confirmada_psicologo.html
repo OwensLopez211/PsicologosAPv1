@@ -56,6 +56,33 @@
       margin-top: 15px;
       border-left: 4px solid #4a86e8;
     }
+    .calendar-buttons {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .calendar-button {
+      display: inline-block;
+      background-color: #4a86e8;
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      margin-right: 10px;
+      font-weight: bold;
+    }
+    .google-button {
+      background-color: #4285f4;
+    }
+    .outlook-button {
+      background-color: #0078d4;
+    }
+    .yahoo-button {
+      background-color: #6001d2;
+    }
+    .apple-button {
+      background-color: #555555;
+    }
     .calendar-note {
       font-size: 13px;
       color: #666;
@@ -83,6 +110,21 @@
     </div>
   </div>
   
+  <div class="calendar-section">
+    <h3>Agregar a tu calendario</h3>
+    <p>Haz clic en uno de los siguientes botones para agregar esta cita a tu calendario favorito:</p>
+    
+    <div class="calendar-buttons">
+      <a href="{{ google_calendar_url }}" target="_blank" class="calendar-button google-button">Google Calendar</a>
+      <a href="{{ outlook_calendar_url }}" target="_blank" class="calendar-button outlook-button">Outlook</a>
+      <a href="{{ yahoo_calendar_url }}" target="_blank" class="calendar-button yahoo-button">Yahoo</a>
+    </div>
+    
+    <div class="calendar-note">
+      <p>* También hemos adjuntado un archivo .ics a este correo que puedes usar con Apple Calendar u otra aplicación.</p>
+    </div>
+  </div>
+
   <div class="section">
     <h3>Próximos pasos</h3>
     <p>Puedes ver los detalles completos de esta cita en tu panel de E-Mind.</p>
