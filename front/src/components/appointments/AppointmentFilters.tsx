@@ -168,9 +168,13 @@ const AppointmentFilters = ({
                     className="block w-full px-3 py-1.5 pr-8 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-[#2A6877]/20 focus:border-[#2A6877] text-xs appearance-none transition-all"
                   >
                     <option value="">Todos los estados</option>
+                    <option value="PENDING_PAYMENT">Pendiente de Pago</option>
                     <option value="PAYMENT_UPLOADED">Comprobante Subido</option>
                     <option value="PAYMENT_VERIFIED">Pago Verificado</option>
                     <option value="CONFIRMED">Confirmada</option>
+                    <option value="COMPLETED">Completada</option>
+                    <option value="CANCELLED">Cancelada</option>
+                    <option value="NO_SHOW">No Asistió</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
                     <svg className="h-3 w-3 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -214,9 +218,14 @@ const AppointmentFilters = ({
                   )}
                   {filters.status && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#2A6877]/10 text-[#2A6877]">
-                      Estado: {filters.status === 'PAYMENT_UPLOADED' ? 'Comprobante Subido' : 
-                              filters.status === 'PAYMENT_VERIFIED' ? 'Pago Verificado' : 
-                              filters.status === 'CONFIRMED' ? 'Confirmada' : filters.status}
+                      Estado: {filters.status === 'PAYMENT_UPLOADED' ? 'Comprobante Subido' :
+                              filters.status === 'PAYMENT_VERIFIED' ? 'Pago Verificado' :
+                              filters.status === 'CONFIRMED' ? 'Confirmada' :
+                              filters.status === 'PENDING_PAYMENT' ? 'Pendiente de Pago' :
+                              filters.status === 'COMPLETED' ? 'Completada' :
+                              filters.status === 'CANCELLED' ? 'Cancelada' :
+                              filters.status === 'NO_SHOW' ? 'No Asistió' :
+                              filters.status}
                     </span>
                   )}
                 </>

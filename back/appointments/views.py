@@ -648,7 +648,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             confirmed_appointments = Appointment.objects.filter(
                 client=client,
                 psychologist_id=psychologist_id,
-                status='CONFIRMED'
+                status__in=['CONFIRMED', 'COMPLETED']
             ).exists()
             
             return Response({
