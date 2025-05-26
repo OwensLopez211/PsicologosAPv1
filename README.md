@@ -400,7 +400,6 @@ Este proyecto está licenciado bajo la [Licencia MIT](LICENSE) - consulta el arc
 - **Desarrollador Owens López** - Desarrollo y mantenimiento
 - **Comunidad Open Source** - Herramientas y bibliotecas utilizadas
 - **Profesionales de la Salud Mental** - Feedback y validación clínica
-- **Beta Testers** - Pruebas y retroalimentación valiosa
 
 ---
 
