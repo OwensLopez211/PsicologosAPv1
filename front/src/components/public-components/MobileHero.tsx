@@ -86,21 +86,6 @@ const MobileHero = () => {
           className="absolute inset-0 bg-gradient-to-tr from-[#2A6877]/30 to-transparent"
           aria-hidden="true"
         />
-
-        {/* Floating elements similar al Hero */}
-        <motion.div
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-4 right-4 bg-white p-2.5 rounded-lg shadow-lg border-l-3 border-[#2A6877]"
-          role="presentation"
-        >
-          <div className="flex items-center">
-            <svg className="w-4 h-4 text-[#2A6877] mr-1.5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-            </svg>
-            <span className="text-[#2A6877] font-bold text-xs">100% Online</span>
-          </div>
-        </motion.div>
       </div>
 
       {/* Text content con animaciones como en Hero */}

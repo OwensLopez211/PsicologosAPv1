@@ -67,20 +67,6 @@ const Hero = () => {
           {imageLoaded && (
             <>
               <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -top-6 -right-6 bg-white p-4 rounded-lg shadow-lg border-l-4 border-[#2A6877]"
-                role="presentation"
-              >
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-[#2A6877] mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-[#2A6877] font-bold">100% Online</span>
-                </div>
-              </motion.div>
-              
-              <motion.div
                 animate={{ y: [0, 10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                 className="absolute -bottom-6 -left-6 bg-white p-4 rounded-lg shadow-lg border-l-4 border-[#2A6877]"
