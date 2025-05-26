@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Configura las credenciales
 MAILGUN_API_KEY = os.getenv("MAILGUN_API_KEY")
 MAILGUN_DOMAIN = os.getenv("MAILGUN_DOMAIN")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@emindapp.cl")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "info@emindapp.cl")
 
 def send_email(to_email, subject, template_name=None, context=None, template_content=None, is_html_template=False, attachments=None):
     """
