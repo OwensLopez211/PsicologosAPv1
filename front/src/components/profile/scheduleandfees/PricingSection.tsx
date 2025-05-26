@@ -23,11 +23,11 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [priceConfig, setPriceConfig] = useState<{
     min_price: number;
-    max_price: number;
+    max_price: number | null;
     platform_fee_percentage: number;
   } | null>({
-    min_price: 30000,
-    max_price: 200000,
+    min_price: 5000,
+    max_price: null,
     platform_fee_percentage: 10
   });
 
@@ -97,8 +97,8 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
       return;
     }
     
-    if (priceConfig && (newSuggestedPrice < priceConfig.min_price || newSuggestedPrice > priceConfig.max_price)) {
-      toast.error(`El precio debe estar entre ${formatCurrency(priceConfig.min_price)} y ${formatCurrency(priceConfig.max_price)}.`);
+    if (priceConfig && newSuggestedPrice < priceConfig.min_price) {
+      toast.error(`El precio debe ser mayor o igual a ${formatCurrency(priceConfig.min_price)}.`);
       return;
     }
     
@@ -322,13 +322,10 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="bg-gray-50/80 p-2 sm:p-3 rounded-lg border border-gray-100">
                     <h4 className="font-medium text-gray-700 mb-1 text-xs sm:text-sm">Rango de precios</h4>
-                    <p className="text-gray-600 text-xs sm:text-sm">El precio debe estar entre:</p>
+                    <p className="text-gray-600 text-xs sm:text-sm">El precio debe ser mayor o igual a:</p>
                     <div className="flex justify-between items-center mt-1">
                       <span className="bg-[#2A6877]/10 text-[#2A6877] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm font-medium">
                         Mínimo: {formatCurrency(priceConfig.min_price)}
-                      </span>
-                      <span className="bg-[#2A6877]/10 text-[#2A6877] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs sm:text-sm font-medium">
-                        Máximo: {formatCurrency(priceConfig.max_price)}
                       </span>
                     </div>
                   </div>
@@ -351,6 +348,13 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                 <p className="text-xs sm:text-sm text-gray-500 mt-2 sm:mt-3 italic">
                   Los cambios de precio están sujetos a aprobación por parte del administrador
                 </p>
+
+                {priceConfig && (
+                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-500 flex items-center gap-1">
+                    <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                    El precio debe ser mayor o igual a {formatCurrency(priceConfig.min_price)}
+                  </p>
+                )}
               </motion.div>
             )}
           </motion.div>
@@ -387,12 +391,6 @@ const PricingSection = ({ onLoadingChange, isLoading }: PricingSectionProps) => 
                     <span className="text-gray-500 text-xs sm:text-sm">CLP</span>
                   </div>
                 </div>
-                {priceConfig && (
-                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-500 flex items-center gap-1">
-                    <InformationCircleIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                    El precio debe estar entre {formatCurrency(priceConfig.min_price)} y {formatCurrency(priceConfig.max_price)}
-                  </p>
-                )}
               </div>
 
               {newSuggestedPrice ? (

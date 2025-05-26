@@ -579,6 +579,44 @@ END:VCALENDAR
         logger.error(f"❌ Error al enviar correo con archivo .ics a {user.email}: {str(e)}")
         return False
 
+def send_appointment_confirmed_psychologist_email(appointment, frontend_url=None):
+    """
+    Envía correo al psicólogo cuando el paciente confirma la cita, después de que el administrador verifica el pago.
+    
+    Args:
+        appointment: Instancia del modelo Appointment
+        frontend_url: URL base del frontend (opcional)
+    """
+    psychologist = appointment.psychologist
+    user_psy = psychologist.user
+    client = appointment.client
+
+    # Formatear la fecha y horas para presentación
+    fecha_cita = appointment.date.strftime('%d/%m/%Y')
+    hora_inicio = appointment.start_time.strftime('%H:%M')
+    hora_fin = appointment.end_time.strftime('%H:%M')
+
+    # Preparar el contexto para la plantilla
+    context = {
+        'nombre_psicologo': f"{user_psy.first_name} {user_psy.last_name}",
+        'nombre_paciente': f"{client.user.first_name} {client.user.last_name}",
+        'fecha_cita': fecha_cita,
+        'hora_inicio': hora_inicio,
+        'hora_fin': hora_fin,
+    }
+
+    # Definir asunto y plantilla
+    subject = f'Cita confirmada con {client.user.first_name} {client.user.last_name} - {fecha_cita}'
+    template_name = 'emails/cita_confirmada_psicologo.html'
+
+    # Enviar el correo
+    return send_email(
+        user_psy.email,
+        subject,
+        template_name,
+        context
+    )
+
 def send_review_opportunity_email(appointment, frontend_url=None):
     """
     Envía un correo al paciente notificando que puede dejar un comentario/review.

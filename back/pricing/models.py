@@ -5,7 +5,7 @@ from profiles.models import PsychologistProfile
 class PriceConfiguration(models.Model):
     """Configuration for pricing system"""
     min_price = models.IntegerField(default=5000)
-    max_price = models.IntegerField(default=50000)
+    max_price = models.IntegerField(null=True, blank=True)
     platform_fee_percentage = models.IntegerField(default=10)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -16,7 +16,7 @@ class PriceConfiguration(models.Model):
         verbose_name_plural = "Price Configurations"
 
     def __str__(self):
-        return f"Price Config (Min: {self.min_price}, Max: {self.max_price}, Fee: {self.platform_fee_percentage}%)"
+        return f"Price Config (Min: {self.min_price}, Fee: {self.platform_fee_percentage}%)"
 
 
 class PsychologistPrice(models.Model):

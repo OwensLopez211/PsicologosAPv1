@@ -406,9 +406,9 @@ class PriceChangeRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if requested_price < price_config.min_price or requested_price > price_config.max_price:
+        if requested_price < price_config.min_price:
             return Response(
-                {"detail": f"Price must be between {price_config.min_price} and {price_config.max_price}."},
+                {"detail": f"El precio debe ser mayor o igual a {price_config.min_price}."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
