@@ -162,6 +162,8 @@ class CommentAdminViewSet(viewsets.ModelViewSet):
         """
         Administradores pueden actualizar cualquier campo, incluido 'status'.
         """
+        # Log para ver qué datos llegan en la solicitud PATCH/PUT
+        logger.info(f"Received data for CommentAdminViewSet update: {self.request.data}")
         serializer.save()
     
     def perform_destroy(self, instance):
