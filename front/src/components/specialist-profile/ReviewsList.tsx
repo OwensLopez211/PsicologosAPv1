@@ -165,8 +165,9 @@ const ReviewsList: FC<ReviewsListProps> = ({ psychologistId }) => {
       // En móvil: stack vertical, en desktop: horizontal
       return "flex flex-col sm:flex-row sm:space-x-6 space-y-4 sm:space-y-0 sm:justify-center";
     } else {
-      // Para 3+ reseñas: carrusel con scroll horizontal
-      return "flex space-x-4 overflow-x-hidden pb-4";
+      // Para 3+ reseñas: carrusel
+      // En móvil: scroll manual habilitado, en desktop: scroll automático
+      return "flex space-x-4 overflow-x-auto sm:overflow-x-hidden pb-4";
     }
   };
 
