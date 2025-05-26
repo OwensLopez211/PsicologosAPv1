@@ -13,7 +13,8 @@ class CommentSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField(min_value=1, max_value=5)
     appointment = serializers.PrimaryKeyRelatedField(
         queryset=Appointment.objects.all(),
-        write_only=True
+        write_only=True,
+        required=False
     )
     
     class Meta:
@@ -23,56 +24,63 @@ class CommentSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         logger.info(f"Validating data for CommentSerializer: {data}")
-        appointment = data.get('appointment')
-        if not appointment:
-            logger.error("Validation failed: Appointment object not loaded.")
-            raise serializers.ValidationError(
-                {"appointment": "No se pudo cargar la información de la cita proporcionada."}
-            )
-            
-        logger.info(f"Validating appointment: {appointment.id} with status {appointment.status}")
-        
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            try:
-                client_profile = ClientProfile.objects.get(user=request.user)
-                if appointment.client != client_profile:
-                    logger.error("Validation failed: Appointment does not belong to the authenticated client.")
-                    raise serializers.ValidationError(
-                        {"appointment": "No tienes permiso para valorar esta cita."}
-                    )
-            except ClientProfile.DoesNotExist:
-                logger.error("Validation failed: Client profile not found for authenticated user.")
-                raise serializers.ValidationError(
-                    {"non_field_errors": "No se encontró tu perfil de cliente."}
-                )
-        else:
-            logger.error("Validation failed: User not authenticated or request context missing.")
-            raise serializers.ValidationError(
-                {"non_field_errors": "Usuario no autenticado."}
-            )
-            
-        if appointment.status != 'COMPLETED':
-            logger.error(f"Validation failed: Appointment status is not COMPLETED ({appointment.status}).")
-            raise serializers.ValidationError(
-                {"appointment": "Solo se puede valorar una cita que haya sido completada."}
-            )
-            
-        completed_date = appointment.date
-        now = timezone.now().date()
-        if (now - completed_date) > timedelta(days=3):
-            logger.error(f"Validation failed: Comment period expired. Completed date: {completed_date}, today: {now}")
-            raise serializers.ValidationError(
-                {"appointment": f"Solo puedes valorar dentro de los 3 días posteriores a la cita completada (hasta {completed_date + timedelta(days=3)})."}
-            )
-            
+
         if self.instance is None:
+            logger.info("Validation for creation.")
+            appointment = data.get('appointment')
+
+            if not appointment:
+                logger.error("Validation failed (creation): Appointment is required.")
+                raise serializers.ValidationError({"appointment": "La cita es requerida para crear una valoración."})
+
+            logger.info(f"Validating appointment: {appointment.id} with status {appointment.status}")
+            
+            request = self.context.get('request')
+            if request and request.user.is_authenticated:
+                try:
+                    client_profile = ClientProfile.objects.get(user=request.user)
+                    if appointment.client != client_profile:
+                        logger.error("Validation failed (creation): Appointment does not belong to the authenticated client.")
+                        raise serializers.ValidationError(
+                            {"appointment": "No tienes permiso para valorar esta cita."}
+                        )
+                except ClientProfile.DoesNotExist:
+                    logger.error("Validation failed (creation): Client profile not found for authenticated user.")
+                    raise serializers.ValidationError(
+                        {"non_field_errors": "No se encontró tu perfil de cliente."}
+                    )
+            else:
+                logger.error("Validation failed (creation): User not authenticated or request context missing.")
+                raise serializers.ValidationError(
+                    {"non_field_errors": "Usuario no autenticado."}
+                )
+            
+            if appointment.status != 'COMPLETED':
+                logger.error(f"Validation failed (creation): Appointment status is not COMPLETED ({appointment.status}).")
+                raise serializers.ValidationError(
+                    {"appointment": "Solo se puede valorar una cita que haya sido completada."}
+                )
+            
+            completed_date = appointment.date
+            now = timezone.now().date()
+            if (now - completed_date) > timedelta(days=3):
+                logger.error(f"Validation failed (creation): Comment period expired. Completed date: {completed_date}, today: {now}")
+                raise serializers.ValidationError(
+                    {"appointment": f"Solo puedes valorar dentro de los 3 días posteriores a la cita completada (hasta {completed_date + timedelta(days=3)})."}
+                )
+            
             if Comment.objects.filter(appointment=appointment).exists():
-                logger.error(f"Validation failed: Comment already exists for appointment {appointment.id}.")
+                logger.error(f"Validation failed (creation): Comment already exists for appointment {appointment.id}.")
                 raise serializers.ValidationError(
                     {"appointment": "Ya existe una valoración para esta cita."}
                 )
-                
+
+        else:
+            logger.info("Validation for update.")
+            if 'status' in data and data['status'] not in ['APPROVED', 'REJECTED']:
+                logger.error(f"Validation failed (update): Invalid status {data['status']}.")
+                raise serializers.ValidationError({"status": "Estado no válido."})
+
         return data
 
 class CommentReadSerializer(serializers.ModelSerializer):
