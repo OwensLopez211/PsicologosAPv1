@@ -31,40 +31,28 @@ const VerificationsPage = () => {
     try {
       if (user?.user_type === 'admin') {
         try {
-          // Para administradores, usar el endpoint de administración con los mismos filtros que ven los psicólogos
-          const statusFilter = filters.status || 'PAYMENT_UPLOADED,PAYMENT_VERIFIED,CONFIRMED';
-          
+          // Para administradores, usar el endpoint de administración
+          // NO APLICAR FILTRO DE ESTADO POR DEFECTO AQUÍ
           const data = await getAdminPaymentVerifications({
-            ...filters,
-            status: statusFilter
+            ...filters
+            // status ya no se fuerza aquí, se pasa si está en 'filters'
           });
-          
-        // Manejar diferentes formatos de respuesta
+
+          // Manejar diferentes formatos de respuesta
           const appointmentsData = Array.isArray(data) ? data : (data as any).results || [];
-        setAppointments(appointmentsData);
-          
+          setAppointments(appointmentsData);
+
           console.log('Citas cargadas para admin:', appointmentsData.length);
         } catch (adminError: any) {
           console.error('Error específico de admin:', adminError);
-          
-          // Mantener los mensajes de error específicos ya que son importantes para diagnóstico
+
+          // Mantener los mensajes de error específicos
           if (adminError.response) {
             const statusCode = adminError.response.status;
             if (statusCode === 404) {
               toastService.error('La ruta de verificación de pagos no se encuentra disponible. Contacte al administrador del sistema.');
-              
-              // Intento directo de obtener las citas como último recurso
-              try {
-                const response = await api.get('/appointments/');
-                const allAppointments = response.data;
-                // Filtrar manualmente las citas que nos interesan
-                const filteredAppointments = allAppointments.filter((app: any) => 
-                  ['PAYMENT_UPLOADED', 'PAYMENT_VERIFIED', 'CONFIRMED'].includes(app.status)
-                );
-                setAppointments(filteredAppointments);
-              } catch (fallbackError) {
-                console.error('Falló el intento alternativo:', fallbackError);
-              }
+              // Eliminar el intento alternativo de obtener todas las citas,
+              // ya que ahora queremos que el endpoint principal devuelva todas.
             } else if (statusCode === 403) {
               toastService.error('No tienes permisos para acceder a este recurso');
             } else {
@@ -75,20 +63,21 @@ const VerificationsPage = () => {
           } else {
             toastService.error('Error al cargar las verificaciones: ' + adminError.message);
           }
-          
+
           throw adminError;
         }
       } else if (user?.user_type === 'psychologist') {
         // Para psicólogos, usar el endpoint existente
+        // NO APLICAR FILTRO DE ESTADO POR DEFECTO AQUÍ
         const data = await getPsychologistPendingPayments({
-          ...filters,
-          status: filters.status || 'PAYMENT_UPLOADED,PAYMENT_VERIFIED,CONFIRMED'
+          ...filters
+          // status ya no se fuerza aquí
         });
-        
+
         // Manejar diferentes formatos de respuesta
         const appointmentsData = Array.isArray(data) ? data : (data as any).results || [];
         setAppointments(appointmentsData);
-        
+
         console.log('Citas cargadas para psicólogo:', appointmentsData.length);
       } else {
         setError(new Error('Tipo de usuario no autorizado'));
@@ -97,6 +86,10 @@ const VerificationsPage = () => {
     } catch (err: any) {
       setError(err as Error);
       console.error('Error al cargar las citas:', err);
+      // Mostrar un toast genérico si no se manejó un error específico arriba
+       if (!err.response && !err.request) {
+           toastService.error('Error al cargar las citas');
+       }
     } finally {
       setIsLoading(false);
     }

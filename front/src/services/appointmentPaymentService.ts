@@ -636,17 +636,16 @@ export const updateAppointmentPaymentStatus = async (
 
 // Servicios para administradores
 export const getAdminPaymentVerifications = async (
-  params?: { 
-    psychologist_id?: number, 
-    start_date?: string, 
+  params?: {
+    psychologist_id?: number,
+    start_date?: string,
     end_date?: string,
-    status?: string 
+    status?: string // Permitir que 'status' sea opcional
   }
 ) => {
   try {
-    // Asegurarse de que las fechas se manejan correctamente
     const adjustedParams = { ...params };
-    
+
     // Si hay una fecha de inicio, asegurarse de que se envía en formato YYYY-MM-DD
     if (adjustedParams.start_date) {
       const dateParts = adjustedParams.start_date.split('-');
@@ -655,7 +654,7 @@ export const getAdminPaymentVerifications = async (
         adjustedParams.start_date = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
       }
     }
-    
+
     // Lo mismo para la fecha de fin
     if (adjustedParams.end_date) {
       const dateParts = adjustedParams.end_date.split('-');
@@ -664,15 +663,12 @@ export const getAdminPaymentVerifications = async (
         adjustedParams.end_date = `${dateParts[0]}-${dateParts[1]}-${dateParts[2]}`;
       }
     }
-    
-    // Si no hay filtro de estado, incluir todos los estados relevantes por defecto
-    const defaultParams = {
-      ...adjustedParams,
-      status: adjustedParams.status || 'PAYMENT_UPLOADED,PAYMENT_VERIFIED,CONFIRMED'
-    };
-    
+
+    // NO APLICAR FILTRO DE ESTADO POR DEFECTO AQUÍ
+    // Permitir que el backend devuelva todas si 'status' no viene en params
+
     let errorToThrow = null;
-    
+
     // Lista de rutas a intentar en orden
     const routesToTry = [
       '/appointments/admin-payment-verification/',
@@ -680,62 +676,74 @@ export const getAdminPaymentVerifications = async (
       '/appointments/admin/payment-verification/',
       '/appointments/admin-payment-verification'
     ];
-    
+
     for (const route of routesToTry) {
       try {
         console.log(`Intentando con ruta: ${route}`);
-        const response = await api.get<AppointmentData[]>(route, { 
-          params: defaultParams 
+        // Pasar adjustedParams directamente, incluyendo 'status' si vino
+        const response = await api.get<AppointmentData[]>(route, {
+          params: adjustedParams
         });
         console.log(`Éxito con ruta: ${route}`);
-        
+
         // Procesar las fechas para asegurar que se muestran correctamente
         const processedData = response.data.map(appointment => ({
           ...appointment,
           // Asegurarse de que la fecha se mantiene igual
           date: appointment.date
         }));
-        
+
         return processedData;
       } catch (error: any) {
         console.error(`Error con ruta ${route}:`, error.response?.status || error.message);
         errorToThrow = error;
-        
+
         // Si el error no es 404, no seguir intentando con otras rutas
         if (error.response && error.response.status !== 404) {
           break;
         }
       }
     }
-    
-    // Si llegamos aquí, todas las rutas fallaron. Intentemos un enfoque diferente
+
+    // Si llegamos aquí, todas las rutas fallaron. Intentemos un enfoque diferente (sin filtro de estado)
     try {
       // Obtener todas las citas y filtrar manualmente (último recurso)
+      // Aunque el objetivo es que el endpoint principal devuelva todas,
+      // mantenemos este fallback por robustez, pero sin filtrar por estado por defecto.
       const response = await api.get<AppointmentData[]>('/appointments/', {
         params: {
-          psychologist_id: defaultParams.psychologist_id,
-          start_date: defaultParams.start_date,
-          end_date: defaultParams.end_date
+          psychologist_id: adjustedParams.psychologist_id,
+          start_date: adjustedParams.start_date,
+          end_date: adjustedParams.end_date
         }
       });
-      
-      // Filtrar por estado manualmente
-      let filteredData = response.data;
-      if (defaultParams.status) {
-        const statusList = defaultParams.status.split(',');
-        filteredData = filteredData.filter(app => statusList.includes(app.status));
-      }
-      
-      console.log('Citas recuperadas y filtradas manualmente', filteredData.length);
+
+       // Si se proporcionó un status en los params originales, filtrar manualmente aquí
+       let filteredData = response.data;
+       if (params?.status) {
+         const statusList = params.status.split(',');
+         filteredData = filteredData.filter(app => statusList.includes(app.status));
+       } else {
+           // Si no se proporcionó status, devolver todas (excepto CANCELLED y NO_SHOW por defecto en este fallback)
+           // Ojo: Esto es un fallback, lo ideal es que el endpoint principal devuelva todas.
+           // Para cumplir el requisito de mostrar todas, quitaremos este filtro también en el fallback.
+           // Si necesitas excluir CANCELLED/NO_SHOW, debe ser una decisión de diseño del endpoint.
+           // Por ahora, asumimos que el endpoint principal puede devolver todas.
+           // Si este fallback se activa, puede que no sea lo que esperas.
+       }
+
+
+      console.log('Citas recuperadas y filtradas manualmente (fallback)', filteredData.length);
       return filteredData;
     } catch (fallbackError) {
       console.error('Fallback también falló:', fallbackError);
       // Si el fallback también falla, lanzar el error original
       throw errorToThrow;
     }
+
   } catch (error) {
     console.error('Error al obtener verificaciones de pago para administrador:', error);
-    toast.error('Error al cargar las citas pendientes de verificación', {
+    toast.error('Error al cargar las citas', { // Mensaje más genérico
       id: 'unique-notification'
     });
     throw error;
@@ -744,29 +752,30 @@ export const getAdminPaymentVerifications = async (
 
 // Servicios para psicólogos
 export const getPsychologistPendingPayments = async (
-  params?: { 
-    status?: string, 
-    start_date?: string, 
-    end_date?: string 
+  params?: {
+    status?: string, // Permitir que 'status' sea opcional
+    start_date?: string,
+    end_date?: string
   }
 ) => {
   try {
-    // Usar my-appointments con filtro de estado para pagos pendientes
-    const response = await api.get<AppointmentData[]>('/appointments/my-appointments/', { 
+    // Usar my-appointments
+    // NO APLICAR FILTRO DE ESTADO POR DEFECTO AQUÍ
+    const response = await api.get<AppointmentData[]>('/appointments/my-appointments/', {
       params: {
-        ...params,
-        status: params?.status || 'PAYMENT_UPLOADED,PAYMENT_VERIFIED'
+        ...params
+        // status ya no se fuerza a 'PAYMENT_UPLOADED,PAYMENT_VERIFIED'
       }
     });
     return response.data;
   } catch (error) {
     console.error('Error al obtener pagos pendientes para psicólogo:', error);
-    toast.error('Error al cargar las citas pendientes de verificación', {
+     toast.error('Error al cargar tus citas', { // Mensaje más genérico
       id: 'unique-notification'
     });
     throw error;
   }
-}; 
+};
 
 /**
  * Verifica si la cita es la primera entre un cliente y un psicólogo
