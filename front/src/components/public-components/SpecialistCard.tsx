@@ -11,7 +11,6 @@ interface SpecialistCardProps {
   name: string;
   university: string;
   specialties: string;
-  experience: string;
   imageUrl: string;
   verification_status?: string;
   gender?: string;
@@ -24,7 +23,6 @@ const SpecialistCard: FC<SpecialistCardProps> = ({
   name, 
   university, 
   specialties, 
-  experience, 
   imageUrl,
   verification_status,
   rating = 4.8,
@@ -165,14 +163,6 @@ const SpecialistCard: FC<SpecialistCardProps> = ({
                   
                   {/* Experience + Rating in a row */}
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-2">
-                    {/* Experience Badge */}
-                    <div className="flex items-center text-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="text-sm">{experience} de experiencia</span>
-                    </div>
-                    
                     {/* Rating Stars */}
                     <div className="flex items-center">
                       <div className="flex text-amber-400">
@@ -180,7 +170,7 @@ const SpecialistCard: FC<SpecialistCardProps> = ({
                           <svg 
                             key={i} 
                             xmlns="http://www.w3.org/2000/svg" 
-                            className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-amber-400' : 'text-gray-300'}`} 
+                            className={`h-4 w-4 ${rating && i < Math.floor(rating) ? 'text-amber-400' : 'text-gray-300'}`}
                             viewBox="0 0 20 20" 
                             fill="currentColor"
                           >
@@ -188,7 +178,7 @@ const SpecialistCard: FC<SpecialistCardProps> = ({
                           </svg>
                         ))}
                       </div>
-                      <span className="ml-1 text-sm font-medium text-gray-600">{rating.toFixed(1)}</span>
+                      <span className="ml-1 text-sm font-medium text-gray-600">{rating !== undefined && rating !== null ? rating.toFixed(1) : 'N/A'}</span>
                     </div>
                     
                     {/* Availability Status */}

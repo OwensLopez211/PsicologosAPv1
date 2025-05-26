@@ -1,11 +1,25 @@
 import { FC, useState } from 'react';
-import { specialtyOptions, populationOptions } from '../../types/options-data';
+import { populationCategories } from '../../types/options-data';
 
 interface FilterOption {
   id: string;
   label: string;
   value: string;
 }
+
+// Definimos la lista limitada de enfoques terapéuticos
+const limitedSpecialtyOptions: string[] = [
+  'Psicoanálisis',
+  'Psicoterapia integrativa',
+  'Terapia breve estratégica',
+  'Terapia cognitiva conductual',
+  'Terapia constructivista',
+  'Terapia sistemático-relacional',
+  'Terapia de Gestalt',
+  'Terapia humanista',
+  'Terapia narrativa',
+  'Terapia psicodinámica',
+];
 
 interface SpecialistFiltersProps {
   totalSpecialists: number;
@@ -14,6 +28,8 @@ interface SpecialistFiltersProps {
     specialty?: string;
     sort?: string;
     population?: string;
+    modality?: string;
+    reason?: string;
   };
 }
 
@@ -22,6 +38,28 @@ const sortOptions: FilterOption[] = [
   { id: 'experience', label: 'Experiencia (mayor a menor)', value: 'experience' },
   { id: 'name', label: 'Nombre (A-Z)', value: 'name' },
   { id: 'rating', label: 'Valoración (mayor a menor)', value: 'rating' },
+  { id: 'price', label: 'Precio (menor a mayor)', value: 'price' },
+];
+
+const modalityOptions: FilterOption[] = [
+  { id: 'default', label: 'Modalidad de terapia', value: '' },
+  { id: 'individual', label: 'Individual', value: 'Individual' },
+  { id: 'pareja', label: 'Pareja', value: 'Pareja' },
+  { id: 'familiar', label: 'Familiar', value: 'Familiar' },
+  { id: 'en-grupo', label: 'En grupo', value: 'En grupo' },
+];
+
+const reasonOptions: FilterOption[] = [
+  { id: 'default', label: 'Razón de consulta', value: '' },
+  { id: 'ansiedad', label: 'Ansiedad', value: 'Ansiedad' },
+  { id: 'depresion', label: 'Depresión', value: 'Depresión' },
+  { id: 'trastornos-alimenticios', label: 'Trastornos alimenticios', value: 'Trastornos alimenticios' },
+  { id: 'consumo-alcohol-drogas', label: 'Consumo de alcohol y drogas', value: 'Consumo de alcohol y drogas' },
+  { id: 'trastornos-sueno', label: 'Trastornos del sueño', value: 'Trastornos del sueño' },
+  { id: 'autoestima', label: 'Autoestima', value: 'Autoestima' },
+  { id: 'dificultades-sociales', label: 'Dificultades sociales', value: 'Dificultades sociales' },
+  { id: 'crecimiento-personal', label: 'Crecimiento personal', value: 'Crecimiento personal' },
+  { id: 'obsesiones', label: 'Obsesiones', value: 'Obsesiones' },
 ];
 
 const SpecialistFilters: FC<SpecialistFiltersProps> = ({ 
@@ -52,6 +90,8 @@ const SpecialistFilters: FC<SpecialistFiltersProps> = ({
     onFilterChange('specialty', '');
     onFilterChange('sort', '');
     onFilterChange('population', '');
+    onFilterChange('modality', '');
+    onFilterChange('reason', '');
     
     setActiveFilters([]);
   };
@@ -84,7 +124,7 @@ const SpecialistFilters: FC<SpecialistFiltersProps> = ({
                 defaultValue={initialFilters.specialty || ''}
               >
                 <option value="">Todos los enfoques terapéuticos</option>
-                {specialtyOptions.map((specialty, index) => (
+                {limitedSpecialtyOptions.map((specialty, index) => (
                   <option key={index} value={specialty}>{specialty}</option>
                 ))}
               </select>
@@ -103,8 +143,44 @@ const SpecialistFilters: FC<SpecialistFiltersProps> = ({
                 defaultValue={initialFilters.population || ''}
               >
                 <option value="">Todas las edades</option>
-                {populationOptions.map((population, index) => (
+                {populationCategories['Por Edad'].map((population, index) => (
                   <option key={index} value={population}>{population}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+            
+            {/* Filtro de modalidad de terapia */}
+            <div className="relative">
+              <select
+                className="w-full appearance-none text-xs sm:text-sm border border-gray-200 rounded-md sm:rounded-lg px-3 py-2 sm:px-4 sm:py-2.5 bg-white hover:border-[#2A6877] transition-colors focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent"
+                onChange={(e) => handleFilterChange('modality', e.target.value)}
+                defaultValue={initialFilters.modality || ''}
+              >
+                {modalityOptions.map(option => (
+                  <option key={option.id} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+            
+            {/* Filtro de razón de consulta */}
+            <div className="relative">
+              <select
+                className="w-full appearance-none text-xs sm:text-sm border border-gray-200 rounded-md sm:rounded-lg px-3 py-2 sm:px-4 sm:py-2.5 bg-white hover:border-[#2A6877] transition-colors focus:outline-none focus:ring-2 focus:ring-[#2A6877] focus:border-transparent"
+                onChange={(e) => handleFilterChange('reason', e.target.value)}
+                defaultValue={initialFilters.reason || ''}
+              >
+                {reasonOptions.map(option => (
+                  <option key={option.id} value={option.value}>{option.label}</option>
                 ))}
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
@@ -164,6 +240,16 @@ const SpecialistFilters: FC<SpecialistFiltersProps> = ({
             {activeFilters.includes('population') && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#2A6877]/10 text-[#2A6877]">
                 Edad
+              </span>
+            )}
+            {activeFilters.includes('modality') && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#2A6877]/10 text-[#2A6877]">
+                Modalidad
+              </span>
+            )}
+            {activeFilters.includes('reason') && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#2A6877]/10 text-[#2A6877]">
+                Razón de consulta
               </span>
             )}
             {activeFilters.includes('sort') && (

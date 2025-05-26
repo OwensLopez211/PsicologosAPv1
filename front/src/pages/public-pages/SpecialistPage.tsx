@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import HeaderPage from '../../components/public-components/HeaderPage';
 import PageTransition from '../../components/animations/PageTransition';
-import SpecialistList from '../../components/specialist-list/SpecialistList';
+import { SpecialistList } from '../../components/specialist-list/SpecialistList';
 import SpecialistFilters from '../../components/specialist-list/SpecialistFilters';
 
 interface Specialist {

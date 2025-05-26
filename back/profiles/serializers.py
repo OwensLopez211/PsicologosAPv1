@@ -120,27 +120,18 @@ class PsychologistProfileBasicSerializer(BaseProfileSerializer):
     name = serializers.SerializerMethodField()
     university = serializers.CharField(required=False)
     specialties = serializers.ListField(child=serializers.CharField(), required=False)
-    experience = serializers.SerializerMethodField()
     gender = serializers.CharField(read_only=True)  # Add gender field
+    rating = serializers.FloatField(read_only=True) # Añadimos el campo rating
     
     class Meta(BaseProfileSerializer.Meta):
         model = PsychologistProfile
         fields = BaseProfileSerializer.Meta.fields + (
-            'id', 'name', 'university', 'specialties', 'experience', 
-            'professional_title', 'verification_status', 'gender'  # Include gender in fields
+            'id', 'name', 'university', 'specialties', 
+            'professional_title', 'verification_status', 'gender', 'rating'  # Incluimos 'rating' en fields
         )
     
     def get_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}"
-    
-    def get_experience(self, obj):
-        # Calculate years of experience if graduation_year is available
-        if obj.graduation_year:
-            import datetime
-            current_year = datetime.datetime.now().year
-            years = current_year - obj.graduation_year
-            return f"{years} años"
-        return ""
 
 class PsychologistProfileSerializer(PsychologistProfileBasicSerializer):
     """Serializer para perfil de psicólogo con datos completos"""

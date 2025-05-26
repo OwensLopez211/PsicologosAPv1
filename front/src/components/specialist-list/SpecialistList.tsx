@@ -11,13 +11,14 @@ interface Specialist {
   verification_status: string;
   professional_title?: string;
   gender?: string;
+  rating?: number;
 }
 
 interface SpecialistListProps {
   specialists: Specialist[];
 }
 
-const SpecialistList: React.FC<SpecialistListProps> = ({ specialists }) => {
+export const SpecialistList: React.FC<SpecialistListProps> = ({ specialists }) => {
   if (specialists.length === 0) {
     return (
       <div className="p-12 text-center">
@@ -37,10 +38,10 @@ const SpecialistList: React.FC<SpecialistListProps> = ({ specialists }) => {
             name={specialist.name}
             university={specialist.university || ''}
             specialties={Array.isArray(specialist.specialties) ? specialist.specialties.join(', ') : ''}
-            experience={specialist.experience || ''}
             imageUrl={specialist.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(specialist.name)}&background=2A6877&color=fff&size=300`}
             verification_status={specialist.verification_status}
             gender={specialist.gender}
+            rating={specialist.rating}
           />
         </div>
       ))}
