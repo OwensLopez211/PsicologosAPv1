@@ -5,6 +5,8 @@
 [![Frontend](https://img.shields.io/badge/Frontend-React_18.2-61DAFB.svg?logo=react)](./front)
 [![Backend](https://img.shields.io/badge/Backend-Django_5.1-092E20.svg?logo=django)](./back)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.16.0-339933.svg?logo=node.js)](https://nodejs.org/)
+[![npm](https://img.shields.io/badge/npm-10.8.1-CB3837.svg?logo=npm)](https://www.npmjs.com/)
 [![Python](https://img.shields.io/badge/Python-3.12.5-3776AB.svg?logo=python)](https://www.python.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.4-336791.svg?logo=postgresql)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -54,10 +56,10 @@ El backend de E-mind está organizado por funcionalidades específicas:
 ## 🌟 Características Principales
 
 ### Para Pacientes
-- ✅ **Búsqueda** - Encuentra el psicólogo ideal según tus necesidades
-- ✅ **Citas** - Agenda y gestiona tus sesiones de forma sencilla
-- ✅ **Pagos** - Sistema de pagos integrado y protegido
-- ✅ **Historial Clínico** - Acceso a tu historial de sesiones.
+- ✅ **Búsqueda Inteligente** - Encuentra el psicólogo ideal según tus necesidades
+- ✅ **Citas Online** - Agenda y gestiona tus sesiones de forma sencilla
+- ✅ **Pagos Seguros** - Sistema de pagos integrado y protegido
+- ✅ **Historial Clínico** - Acceso a tu historial de sesiones y progreso
 - ✅ **Valoraciones** - Sistema de reseñas para mejorar la calidad del servicio
 
 ### Para Psicólogos
@@ -71,6 +73,7 @@ El backend de E-mind está organizado por funcionalidades específicas:
 - ✅ **Panel de Control** - Gestión integral de la plataforma
 - ✅ **Verificación de Profesionales** - Validación de documentos y credenciales
 - ✅ **Moderación de Contenido** - Control de calidad de reseñas y perfiles
+- ✅ **Analytics Avanzados** - Métricas de uso y rendimiento de la plataforma
 - ✅ **Gestión de Usuarios** - Administración completa de cuentas y permisos
 
 ---
@@ -161,7 +164,7 @@ e-mind/
 
 Asegúrate de tener instalado:
 
-- **Node.js** 18.0+ y **npm** 9.0+
+- **Node.js** 20.16.0+ y **npm** 10.8.1+
 - **Python** 3.12.5
 - **PostgreSQL** 16.4
 - **Git** para control de versiones
@@ -170,8 +173,8 @@ Asegúrate de tener instalado:
 
 #### 1. Clonar el Repositorio
 ```bash
-git clone https://github.com/OwensLopez211/PsicologosAPv1.git
-cd PsicologosAPv1.git
+git clone https://github.com/OwensLopez211/PsicologosAPv1/
+cd PsicologosAPv1
 ```
 
 #### 2. Configurar Backend
@@ -246,7 +249,7 @@ EMAIL_PORT=587
 EMAIL_USE_TLS=True
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-email-password
-
+```
 
 #### Frontend (`front/.env.local`)
 ```env
@@ -261,10 +264,6 @@ VITE_NODE_ENV=development
 VITE_ENABLE_PWA=true
 VITE_USE_MOCKS=false
 
-# Servicios externos
-VITE_STRIPE_PUBLIC_KEY=pk_test_...
-
-
 # Desarrollo móvil
 VITE_CAPACITOR_ENABLED=false
 VITE_EXPOSE_SUBDOMAIN=emind
@@ -272,12 +271,54 @@ VITE_EXPOSE_SUBDOMAIN=emind
 
 ---
 
+## 🧪 Testing y Calidad
+
+### Ejecutar Tests
+
+#### Backend
+```bash
+cd back
+
+# Activar entorno virtual
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+
+# Tests básicos de Django
+python manage.py test
+
+# Tests específicos por app
+python manage.py test appointments
+python manage.py test authentication
+python manage.py test profiles
+
+# Tests con coverage (si está instalado)
+coverage run manage.py test
+coverage report
+coverage html  # Genera reporte HTML
+```
+
+#### Frontend
+```bash
+cd front
+
+# Tests unitarios
+npm run test
+
+# Tests end-to-end (si están configurados)
+npm run test:e2e
+
+# Análisis de código
+npm run lint
+
+# Verificación de tipos TypeScript
+npm run type-check
+```
+
 ### Calidad de Código
 
 - **Backend**: Black, isort, flake8, mypy
 - **Frontend**: ESLint, Prettier, TypeScript
 - **Pre-commit hooks**: Validación automática antes de commits
-- **CI/CD**: GitHub Actions para despliegue automatizado
+- **CI/CD**: GitHub Actions para testing automatizado
 
 ---
 
@@ -325,13 +366,14 @@ VITE_EXPOSE_SUBDOMAIN=emind
 ### Versión Actual (v1.0)
 - ✅ Sistema de usuarios (pacientes, psicólogos, admin)
 - ✅ Gestión de citas y pagos
+- ✅ Videollamadas integradas
 - ✅ Sistema de valoraciones
-- ✅ Integración con calendario externo
 - ✅ Panel administrativo
 
 ### Próximas Funcionalidades (v1.1)
 - 🔄 Chat en tiempo real
 - 🔄 Recordatorios automáticos
+- 🔄 Integración con calendario externo
 - 🔄 Reportes avanzados
 - 🔄 App móvil nativa
 
@@ -343,6 +385,20 @@ VITE_EXPOSE_SUBDOMAIN=emind
 - 📋 Análisis predictivo
 
 ---
+
+## 🤝 Contribución
+
+Valoramos las contribuciones de la comunidad. Para contribuir:
+
+### Proceso de Contribución
+
+1. **Fork** el repositorio
+2. **Crea** una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. **Desarrolla** siguiendo nuestras guías de estilo
+4. **Escribe tests** para tu código
+5. **Commit** tus cambios (`git commit -m 'feat: agregar nueva funcionalidad'`)
+6. **Push** a la rama (`git push origin feature/nueva-funcionalidad`)
+7. **Abre** un Pull Request
 
 ### Guías de Contribución
 
@@ -371,10 +427,9 @@ VITE_EXPOSE_SUBDOMAIN=emind
 
 ### Canales de Comunicación
 
-- 🐛 **Issues**: [GitHub Issues](https://github.com/tu-org/e-mind/issues)
-- 💬 **Discusiones**: [GitHub Discussions](https://github.com/tu-org/e-mind/discussions)
-- 📧 **Email**: dev@e-mind.com
-- 🌐 **Website**: [e-mind.com](https://e-mind.com)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/OwensLopez211/PsicologosAPv1/issues)
+- 📧 **Email**: dev@emindapp.cl
+- 🌐 **Website**: [emindapp.cl](https://emindapp.cl)
 
 ### FAQ
 
