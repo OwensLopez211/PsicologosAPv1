@@ -8,6 +8,7 @@ import PresentationVideo from '../../components/specialist-profile/PresentationV
 import Specialties from '../../components/specialist-profile/Specialties';
 import Education from '../../components/specialist-profile/Education';
 import ProfessionalExperience from '../../components/specialist-profile/ProfessionalExperience';
+import ReviewsList from '../../components/specialist-profile/ReviewsList';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 interface Document {
@@ -323,8 +324,8 @@ const SpecialistProfilePage = () => {
                 variants={itemVariants}
               >
                 <PresentationVideo videoUrl={presentationVideoUrl} />
-                {/* Usamos el nuevo componente con las experiencias profesionales */}
                 <ProfessionalExperience experiences={experiences} />
+                <ReviewsList psychologistId={specialist.id} />
               </motion.div>
               
               {/* Right Column - Specialties and Education */}

@@ -134,7 +134,7 @@ class ClientCommentListView(generics.ListAPIView):
 class CommentListByPsychologistView(generics.ListAPIView):
     """
     Vista para listar comentarios aprobados por psicólogo.
-    Esta vista es pública.
+    Esta vista es pública y solo muestra comentarios con estado APPROVED.
     """
     serializer_class = CommentReadSerializer
     permission_classes = [permissions.AllowAny]
