@@ -104,11 +104,15 @@ const SpecialistProfilePage = () => {
           setPresentationVideoUrl(specialistData.presentation_video_url);
         } else if (specialistData.verification_documents) {
           // Try to find presentation video in verification documents
+          console.log('All verification documents:', specialistData.verification_documents);
+          
           const videoDoc = specialistData.verification_documents.find(
-            (doc: Document) => 
-              doc.document_type === 'presentation_video' && 
-              (doc.verification_status === 'verified' || 
-               doc.verification_status === 'approved')
+            (doc: Document) => {
+              console.log('Checking doc:', doc.document_type, 'is_verified:', doc.is_verified, 'status:', doc.verification_status);
+              return doc.document_type === 'presentation_video' && 
+                     (doc.verification_status === 'verified' || 
+                      doc.verification_status === 'approved');
+            }
           );
           
           if (videoDoc && videoDoc.file) {
