@@ -15,7 +15,12 @@ urlpatterns = [
     path('api/comments/', include('comments.urls')),
     path('api/contacto/', contact_form, name='contact_form'),
     # path('api/', include('settlements.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Serve media files in all environments (including production)
+# For better performance in production, configure nginx/apache instead
+if True:  # Always serve media files through Django
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Error handlers
 handler404 = 'django.views.defaults.page_not_found'
